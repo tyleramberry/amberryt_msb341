@@ -1,23 +1,22 @@
-# [Your product, or your part of it]
+# Domain-specific LLM harness (domain TBD)
 
-> One sentence: what this is and who it is for.
+> A domain-specific harness for LLMs, most likely serving teachers and sold B2B to school organizations.
 
-**Where to see it:** [URL, or where the work lives: a live app, a published page, a model in this repo]
-**Built by:** [your name], MSB 341 Product Management, BYU
+**Where to see it:** Not yet — product and domain still being validated
+**Built by:** Tyler Amberry, MSB 341 Product Management, BYU
 
 ## Context
 
 Fill this in during Sprint 1 and keep it current. Every sprint is read against it.
 
-- **My role:** [the hats you wear, and what you own. Most roles combine several: product,
-  engineering, design, go-to-market, pricing, analytics, operations. A solo builder wears most
-  of them]
-- **What I am working on:** [your product, or your part of a team's product. "Not decided" is
-  fine early on; list the options you are weighing]
-- **Who it is for:** [the customer or segment the work ultimately serves]
-- **Who uses my work:** [the specific person who will use what you make, and how you reach
-  them. On a team this can be your teammates: engineers using your specs, sales using your
-  pricing]
+- **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
+  heavy on product (validating ideas), then shifting to engineering (shipping features), then
+  a mix of product and GTM (getting in front of users).
+- **What I am working on:** Not decided. Building a domain-specific LLM harness; domain TBD.
+  Leaning toward education.
+- **Who it is for:** Teachers. B2B model, selling to school organizations.
+- **Who uses my work:** Teachers are the end users; school administrators and district
+  decision-makers are the buyers.
 
 If your situation changes, revise this and note what changed. That is normal; a silent
 mismatch between this file and your work is not.
