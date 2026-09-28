@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Harness Engineering — Visual Notes</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#151b23; --panel2:#1b232d; --line:#27333f;
+    --ink:#dce4ee; --muted:#8b98a9; --amber:#f0b429; --teal:#4ec9b0;
+    --violet:#a78bfa; --red:#f97583; --green:#7ee787;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:38px 26px 80px}
+  h1{font-size:34px;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+  h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+  h3{font-size:15px;margin:0 0 6px}
+  a{color:var(--teal);text-decoration:none;border-bottom:1px solid #2c4b47}
+  a:hover{border-bottom-color:var(--teal)}
+  p{margin:0 0 10px}
+  code,kbd{font-family:var(--mono);font-size:12.5px;background:#0a0d12;
+       border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--teal)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+       color:var(--amber);margin-bottom:14px}
+  .deck{color:var(--muted);max-width:70ch;font-size:15.5px}
+  .src{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:10px}
+  section{margin-top:46px}
+  .sechead{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);
+       padding-bottom:8px;margin-bottom:18px}
+  .sechead .n{font-family:var(--mono);font-size:12px;color:var(--amber);
+       border:1px solid #3b3116;background:#1b1607;border-radius:4px;padding:2px 7px}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+  .card.hint{background:var(--panel2)}
+  .card .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .card .src{font-size:11px;color:var(--violet);font-family:var(--mono);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .callout{background:linear-gradient(180deg,#1a1508,#151b23);border:1px solid #4a3a12;
+       border-left:3px solid var(--amber);border-radius:8px;padding:14px 16px;margin:16px 0}
+  .callout.teal{background:linear-gradient(180deg,#0d1c1a,#151b23);border-color:#1f4f47;border-left-color:var(--teal)}
+  .big{font-family:var(--mono);font-size:15px;color:var(--amber)}
+  .stat{font-family:var(--mono);font-size:22px;color:var(--ink);letter-spacing:-.02em}
+  .stat small{font-size:11px;color:var(--muted);display:block;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);font-weight:500}
+  td{padding:9px 10px;border-bottom:1px solid #1d2732;vertical-align:top}
+  td.k{color:var(--amber);font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  pre{background:#080b0f;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;
+      font-family:var(--mono);font-size:12.2px;line-height:1.6;margin:0}
+  pre .c{color:#5d6b7c} pre .kw{color:var(--violet)} pre .s{color:var(--green)} pre .f{color:var(--teal)}
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:6px 0 2px}
+  .node{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;min-width:0}
+  .node b{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:2px}
+  .node.warm{border-color:#4a3a12;background:#1b1607}
+  .node.cool{border-color:#1f4f47;background:#0d1c1a}
+  .arw{align-self:center;color:var(--muted);font-family:var(--mono);font-size:15px}
+  .era{border-left:2px solid var(--line);padding:0 0 20px 20px;position:relative}
+  .era:last-child{padding-bottom:0}
+  .era::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;border-radius:50%;
+      background:var(--bg);border:2px solid var(--amber)}
+  .era.t2::before{border-color:var(--teal)} .era.t3::before{border-color:var(--violet)} .era.t4::before{border-color:var(--green)}
+  .era .when{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--panel);border:1px solid var(--line);
+      border-radius:99px;padding:3px 10px;color:var(--ink)}
+  .chip i{color:var(--muted);font-style:normal;margin-left:5px}
+  .ladder{counter-reset:step}
+  .rung{display:grid;grid-template-columns:64px 1fr;gap:14px;background:var(--panel);
+      border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+  .rung .num{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em;padding-top:2px}
+  .rung h3{margin-bottom:4px}
+  .rung .done{font-family:var(--mono);font-size:11.5px;color:var(--green);margin-top:6px}
+  ul{margin:6px 0 0;padding-left:18px} li{margin-bottom:4px}
+  .foot{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  @media print{body{background:#fff;color:#000}.card,pre,.rung{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Research notes · 21 papers · 51 tools · read in order</div>
+  <h1>Agent Harness Engineering</h1>
+  <p class="deck">A harness is everything between the model weights and the world: the loop, the context it assembles,
+  the tools and skills it can reach for, the sub-agents it can spawn — and lately the code of the harness itself.
+  Same weights, same benchmark, wildly different scores. These notes distill the history, then lay out the shortest
+  path to building one.</p>
+  <div class="src">Source: DAIR.AI Academy — <em>Harness Engineering</em> paper collection, compiled from
+  YC Paper Club: Harness Edition (Aug 26, 2026) · academy.dair.ai/papers/collections/harness-engineering</div>
+
+  <div class="callout">
+    <div class="flow">
+      <div class="node"><b>The claim</b>Identical weight file</div>
+      <div class="arw">→</div>
+      <div class="node warm"><b>Bare harness</b>while-not-EOS loop + top-p</div>
+      <div class="arw">→</div>
+      <div class="node cool"><b>Engineered harness</b>REPL · memory · skills · sub-agents</div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:34px;flex-wrap:wrap">
+      <div class="stat">30% → 95.5%<small>ARC-AGI-3 RHAE Best@1, same weights</small></div>
+      <div class="stat">~100 lines<small>mini-swe-agent, &gt;74% SWE-bench verified</small></div>
+      <div class="stat">~800×<small>lower marginal cost, OpenJarvis personal AI</small></div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <div class="sechead"><span class="n">01</span><h2>The nine components — and where each one was invented</h2></div>
+    <p class="deck" style="margin-bottom:16px">Every entry in the collection is the same move repeated: give the loop
+    something new it is allowed to do. Here is the resulting anatomy, with the paper that first put each part in.</p>
+    <table>
+      <tr><th style="width:150px">Component</th><th>What it does</th><th style="width:230px">First introduced by</th><th style="width:170px">Minimal version</th></tr>
+      <tr><td class="k">1. Loop</td><td>Calls the model, runs what it asked for, decides whether to continue or stop.</td><td>GPT-2 · <em>Unsupervised Multitask Learners</em> (2019) — a bare while-not-EOS loop, no tools, no memory</td><td><code>for step in range(max_steps)</code></td></tr>
+      <tr><td class="k">2. Context assembly</td><td>Builds the prompt: system message, history, retrieved text, files, compaction.</td><td>GPT-3 · <em>Few-Shot Learners</em> (2020) — paste solved examples above the question; accuracy moves</td><td>a list of messages</td></tr>
+      <tr><td class="k">3. Token budget</td><td>Spends compute in the output space instead of demanding an answer in one shot.</td><td><em>Chain-of-Thought Prompting</em> (2022) — the reason harnesses budget tokens, not calls</td><td><code>max_tokens</code></td></tr>
+      <tr><td class="k">4. Action space</td><td>The calls the model may emit, and the executor that runs them.</td><td>WebGPT (2021) retrieval-as-an-action → Toolformer (2023) declaring tools in the prompt</td><td>one tool: <code>bash</code></td></tr>
+      <tr><td class="k">5. Observation</td><td>What comes back from the world — stdout, exit codes, tracebacks — appended verbatim.</td><td>InterCode (2023) — execution feedback as a standard environment</td><td><code>subprocess.run</code></td></tr>
+      <tr><td class="k">6. Memory &amp; state</td><td>Lets the model create/read/update/delete its own context instead of only appending.</td><td>MemGPT (2023) — a transcript becomes managed state</td><td>a <code>messages</code> list + notes file</td></tr>
+      <tr><td class="k">7. Skills</td><td>Verified routines written back to a searchable library for reuse.</td><td>Voyager (2023) — the ancestor of the SKILLS.md in your repo</td><td><code>skills/*.md</code></td></tr>
+      <tr><td class="k">8. Sub-agents</td><td>Spawning a peer as just another tool call; roles persist and stay addressable.</td><td>Multi-Agent Collaboration (2023) → Prime Agent's recursive, still-addressable subagents</td><td><code>spawn(task) -&gt; handle</code></td></tr>
+      <tr><td class="k">9. Verification</td><td>Checks the work and supplies the exit condition.</td><td>Self-Refine (2023) internal grader · Reflexion (2023) reward written back as words</td><td>a sentinel string in real output</td></tr>
+      <tr><td class="k" style="color:var(--violet)">+ the harness code itself</td><td>Prompt, retrieval, memory and scaffolding become artifacts to be optimized rather than authored.</td><td>DSPy (2023) → GEPA (2025) → Darwin Gödel Machine (2025) → Meta-Harness (2026) → Continual Harness (2026)</td><td>start by hand-writing it</td></tr>
+    </table>
+    <div class="callout teal" style="margin-top:18px">
+      <b>What actually varies between a 30% and a 95% run</b> is not the weights but components 4–9 placed deliberately,
+      plus one thing the papers never stop repeating: <b>harness failures must not be mistaken for model failures</b>.
+      Prime Agent's own framing is that a low-friction membrane keeps the measurement pointed at the model's true capability.
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="sechead"><span class="n">02</span><h2>The lineage, 2019 → 2026</h2></div>
+    <div class="era">
+      <div class="when">2019 – 2022 · THE V0 HARNESS</div>
+      <h3>A sampling loop and a prompt. Nothing else exists.</h3>
+      <p class="deck" style="font-size:14px">No tool calling, no skills, no memory. Two things you can do without leaving the context window:
+      put examples in it, and let the model spend more tokens thinking inside it.</p>
+      <div class="chips"><span class="chip">GPT-2<i>2019</i></span><span class="chip">GPT-3 few-shot<i>2020</i></span><span class="chip">Chain-of-Thought<i>2022</i></span></div>
+    </div>
+    <div class="era t2">
+      <div class="when">2021 – 2025 · STATIC HARNESSES — growing the action space</div>
+      <h3>Give the loop something new it is allowed to do. The harness code stays fixed.</h3>
+      <p class="deck" style="font-size:14px">Search the web, call a tool, act and observe, critique itself, run code, spawn a peer,
+      write a skill, edit its own memory, recurse. Ten papers, one move.</p>
+      <div class="chips"><span class="chip">WebGPT<i>2021</i></span><span class="chip">ReAct<i>2022</i></span><span class="chip">Toolformer<i>2023</i></span>
+      <span class="chip">Self-Refine<i>2023</i></span><span class="chip">Reflexion<i>2023</i></span><span class="chip">InterCode<i>2023</i></span>
+      <span class="chip">Multi-Agent Collaboration<i>2023</i></span><span class="chip">Voyager<i>2023</i></span><span class="chip">MemGPT<i>2023</i></span>
+      <span class="chip">Recursive Language Models<i>2025</i></span></div>
+    </div>
+    <div class="era t3">
+      <div class="when">2023 – 2026 · LET THE HARNESS LEARN</div>
+      <h3>The fixed part stops being fixed — prompt, then scaffolding, then the harness code, then online.</h3>
+      <p class="deck" style="font-size:14px">You cannot backpropagate through a prompt, so search over it instead. Then let the agent
+      rewrite its own retrieval and memory code around a frozen model. Then mutate while it runs.</p>
+      <div class="chips"><span class="chip">DSPy<i>2023</i></span><span class="chip">GEPA<i>2025</i></span><span class="chip">Darwin Gödel Machine<i>2025</i></span>
+      <span class="chip">Meta-Harness<i>2026</i></span><span class="chip">Continual Harness<i>2026</i></span></div>
+    </div>
+    <div class="era t4">
+      <div class="when">2026 · SHIPPED, AND MEASURED</div>
+      <h3>Two systems built on everything above, plus the paper that makes progress visible at all.</h3>
+      <div class="grid g3" style="margin-top:10px">
+        <div class="card"><div class="lbl">Prime Agent</div>Persistent IPython REPL following the Recursive Language Model abstraction,
+        recursive subagents, continual refinement of prompts and skills. <span class="src">30% → 95.5% ARC-AGI-3</span></div>
+        <div class="card"><div class="lbl">OpenJarvis</div>The same argument pointed at your laptop: five primitives, a frontier model
+        searches the spec, everything runs locally. <span class="src">~800× lower marginal cost</span></div>
+        <div class="card"><div class="lbl">Long-task measurement</div>Capability as the <em>length of task</em> a system completes,
+        not a single-turn score — the trend line that shows harness progress. <span class="src">Kwa et al. 2025</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="sechead"><span class="n">03</span><h2>The minimal loop, drawn</h2></div>
+    <div class="flow">
+      <div class="node"><b>1 · assemble</b>system + history + observation</div>
+      <div class="arw">→</div>
+      <div class="node"><b>2 · model</b>one reply</div>
+      <div class="arw">→</div>
+      <div class="node"><b>3 · parse</b>extract one action</div>
+      <div class="arw">→</div>
+      <div class="node warm"><b>4 · execute</b>bash, isolated</div>
+      <div class="arw">→</div>
+      <div class="node cool"><b>5 · observe</b>append verbatim</div>
+    </div>
+    <div class="flow" style="margin-top:10px">
+      <div class="node" style="border-color:#4a3a12"><b>exit condition</b>sentinel seen in <em>real</em> output → stop</div>
+      <div class="arw">↺</div>
+      <div class="node"><b>otherwise</b>go to 1, with 2 more messages than before</div>
+    </div>
+    <p class="deck" style="margin-top:14px;font-size:14px">A working reference implementation lives beside this document:
+    <code>minimal_harness.py</code> (~150 lines, stdlib only, any OpenAI-compatible provider). Its offline self-test verifies
+    the loop, the bash action, the linear history growth and the exit condition. Run it with
+    <code>python3 minimal_harness.py --selftest</code>.</p>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="sechead"><span class="n">04</span><h2>Which language</h2></div>
+    <p class="deck" style="margin-bottom:14px">Pick by what you are building, not by taste. <b>Python is the default answer</b> for a
+    first harness: the canonical 100-line reference is Python, every provider is one library away, the eval tooling is Python,
+    and the most interesting shipped research harness (Prime Agent) is a Python-REPL machine.</p>
+    <table>
+      <tr><th style="width:110px">Language</th><th>Choose it when</th><th style="width:300px">Proof in the collection</th></tr>
+      <tr><td class="k">Python</td><td>You are learning, benchmarking, training on trajectories, or want the shortest path to a working loop.</td>
+        <td>mini-swe-agent (~100 lines, any model via litellm) · Prime Agent (MIT) · SWE-agent · Deep Agents · Claude Agent SDK · Antigravity SDK · OpenAI Agents SDK</td></tr>
+      <tr><td class="k">TypeScript</td><td>The harness ships inside a product or a UI, or you want to assemble one from real parts rather than write it.</td>
+        <td>Pi SDK — pi-ai + pi-agent-core, MIT, "building your own harness from real parts", 16.7M npm/mo · eve (Vercel, Apache-2.0) · Claude Agent SDK</td></tr>
+      <tr><td class="k">Rust / Zig / Go</td><td>Distribution and start-up matter: a single small binary, embedded in a larger system.</td>
+        <td>Exo (Rust, CLI, MIT — the harness edits its own code; $1.05 per task in FrontierHarness) · fx (Vercel Labs, 7.8 MiB Zig binary, embeddable)</td></tr>
+    </table>
+    <div class="callout">
+      <b>Do not start with a framework.</b> mini-swe-agent scored &gt;74% on SWE-bench verified with <em>no tool-calling API at all</em> —
+      bash is the only tool, history is strictly linear, and each action is an independent <code>subprocess.run</code>.
+      That last detail is why sandboxing is a one-line swap to <code>docker exec</code> and why scale-out is trivial.
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <div class="sechead"><span class="n">05</span><h2>Where to start — a five-rung ladder</h2></div>
+    <div class="ladder">
+      <div class="rung"><div class="num">RUNG 1</div>
+        <div><h3>Read one real harness end to end (~1 hour)</h3>
+        <p>Three files: the agent class, the environment, the model wrapper. Nothing else is load-bearing.
+        Then read <em>Mini-SWE-agent</em>'s FAQ on why there is no persistent shell session — it is the design decision
+        most people get wrong first.</p>
+        <div class="done">DONE WHEN → you can name the loop, the tool interface and the exit condition from memory.</div></div></div>
+
+      <div class="rung"><div class="num">RUNG 2</div>
+        <div><h3>Rebuild it yourself, from scratch, in Python (~half a day)</h3>
+        <p>Start from <code>minimal_harness.py</code> next to this file. Keep it to four clearly separated functions:
+        <code>build_messages</code>, <code>call_model</code>, <code>run_command</code>, <code>run</code>. Use the
+        <code>--selftest</code> stub model so no API key is needed while you iterate on the loop.</p>
+        <div class="done">DONE WHEN → <code>--selftest</code> passes and a real task completes against a live provider.</div></div></div>
+
+      <div class="rung"><div class="num">RUNG 3</div>
+        <div><h3>Add the three things the minimal design deliberately omits (~1 day)</h3>
+        <ul>
+          <li><b>A sandbox:</b> run actions in a container, not your home directory.</li>
+          <li><b>A transcript log:</b> append-only, so a failed episode stops being wasted — this is Reflexion's seed.</li>
+          <li><b>A token/cost counter:</b> budget tokens rather than calls; per-task cost is the metric nobody instruments early.</li>
+        </ul>
+        <div class="done">DONE WHEN → one run is reproducible from its transcript, and you know its cost.</div></div></div>
+
+      <div class="rung"><div class="num">RUNG 4</div>
+        <div><h3>Build a 10-task eval before you add features (~1 day)</h3>
+        <p>Ten small tasks with objective success criteria. Measure success rate and cost per task. Without this you cannot
+        tell a harness improvement from noise — and the whole collection is an argument that capability should be measured as
+        task <em>horizon</em>, not single-turn scores.</p>
+        <div class="done">DONE WHEN → a one-line table: task, pass/fail, steps, tokens, dollars.</div></div></div>
+
+      <div class="rung"><div class="num">RUNG 5</div>
+        <div><h3>Only now add components, one at a time, each re-measured</h3>
+        <p>Order of value, cheapest first: skills (write verified routines to files), memory (managed context region),
+        sub-agents (spawn as a tool call), then prompt optimization (DSPy/GEPA) and — if you get that far —
+        letting the harness rewrite its own retrieval and memory code, as Meta-Harness does around a fixed model.</p>
+        <div class="done">DONE WHEN → every component you added moved the eval, and you can show which run proved it.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <div class="sechead"><span class="n">06</span><h2>Shortlist from the companion 51-tool list</h2></div>
+    <div class="grid g2">
+      <div class="card"><div class="lbl">Read first — the baseline</div>
+        <h3><a href="https://mini-swe-agent.com">mini-swe-agent</a></h3>
+        <p>~100 lines of Python, bash as the only tool, plain-text actions instead of tool calling, strictly linear history,
+        independent <code>subprocess.run</code> per action. MIT, 7.5k stars. No skills, no memory, no MCP — by design.
+        Its authors now recommend it over SWE-agent for everything.</p>
+        <div class="src">Research harness · SWE-bench team (Princeton/Stanford)</div></div>
+
+      <div class="card"><div class="lbl">Read second — what "more" looks like</div>
+        <h3><a href="https://github.com/PrimeIntellect-ai/prime-agent">Prime Agent</a></h3>
+        <p>Persistent IPython REPL, recursive subagents that stay addressable after they finish, continual refinement of
+        prompts and skills, an Agents View for inspecting sessions. Standardizes execution, recovery, verification and
+        resource accounting while leaving strategy to the model.</p>
+        <div class="src">Research harness · MIT · 30% → 95.5% on ARC-AGI-3</div></div>
+
+      <div class="card"><div class="lbl">If you would rather assemble than write</div>
+        <h3><a href="https://github.com/earendil-works/pi">Pi SDK — pi-ai, pi-agent-core</a></h3>
+        <p>TypeScript packages behind the Pi harness: unified LLM API (15+ providers), agent loop, tools and state,
+        usable on their own. Explicitly positioned for building your own harness from real parts.</p>
+        <div class="src">Harness SDK · MIT · 16.7M npm/mo (pi-ai)</div></div>
+
+      <div class="card"><div class="lbl">If you are shipping a product agent</div>
+        <h3>Claude Agent SDK · OpenAI Agents SDK · Deep Agents · eve</h3>
+        <p>Claude Agent SDK gives you Claude Code's loop and tools in-process (Claude only; 45.9M npm/mo).
+        OpenAI's SDK is MIT with a hosted Agents API in US-only public beta. Deep Agents is the opinionated
+        LangGraph-based library (subagents, filesystem backends, memory, skills, MCP). eve defines agents as
+        conventional folders (Apache-2.0).</p>
+        <div class="src">Harness SDK category · 6 of the 51 tools</div></div>
+
+      <div class="card"><div class="lbl">To watch the frontier move</div>
+        <h3><a href="https://github.com/exoharness/exo">Exo</a> · fx · Omnigent</h3>
+        <p>Exo (Rust, MIT) is a harness that reads and edits its own code with an append-only event log as the safety record —
+        and stopped early enough to be the cheapest per task. fx (Vercel Labs, Zig, ~7.8 MiB) is a tiny embeddable harness.
+        Omnigent (Apache-2.0, alpha) composes and controls across harnesses.</p>
+        <div class="src">Research / embeddable / meta-harness</div></div>
+
+      <div class="card"><div class="lbl">How you know it worked</div>
+        <h3>ARC-AGI-3 · SWE-bench verified · Terminal-Bench 2</h3>
+        <p>Prime Agent reports ARC-AGI-3 RHAE Best@1; mini-swe-agent reports SWE-bench verified; Meta-Harness claims
+        state of the art on Terminal-Bench 2 without touching the weights. Pick one, wire it into rung 4,
+        and keep it honest.</p>
+        <div class="src">Benchmarks named across the collection</div></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section>
+    <div class="sechead"><span class="n">07</span><h2>Traps the papers already paid for</h2></div>
+    <div class="grid g2">
+      <div class="card"><div class="lbl">Trap 01</div>Stop hand-writing ReAct scaffolding. Models interleave thought and action
+      natively now, so an explicit "Thought:/Action:" template is a harness imposing a shape the model already has.</div>
+      <div class="card"><div class="lbl">Trap 02</div>Keep history linear. When the trajectory <em>is</em> the message list,
+      debugging and fine-tuning both become trivial and you can diff exactly what the model saw.</div>
+      <div class="card"><div class="lbl">Trap 03</div>Never let the model assert success. The completion signal must return as
+      an observation from real execution, not as text the model produced.</div>
+      <div class="card"><div class="lbl">Trap 04</div>One action per step, isolated process per action. A persistent shell
+      session buys convenience and costs you sandboxing, reproducibility and parallel scale-up.</div>
+      <div class="card"><div class="lbl">Trap 05</div>Unbounded tools are not the goal. Once the action is code, the tool list
+      is already infinite — a persistent REPL generalizes better than twenty hand-written tools.</div>
+      <div class="card"><div class="lbl">Trap 06</div>Budget tokens, not calls, and log the cost per task. The cheapest harness
+      in the collection is cheapest partly because it stops early — early stopping is a harness feature.</div>
+      <div class="card"><div class="lbl">Trap 07</div>Don't confuse a harness failure with a model failure. Sandboxing,
+      recovery and resource accounting are your job; strategy is the model's.</div>
+      <div class="card"><div class="lbl">Trap 08</div>Don't optimize prompts in the dark. There is no gradient through a prompt,
+      so DSPy searched over them and GEPA read its own failed traces — both need the traces you should already be logging.</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>Files in this folder</b> — <code>harness-notes.html</code> (this document) ·
+    <code>minimal_harness.py</code> (runnable reference, <code>--selftest</code> verified offline) ·
+    <code>research/papers.md</code> and <code>research/tools.json</code> (the 21 papers and all 51 tools, extracted from the collection).
+    <p style="margin-top:10px">Primary source: DAIR.AI Academy, <em>Harness Engineering</em> collection
+    (21 papers, 51 tools), compiled from YC Paper Club: Harness Edition, recorded 26 Aug 2026.
+    Everything above is either drawn from that collection's annotations or verified against the linked primary sources;
+    quoted figures are reproduced as published.</p>
+  </div>
+</div>
+</body>
+</html>

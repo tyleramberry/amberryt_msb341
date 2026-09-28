@@ -41,6 +41,8 @@ Current research:
   users, parts to steal)
 - `discovery/research/agent-harness-comp.md` + `.html`: side-by-side of Codex, OpenCode,
   Hermes, OpenClaw, Pi
+- `discovery/research/harness-notes/`: background reading on harness engineering (DAIR.AI
+  collection: 21 papers, 51 tools), visual notes, and a minimal runnable harness
 
 ## How this repo works
 
