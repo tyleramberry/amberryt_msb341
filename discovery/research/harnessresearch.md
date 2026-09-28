@@ -3,13 +3,12 @@ title: Harness Research — Sprint 1
 date: 2026-09-28
 sprint: 1
 tags: [research, harness-engineering, sprint-1, msb341]
-related: "[[agent-harness-atlas]]"
+related: "[[agent-harness-comp]]"
 ---
 
 # Harness Research — Sprint 1
 
-**The question:** What can a harness do to make frontier models better *for students*, and what can I
-take from existing open-source harnesses instead of building from scratch?
+**The question:** What can a harness do to make frontier models better *for students*, and what can I take from existing open-source harnesses instead of building from scratch?
 
 This file holds three things from Sprint 1:
 
@@ -18,7 +17,7 @@ This file holds three things from Sprint 1:
 3. **Parts to steal:** specific patterns from open-source harnesses I want to reuse
 
 It feeds directly into `mvpspec.md`. For the side-by-side of the five harnesses I studied
-(Codex, OpenCode, Hermes, OpenClaw, Pi), see [[agent-harness-atlas]].
+(Codex, OpenCode, Hermes, OpenClaw, Pi), see [[agent-harness-comp]].
 
 ---
 
@@ -50,8 +49,7 @@ readable context is what makes the other three roles work.
 
 ### A closed feedback loop is the core
 
-An agent gets better when it can tell it was wrong and fix itself without a human pointing it
-out. That takes a closed loop:
+An agent gets better when it can tell it was wrong and fix itself without a human pointing it out. That takes a closed loop:
 
 1. **Tests and evals decide what's right or wrong.** Without a definition of "correct," the
    agent can't judge its own output.
@@ -87,6 +85,7 @@ them:
 - readable and editable by the student, not just the model
 - versionable in git
 - portable across models and harnesses (AGENTS.md and SKILL.md are already shared conventions)
+- Would students prefer google docs instead of markdown?
 
 ---
 
