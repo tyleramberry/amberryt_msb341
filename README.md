@@ -63,5 +63,5 @@ Each sprint:
   alternatives you rejected.
 - **No real customer contact details anywhere in this repo.** Anonymize people in interview
   notes: "dental office manager, Provo" rather than a name and an email.
-- **Keep `CLAUDE.md` current.** It is what your agent knows about your work. Stale context
+- **Keep `AGENTS.md` current.** It is what your agent knows about your work (`CLAUDE.md` just imports it). Stale context
   produces bad output.
