@@ -4,7 +4,7 @@ Competitive research on five open-source agent harnesses, done 2026-09-23 to lea
 domain-specific harness needs.
 
 - **Interactive version:** https://claude.ai/artifact/LHGVVjivGEtS3wvdo65P6N
-- **Source file:** [`agent-harness-atlas.html`](agent-harness-atlas.html) (open locally in a browser)
+- **Source file:** [`agent-harness-comp.html`](agent-harness-comp.html) (open locally in a browser)
 
 ## The five
 
