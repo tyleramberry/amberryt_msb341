@@ -1,0 +1,323 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Agent Harness Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1b2127; --muted:#5d6670; --line:#d9ddd6; --soft:#e8ebe5;
+  --codex:#2f63c8; --opencode:#c4731f; --hermes:#7449c9; --openclaw:#c83e37; --pi:#23875f;
+  --accent:#1b2127;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Instrument Sans", system-ui, -apple-system, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#15191d; --surface:#1d2227; --ink:#e7eae6; --muted:#9aa3ab; --line:#2f363d; --soft:#252b31;
+    --codex:#6c9bf0; --opencode:#e8a15a; --hermes:#a88af0; --openclaw:#f07a72; --pi:#5cc596;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#15191d; --surface:#1d2227; --ink:#e7eae6; --muted:#9aa3ab; --line:#2f363d; --soft:#252b31;
+  --codex:#6c9bf0; --opencode:#e8a15a; --hermes:#a88af0; --openclaw:#f07a72; --pi:#5cc596;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.55; margin:0}
+.wrap{max-width:1120px; margin:0 auto; padding-inline:20px; padding-block:40px 80px; display:flex; flex-direction:column; gap:56px}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.15}
+h1{font-size:clamp(30px,5vw,46px); font-weight:700; letter-spacing:-.01em}
+h2{font-size:24px; font-weight:700}
+h3{font-size:17px; font-weight:700}
+p{margin:0}
+a{color:inherit}
+.eyebrow{font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.lede{max-width:66ch; color:var(--muted); font-size:16.5px}
+header{display:flex; flex-direction:column; gap:14px}
+section{display:flex; flex-direction:column; gap:18px}
+.sechead{display:flex; flex-direction:column; gap:6px}
+.sechead p{color:var(--muted); max-width:70ch}
+
+/* harness roster */
+.roster{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
+.h{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:8px; border-top:4px solid var(--c)}
+.h .name{font-family:var(--display); font-weight:700; font-size:20px; color:var(--c)}
+.h .kind{font-size:13.5px; color:var(--ink)}
+.h .meta{font-family:var(--mono); font-size:11.5px; color:var(--muted); display:flex; flex-wrap:wrap; gap:4px 10px}
+.h a.repo{font-family:var(--mono); font-size:12px; color:var(--c); text-decoration:none; word-break:break-all; margin-top:auto}
+.h a.repo:hover,.h a.repo:focus-visible{text-decoration:underline}
+.c-codex{--c:var(--codex)} .c-opencode{--c:var(--opencode)} .c-hermes{--c:var(--hermes)} .c-openclaw{--c:var(--openclaw)} .c-pi{--c:var(--pi)}
+
+/* spectrum plot */
+.spectrum{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; overflow-x:auto}
+.spectrum svg{display:block; min-width:640px; width:100%; height:auto}
+.spectrum text{font-family:var(--body); fill:var(--ink)}
+.spectrum .ax{font-family:var(--mono); font-size:11px; fill:var(--muted)}
+
+/* matrix */
+.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.controls button{font:inherit; font-size:13.5px; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.controls button:focus-visible{outline:2px solid var(--codex); outline-offset:2px}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-left:auto}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.matrix-box{background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:760px}
+th,td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:middle}
+thead th{font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; text-align:center; position:sticky; top:0; background:var(--surface)}
+thead th:first-child{text-align:left}
+thead th.hc{color:var(--c)}
+tbody tr:last-child td{border-bottom:0}
+tr.group td{background:var(--soft); font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-block:7px}
+td.feat{width:40%}
+td.feat b{font-weight:600; display:block}
+td.feat small{color:var(--muted); font-size:12.5px; display:block; line-height:1.45; margin-top:2px}
+td.cell{text-align:center; width:10%}
+td.count{width:10%; font-family:var(--mono); font-size:12px; color:var(--muted); white-space:nowrap}
+.bar{display:inline-block; height:6px; border-radius:3px; background:var(--ink); vertical-align:middle; margin-right:6px; opacity:.75}
+.dot{display:inline-block; width:14px; height:14px; border-radius:50%; border:2px solid var(--c); vertical-align:middle}
+.dot.full{background:var(--c)}
+.dot.part{background:linear-gradient(90deg,var(--c) 50%,transparent 50%)}
+.dot.none{border-color:var(--line); border-style:dashed}
+.legend .dot{--c:var(--muted)}
+td.cell[title]{cursor:help}
+
+/* consensus */
+.consensus{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+.con{background:var(--surface); padding:18px; display:flex; flex-direction:column; gap:6px}
+.con .tag{font-family:var(--mono); font-size:11px; color:var(--pi); letter-spacing:.06em; text-transform:uppercase}
+.con p{color:var(--muted); font-size:14px}
+.con p.how{color:var(--ink); font-size:13.5px}
+.con p.how::before{content:"Build it: "; font-weight:600}
+
+/* signatures */
+.sigs{display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:14px}
+.sig{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:10px}
+.sig h3{color:var(--c)}
+.sig .thesis{font-size:14px; color:var(--muted); font-style:italic}
+.sig ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:14px}
+.sig li::marker{color:var(--c)}
+.sig .steal{font-size:13.5px; border-top:1px dashed var(--line); padding-top:10px}
+.sig .steal b{color:var(--c)}
+
+/* blueprint */
+.stack{display:flex; flex-direction:column; gap:6px}
+.layer{display:grid; grid-template-columns:56px 1fr; gap:14px; align-items:start; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px}
+.layer .n{font-family:var(--mono); font-size:22px; font-weight:600; color:var(--muted); line-height:1}
+.layer h3{font-size:16px; display:flex; flex-wrap:wrap; align-items:baseline; gap:8px}
+.layer h3 .phase{font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 6px}
+.layer p{color:var(--muted); font-size:14px; margin-top:4px}
+.layer .ref{font-family:var(--mono); font-size:12px; margin-top:6px; color:var(--ink)}
+.foot{font-size:12.5px; color:var(--muted); max-width:80ch; border-top:1px solid var(--line); padding-top:16px}
+@media (max-width:520px){ .layer{grid-template-columns:36px 1fr} .layer .n{font-size:17px} }
+@media (prefers-reduced-motion:no-preference){ .controls button{transition:background .15s,color .15s} }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Research notes · five open-source agent harnesses · September 2026</span>
+  <h1>Agent Harness Atlas</h1>
+  <p class="lede">A harness is everything around the model: the loop, the tools, the context it loads, how it remembers and how it's kept safe. This page compares Codex, OpenCode, Hermes Agent, OpenClaw and Pi. It shows what all five share, which is the core of a harness, and what each does that the others don't.</p>
+</header>
+
+<section>
+  <div class="sechead"><span class="eyebrow">The five</span><h2>Who's in the set</h2></div>
+  <div class="roster">
+    <div class="h c-codex"><span class="name">Codex</span><span class="kind">OpenAI's coding agent for the terminal, IDE and desktop</span><span class="meta"><span>Rust</span><span>Apache-2.0</span><span>~126k ★</span></span><a class="repo" href="https://github.com/openai/codex" target="_blank" rel="noopener">github.com/openai/codex</a></div>
+    <div class="h c-opencode"><span class="name">OpenCode</span><span class="kind">Coding agent that works with any provider, built as a server with separate clients</span><span class="meta"><span>TypeScript</span><span>MIT</span><span>~210k ★</span></span><a class="repo" href="https://github.com/anomalyco/opencode" target="_blank" rel="noopener">github.com/anomalyco/opencode</a></div>
+    <div class="h c-hermes"><span class="name">Hermes Agent</span><span class="kind">Nous Research's personal agent that learns from its own work</span><span class="meta"><span>Python</span><span>MIT</span><span>~248k ★</span></span><a class="repo" href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noopener">github.com/NousResearch/hermes-agent</a></div>
+    <div class="h c-openclaw"><span class="name">OpenClaw</span><span class="kind">Personal assistant you reach from your chat apps</span><span class="meta"><span>TypeScript</span><span>MIT</span><span>~390k ★</span></span><a class="repo" href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">github.com/openclaw/openclaw</a></div>
+    <div class="h c-pi"><span class="name">Pi</span><span class="kind">Minimal coding agent and toolkit that you extend yourself</span><span class="meta"><span>TypeScript</span><span>MIT</span><span>~109k ★</span></span><a class="repo" href="https://github.com/badlogic/pi-mono" target="_blank" rel="noopener">github.com/badlogic/pi-mono</a></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">Plot</span><h2>Where each one sits</h2><p>Left to right: how much the harness ships out of the box, from a small core you build on to everything built in. Bottom to top: what it's for, from writing code to running your life. Circle size is GitHub stars.</p></div>
+  <div class="spectrum" id="plot"></div>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">Feature matrix</span><h2>Who has what</h2><p>Hover a dot to see how that harness does it. The count on the right is how many of the five have the feature. When all five converged on something, that's a strong sign you need it too.</p></div>
+  <div class="controls" role="group" aria-label="Filter rows">
+    <button type="button" id="f-all" aria-pressed="true" data-f="all">All features</button>
+    <button type="button" id="f-shared" aria-pressed="false" data-f="shared">Shared by all 5</button>
+    <button type="button" id="f-diff" aria-pressed="false" data-f="diff">Where they differ</button>
+    <div class="legend"><span><i class="dot full"></i>Built in</span><span><i class="dot part"></i>Partial or via add-on</span><span><i class="dot none"></i>Not included</span></div>
+  </div>
+  <div class="matrix-box"><table id="matrix"></table></div>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">Consensus</span><h2>The shared core: what all five have</h2><p>These are the pieces every harness in the set built, even though the five were designed very differently. That makes them the best evidence of what a harness can't work without.</p></div>
+  <div class="consensus" id="consensus"></div>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">Signature moves</span><h2>What only one (or few) of them do</h2><p>Each harness has a few ideas the others don't. Each card ends with the one idea most worth copying.</p></div>
+  <div class="sigs" id="sigs"></div>
+</section>
+
+<section>
+  <div class="sechead"><span class="eyebrow">Blueprint</span><h2>Building your own: a suggested order</h2><p>The order is the point here: each layer depends on the ones before it. Get the first four working and you have a usable harness, which is roughly where Pi stops. Everything after that is a product decision.</p></div>
+  <div class="stack" id="stack"></div>
+</section>
+
+<p class="foot">Sources: each project's GitHub README and official docs (developers.openai.com/codex, opencode.ai/docs, docs.openclaw.ai, Mario Zechner's post on why Pi is minimal), checked 23 Sep 2026. Star counts are from that day, rounded. These projects release weekly, so a "not included" dot may be out of date. Treat the matrix as a map, not an audit. Half dots are my call where a feature exists only as a plugin, an optional mode or a workaround the project recommends.</p>
+</div>
+
+<script>
+const H = ["codex","opencode","hermes","openclaw","pi"];
+const NAMES = {codex:"Codex",opencode:"OpenCode",hermes:"Hermes",openclaw:"OpenClaw",pi:"Pi"};
+// 2 = built in, 1 = partial/add-on, 0 = none. Notes per harness.
+const ROWS = [
+ {g:"The loop"},
+ {f:"Agent loop with tool calling", d:"The model calls a tool, gets the result back, and repeats until the task is done.", v:[2,2,2,2,2], n:["Rust core loop","Loop runs on the server; TUI and desktop are clients","Python loop, 40+ tools","Runtime built into the gateway","pi-agent-core, a reusable package"]},
+ {f:"File + shell tools", d:"read, write, edit, bash. The four tools almost everything else is built on.", v:[2,2,2,2,2], n:["Shell + apply_patch editing","read/write/edit/bash/grep/glob/ls","Terminal + file tools across 7 backends","exec, read, write, edit and more","Only these 4 by default"]},
+ {f:"Streaming + interrupt / steer", d:"You watch output as it arrives and can redirect the agent mid-run.", v:[2,2,2,2,2], n:["Esc to interrupt","Interrupt in the TUI","Interrupt-and-redirect","Steers mid-run from chat messages","Queued messages steer the next turn"]},
+ {g:"Context"},
+ {f:"Project instruction files (AGENTS.md)", d:"A Markdown file loaded into the prompt so every session starts with the project's rules.", v:[2,2,2,2,2], n:["AGENTS.md, /init","AGENTS.md, /init","Reads context files, including AGENTS.md","AGENTS.md + SOUL/USER/IDENTITY files","AGENTS.md, nested per folder"]},
+ {f:"Skills (load instructions on demand)", d:"Folders with a SKILL.md. The model sees only each skill's short description until it needs one.", v:[2,2,2,2,2], n:["Skills + plugins","Skills","Skills Hub, agentskills.io standard","Skills + ClawHub registry","Skills + prompt templates"]},
+ {f:"Context compaction", d:"Summarizes older turns when the context window fills up, so long sessions keep going.", v:[2,2,2,2,2], n:["/compact + auto","Auto compaction","Context compression","Auto compaction","Auto + manual compaction"]},
+ {g:"State"},
+ {f:"Saved sessions you can resume", d:"Each conversation is saved to disk so you can pick it up again later.", v:[2,2,2,2,2], n:["codex resume","Session list + share links","Sessions + full-text search","Per-agent SQLite sessions","JSONL sessions"]},
+ {f:"Branching sessions (tree)", d:"Fork a conversation at any turn and explore another path.", v:[1,1,0,0,2], n:["Fork / backtrack","Undo/redo + fork","Not a headline feature","Not a headline feature","/tree and /fork across a full session tree"]},
+ {f:"Long-term memory", d:"Facts about you and your work that carry across sessions.", v:[1,0,2,2,0], n:["Memories feature, secondary","Not built in","Agent-curated memory + Honcho user model","MEMORY.md + USER.md, updated by the agent","Deliberately left out; use files"]},
+ {g:"Models"},
+ {f:"Works with many model providers", d:"Change the model or vendor without changing code.", v:[1,2,2,2,2], n:["OpenAI-first; other providers configurable","75+ providers","300+ via Nous Portal, OpenRouter, etc.","Model providers are swappable plugins","pi-ai unified API; switches providers mid-session"]},
+ {g:"Interfaces"},
+ {f:"Slash commands / prompt templates", d:"Reusable prompts you trigger by name.", v:[2,2,2,2,2], n:["Built-in + custom","Custom commands in Markdown","Slash commands","Chat slash commands","Markdown templates with arguments"]},
+ {f:"Headless / programmatic mode", d:"Run it from scripts, CI or other apps, not just a chat window.", v:[2,2,2,2,2], n:["codex exec + SDK","opencode serve + SDK","CLI + gateway + batch runner","Gateway API","print, JSON, RPC and SDK modes"]},
+ {f:"IDE / desktop / cloud apps", d:"Ways to use it besides the terminal.", v:[2,2,0,2,0], n:["IDE extension, desktop app, cloud","Desktop app, IDE, web","Terminal + chat apps only","macOS/iOS/Android companion apps","Terminal only (by design)"]},
+ {f:"Chat-app channels", d:"Talk to the agent from WhatsApp, Telegram, Slack and similar apps.", v:[0,0,2,2,1], n:["—","—","Telegram, Discord, Slack, WhatsApp, Signal, email","20+ channels incl. iMessage","Via separate chat projects"]},
+ {g:"Extending it"},
+ {f:"Hooks / plugins / extensions", d:"Your code runs at points in the loop (before a tool runs, after an edit) or adds new tools.", v:[2,2,2,2,2], n:["Hooks + plugins","JS/TS plugins with event hooks","Plugins + hooks","Plugins + ClawHub","TypeScript extensions: tools, commands, UI"]},
+ {f:"MCP client", d:"Connects to Model Context Protocol servers for extra tools.", v:[2,2,2,1,0], n:["Client and can run as an MCP server","Local + remote MCP","Any MCP server","Through a plugin or skill","Left out on purpose (token cost); use CLIs + skills"]},
+ {f:"Subagents", d:"Hand part of a task to a child agent that has its own context window.", v:[2,2,2,2,1], n:["Built-in subagents","General + custom subagents","Isolated parallel subagents","Spawns sessions, routes between agents","Spawn pi via bash/tmux or an extension"]},
+ {g:"Safety"},
+ {f:"Approval / permission prompts", d:"Asks before risky actions such as edits, shell commands or network access.", v:[2,2,2,2,0], n:["Approval modes (/permissions)","allow / ask / deny for each tool","Asks before dangerous commands","Exec approvals + chat pairing","No prompts ('YOLO'); run it in a container"]},
+ {f:"Sandboxed execution", d:"Commands run in an isolated environment, not directly on your machine.", v:[2,0,2,1,0], n:["OS sandbox: Seatbelt / Landlock","Relies on permission prompts","Docker, SSH, Modal, Daytona and other backends","Optional Docker sandbox","Use a container yourself"]},
+ {f:"Plan mode", d:"A read-only mode that proposes changes before making them.", v:[2,2,0,0,0], n:["Plan mode","Plan agent (read-only)","Not a headline feature","Not a headline feature","Left out: write PLAN.md instead"]},
+ {g:"Autonomy"},
+ {f:"Scheduled / proactive runs", d:"Runs on a timer or wakes itself up with no prompt from you.", v:[1,0,2,2,0], n:["Automations in the app","—","Cron with delivery to any channel","Cron + heartbeat","—"]},
+ {f:"Web search / browsing", d:"Looks things up online as it works.", v:[2,2,2,2,0], n:["--search","webfetch / websearch","Firecrawl + cloud browser","Controls a browser","Via skill or CLI"]},
+ {f:"Writes and improves its own skills", d:"Turns a finished task into a reusable skill and refines it over time.", v:[0,0,2,1,1], n:["—","—","Learning loop: creates + improves skills","Agent can write skills","Asks the agent to write extensions and skills"]},
+ {f:"Code intelligence (LSP)", d:"The agent sees compiler and linter errors right after it edits a file.", v:[0,2,0,0,0], n:["—","LSP diagnostics fed back to the model","—","—","—"]},
+];
+
+const CONSENSUS = [
+ {t:"A tight agent loop", p:"Call the model, run the tools it asks for, send back the results, repeat. Everything else sits on top of this.", h:"Start with about 100 lines: a messages array, a tool registry and a while-loop that stops when there are no more tool calls."},
+ {t:"Four core tools", p:"read, write, edit, bash. Pi ships only these four and still works as a full coding agent. The others add convenience tools, but the core is the same.", h:"Make edit a find-and-replace on an exact string (not a full-file rewrite), and return errors as text the model can read and fix."},
+ {t:"Project instructions in Markdown", p:"All five read AGENTS.md or something like it. It's the cheapest way to make the agent follow your project's rules.", h:"Walk up from the working directory, join every AGENTS.md you find and add it to the system prompt."},
+ {t:"Skills that load on demand", p:"All five adopted SKILL.md folders in 2025–26. The model sees only a one-line description until it needs the full instructions.", h:"Add each skill's name and description to the prompt, and let the model read the full SKILL.md with its read tool."},
+ {t:"Sessions saved to disk", p:"All five save each conversation so it can be resumed, searched or shared later.", h:"Append each message to a JSONL file. Give each entry a parent ID and you can add branching later at no extra cost."},
+ {t:"Compaction", p:"Long tasks outgrow the context window, and all five handle it by summarizing older turns.", h:"When usage passes about 80%, summarize the older messages, keep the most recent turns word-for-word, and carry on."},
+ {t:"Slash commands and templates", p:"Reusable prompts triggered by name. A small feature, but all five have it.", h:"Load Markdown files from a commands folder and substitute $ARGUMENTS."},
+ {t:"A headless mode", p:"All five can run without a UI, from CI, scripts or another app. That's what turns a chat tool into infrastructure.", h:"Keep the loop separate from the UI from the start. Emit events as JSON so any front end can render them."},
+ {t:"Interruptible streaming", p:"You can watch output arrive and redirect the agent mid-run. Without this, people stop trusting an agent quickly.", h:"Stream tokens and tool events. Check an abort signal between tool calls, and queue new user messages for the next turn."},
+];
+
+const SIGS = [
+ {k:"codex", t:"Codex", th:"Safety comes from the operating system, not from asking the user.", li:["Real OS sandboxing: Seatbelt on macOS, Landlock/seccomp on Linux, with configurable writable folders","Can itself run as an MCP server, so other agents can call Codex","codex exec for CI, plus built-in /review for code review","Hands work off to Codex Cloud","Rust core: fast and a single binary"], s:"Put shell commands inside an OS-level sandbox with an explicit list of writable folders. That's safer than relying on the user to approve every command."},
+ {k:"opencode", t:"OpenCode", th:"The agent is a server, and the TUI is just one of its clients.", li:["Client/server split: TUI, desktop, IDE and web all connect to one server","LSP integration: compiler errors go straight back to the model after each edit","75+ providers through one config","Agents defined as Markdown with allow/ask/deny rules for each tool","Share links to sessions, plus ACP support for editors"], s:"Send language-server diagnostics back to the model after every edit. The agent catches its own type errors without running a build."},
+ {k:"hermes", t:"Hermes Agent", th:"An agent that gets better the more you use it.", li:["Learning loop: after a hard task it writes a skill, then improves it the next time","Full-text search across all past sessions, with summaries","Honcho user modeling: builds a picture of you over time","7 places to run commands: local, Docker, SSH, Singularity, Modal, Daytona, Vercel","execute_code lets the model write Python that calls tools, finishing multi-step work in one turn","Exports trajectories as training data for future models"], s:"After a task succeeds, have the agent write down how it did it as a skill. That's the cheapest form of learning."},
+ {k:"openclaw", t:"OpenClaw", th:"The chat app is the interface, and the agent runs on your own hardware.", li:["Gateway process that manages sessions, channels, tools and events","20+ channels: WhatsApp, iMessage, Telegram, Slack, Discord, Teams…","Persona files: SOUL.md, IDENTITY.md, USER.md, MEMORY.md","Heartbeat: the agent wakes on a schedule and acts without being asked","Phone and desktop devices it can act on, plus Canvas and voice","Unknown chat senders must be approved (DM pairing) before they can talk to it"], s:"Split identity into files (who the agent is, who you are, what it remembers) that the agent can edit itself."},
+ {k:"pi", t:"Pi", th:"Leave features out, and let the agent add what it needs.", li:["4 tools and a system prompt under 1,000 tokens","Tree-shaped sessions: /tree and /fork to any earlier turn","Switch model vendors mid-session and keep the context","Extensions can add tools, commands, UI and event hooks","No MCP, subagents, plan mode or permission prompts, on purpose","Other harnesses can embed its pieces (ai, agent-core, tui)"], s:"Start with 4 tools and a short prompt. Add a feature only when a real task needs it."},
+];
+
+const STACK = [
+ {t:"Agent loop + 4 tools", ph:"core", p:"Model call → tool calls → results → repeat. read, write, edit, bash. Stream the output and support Ctrl-C.", r:"Study: Pi (pi-agent-core)"},
+ {t:"Context files", ph:"core", p:"System prompt + AGENTS.md from the project, merged from the root down. Keep your own prompt short.", r:"Study: Pi, Codex"},
+ {t:"Sessions + compaction", ph:"core", p:"JSONL session log with parent IDs. Resume the last session. Summarize automatically near the context limit.", r:"Study: Pi (tree sessions)"},
+ {t:"Provider layer", ph:"core", p:"One interface over Anthropic, OpenAI, Google and local models. Handle each vendor's reasoning format when you switch.", r:"Study: pi-ai, OpenCode"},
+ {t:"Skills + slash commands", ph:"leverage", p:"Scan skill folders, list their descriptions in the prompt, read the full file on demand. Markdown command templates.", r:"Study: any of the five"},
+ {t:"Headless / RPC mode", ph:"leverage", p:"The same loop, emitting JSON events. That opens the door to CI, a desktop app or a chat bot on top.", r:"Study: OpenCode serve, codex exec"},
+ {t:"Safety: approvals or sandbox", ph:"trust", p:"Choose an approach: approve each tool call (allow/ask/deny), an OS sandbox, or \"always run in a container\".", r:"Study: Codex sandbox, OpenCode permissions"},
+ {t:"Hooks + extensions", ph:"trust", p:"Lifecycle events (before a tool runs, after an edit, when a session ends) that user code can intercept.", r:"Study: Pi extensions, OpenCode plugins"},
+ {t:"MCP + subagents", ph:"scale", p:"Optional. Both add tokens and complexity. Add them when a real workflow needs them.", r:"Study: Codex, Hermes"},
+ {t:"Memory, channels, schedule", ph:"life", p:"Only if you want a personal agent: memory files it maintains itself, a gateway to chat apps, cron and a heartbeat.", r:"Study: OpenClaw, Hermes"},
+];
+
+// ---- matrix
+const tbl = document.getElementById("matrix");
+let head = "<thead><tr><th>Feature</th>" + H.map(h=>`<th class="hc c-${h}">${NAMES[h]}</th>`).join("") + "<th>Count</th></tr></thead><tbody>";
+ROWS.forEach(r=>{
+  if(r.g){ head += `<tr class="group" data-group><td colspan="7">${r.g}</td></tr>`; return; }
+  const full = r.v.filter(x=>x===2).length;
+  const kind = full===5 ? "shared" : "diff";
+  head += `<tr data-kind="${kind}"><td class="feat"><b>${r.f}</b><small>${r.d}</small></td>`;
+  r.v.forEach((x,i)=>{
+    const cls = x===2?"full":x===1?"part":"none";
+    const lab = x===2?"Built in":x===1?"Partial":"Not included";
+    head += `<td class="cell c-${H[i]}" title="${NAMES[H[i]]}: ${r.n[i]}"><i class="dot ${cls}" role="img" aria-label="${NAMES[H[i]]}: ${lab}. ${r.n[i]}"></i></td>`;
+  });
+  head += `<td class="count"><span class="bar" style="width:${full*9}px"></span>${full}/5</td></tr>`;
+});
+tbl.innerHTML = head + "</tbody>";
+
+function applyFilter(f){
+  document.querySelectorAll(".controls button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.f===f)));
+  const rows = [...tbl.querySelectorAll("tbody tr")];
+  rows.forEach(tr=>{ if(!tr.hasAttribute("data-group")) tr.hidden = !(f==="all" || tr.dataset.kind===f); });
+  // hide group headers with no visible rows
+  rows.forEach((tr,i)=>{
+    if(!tr.hasAttribute("data-group")) return;
+    let any=false;
+    for(let j=i+1;j<rows.length && !rows[j].hasAttribute("data-group");j++) if(!rows[j].hidden) any=true;
+    tr.hidden=!any;
+  });
+  try{ localStorage.setItem("atlas-filter", f); }catch(e){}
+}
+document.querySelectorAll(".controls button").forEach(b=>b.addEventListener("click",()=>applyFilter(b.dataset.f)));
+let saved="all"; try{ saved = localStorage.getItem("atlas-filter") || "all"; }catch(e){}
+applyFilter(saved);
+
+// ---- consensus
+document.getElementById("consensus").innerHTML = CONSENSUS.map(c=>`<div class="con"><span class="tag">All 5</span><h3>${c.t}</h3><p>${c.p}</p><p class="how">${c.h}</p></div>`).join("");
+
+// ---- signatures
+document.getElementById("sigs").innerHTML = SIGS.map(s=>`<div class="sig c-${s.k}"><h3>${s.t}</h3><p class="thesis">${s.th}</p><ul>${s.li.map(l=>`<li>${l}</li>`).join("")}</ul><p class="steal"><b>Worth copying:</b> ${s.s}</p></div>`).join("");
+
+// ---- blueprint
+document.getElementById("stack").innerHTML = STACK.map((l,i)=>`<div class="layer"><span class="n">${String(i+1).padStart(2,"0")}</span><div><h3>${l.t}<span class="phase">${l.ph}</span></h3><p>${l.p}</p><p class="ref">${l.r}</p></div></div>`).join("");
+
+// ---- spectrum plot (SVG)
+(function(){
+  const W=900, Hh=380, L=70, R=40, T=30, B=60;
+  const pts=[
+    {k:"pi",x:0.08,y:0.22,s:109},
+    {k:"codex",x:0.55,y:0.06,s:126},
+    {k:"opencode",x:0.70,y:0.24,s:210},
+    {k:"hermes",x:0.74,y:0.70,s:248},
+    {k:"openclaw",x:0.92,y:0.90,s:390},
+  ];
+  const px=x=>L+x*(W-L-R), py=y=>Hh-B-y*(Hh-T-B);
+  const r=s=>8+Math.sqrt(s)*1.35;
+  let g=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Scatter plot: out-of-the-box features versus purpose. Pi is minimal and coding-focused; Codex and OpenCode have everything built in and focus on coding; Hermes and OpenClaw have everything built in and act as personal assistants.">`;
+  // grid
+  [0,.25,.5,.75,1].forEach(v=>{
+    g+=`<line x1="${px(v)}" y1="${py(0)}" x2="${px(v)}" y2="${py(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=`<line x1="${px(0)}" y1="${py(v)}" x2="${px(1)}" y2="${py(v)}" stroke="var(--line)" stroke-width="1"/>`;
+  });
+  g+=`<line x1="${px(0)}" y1="${py(0)}" x2="${px(1)}" y2="${py(0)}" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(1)}" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<text class="ax" x="${px(0)}" y="${py(0)+22}" text-anchor="start">SMALL CORE, YOU EXTEND</text>`;
+  g+=`<text class="ax" x="${px(1)}" y="${py(0)+22}" text-anchor="end">EVERYTHING BUILT IN</text>`;
+  g+=`<text class="ax" x="${px(.5)}" y="${py(0)+44}" text-anchor="middle">OUT-OF-THE-BOX FEATURES →</text>`;
+  g+=`<text class="ax" x="${L-14}" y="${py(0)}" text-anchor="end" dominant-baseline="middle">CODE</text>`;
+  g+=`<text class="ax" x="${L-14}" y="${py(1)}" text-anchor="end" dominant-baseline="middle">LIFE</text>`;
+  g+=`<text class="ax" transform="translate(${L-44},${py(.5)}) rotate(-90)" text-anchor="middle">PURPOSE →</text>`;
+  pts.forEach(p=>{
+    const cx=px(p.x), cy=py(p.y), rr=r(p.s);
+    const left = p.x>0.85;
+    g+=`<circle cx="${cx}" cy="${cy}" r="${rr}" fill="var(--${p.k})" fill-opacity=".22" stroke="var(--${p.k})" stroke-width="2"/>`;
+    g+=`<text x="${left?cx-rr-8:cx+rr+8}" y="${cy-4}" text-anchor="${left?"end":"start"}" font-weight="700" font-size="15" style="fill:var(--${p.k})">${NAMES[p.k]}</text>`;
+    g+=`<text class="ax" x="${left?cx-rr-8:cx+rr+8}" y="${cy+13}" text-anchor="${left?"end":"start"}">~${p.s}k ★</text>`;
+  });
+  g+="</svg>";
+  document.getElementById("plot").innerHTML=g;
+})();
+</script>
+
+</body></html>
