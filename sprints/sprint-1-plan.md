@@ -7,3 +7,9 @@
 **Done looks like:** A markdown file with all of my research compiled, an mvpspec.md file that will be the backbone to my initial validation pitch, and having read the harness engineering papers at https://academy.dair.ai/papers/collections/harness-engineering.
 
 **Predicted difficulty:** 4
+
+**Actual difficulty:** 3
+
+**Why it differed:** The reading made harness architecture click faster than expected; once I understood what a domain-specific harness can do that a general or coding-specific one can't, the roadmap cleared up.
+
+**Retro:** Yes, I hit the goal. I learned what I could about harnesses, read the harness engineering papers, and put together a PRD to take to users. I also wrote the MVP spec and shipped a demo UI on Cloudflare with a Supabase backend. That sets up getting it in front of users this coming sprint. Next sprint, I will get it in front of five students and two professors, with recorded calls and notes.
