@@ -41,6 +41,8 @@ Current research:
   users, parts to steal)
 - `discovery/research/agent-harness-comp.md` + `.html`: side-by-side of Codex, OpenCode,
   Hermes, OpenClaw, Pi
+- `specs/agent-harness-prd.md`: the PRD (students as users, rubric checks, P0/P1 scope,
+  sprint milestones). Source for `specs/mvpspec.md`.
 - `discovery/research/harness-notes/`: background reading on harness engineering (DAIR.AI
   collection: 21 papers, 51 tools), visual notes, and a minimal runnable harness
 
