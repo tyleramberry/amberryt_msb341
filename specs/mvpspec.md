@@ -19,9 +19,7 @@ This spec exists to take to users and find out whether they feel this problem.
 
 **College students taking several courses.** Teachers matter only as the source of rubrics.
 
-This assumption is still open. The README says teachers are the users; the research is
-written for students. This spec assumes students. Record the final call in
-`decisions/001-mvp-user.md` before building F1.
+Decided in [`decisions/001-mvp-user.md`](../decisions/001-mvp-user.md).
 
 ## What we're making
 
@@ -111,12 +109,11 @@ see it as a cheating tool.
 - [ ] Shipped: 3 students other than me have uploaded their own syllabi and checked a real draft
 - [ ] Usage is tracked: sessions per student per week and drafts revised after a check,
       reported in `metrics/weekly.md`
-- [ ] `decisions/001-mvp-user.md` (students vs. teachers) and `decisions/002-harness-core.md`
-      (Pi or another core) are written
+- [x] `decisions/001-mvp-user.md` (students vs. teachers) is written
+- [ ] `decisions/002-harness-core.md` (Pi or another core) is written
 
 ## Open questions
 
-- Students or teachers as the MVP user? (blocking — see "Who it's for")
 - Is this a B2B product for schools or a learning/portfolio project? Changes how much the
   teacher-approval question matters.
 - Can objective rubric checks cover enough of a real rubric to be useful, or is it mostly

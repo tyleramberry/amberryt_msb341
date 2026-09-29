@@ -1,6 +1,6 @@
-# Domain-specific LLM harness (domain TBD)
+# Study harness for students
 
-> A domain-specific harness for LLMs, most likely serving teachers and sold B2B to school organizations.
+> A domain-specific harness for LLMs that helps college students study: it knows their courses and checks drafts against the rubric.
 
 **Where to see it:** Not yet — product and domain still being validated
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
@@ -12,11 +12,12 @@ Fill this in during Sprint 1 and keep it current. Every sprint is read against i
 - **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
   heavy on product (validating ideas), then shifting to engineering (shipping features), then
   a mix of product and GTM (getting in front of users).
-- **What I am working on:** Not decided. Building a domain-specific LLM harness; domain TBD.
-  Leaning toward education.
-- **Who it is for:** Teachers. B2B model, selling to school organizations.
-- **Who uses my work:** Teachers are the end users; school administrators and district
-  decision-makers are the buyers.
+- **What I am working on:** An education-focused LLM harness. See `specs/agent-harness-prd.md`
+  and `specs/mvpspec.md`.
+- **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
+  Who pays (students or schools) is still open.
+- **Who uses my work:** Students are the end users. Teachers supply rubrics and need to trust
+  that it teaches rather than cheats.
 
 If your situation changes, revise this and note what changed. That is normal; a silent
 mismatch between this file and your work is not.

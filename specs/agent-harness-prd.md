@@ -104,7 +104,7 @@ The milestones follow the MSB 341 sprint deadlines; each sprint ends with someth
 
 **Open questions**
 
-- [ ] Students or teachers as the MVP user? Research is written for students; the repo README says teachers. Log the answer in `decisions/001`.
+- [x] Students or teachers as the MVP user? **Students** — see `decisions/001-mvp-user.md`.
 - [ ] Is this a B2B product for schools, or a learning and portfolio project? A Sep 28 note repositions it as the latter; the README still says B2B.
 - [ ] Which crons ship by default beyond the daily brief and deadline reminders?
 - [ ] Can rubric checks be deterministic, or do subjective criteria need an LLM judge?

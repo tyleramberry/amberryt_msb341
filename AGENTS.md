@@ -9,11 +9,11 @@ and why.
 
 - **My role:** Solo founder: product, engineering, design, and go-to-market. Early sprints are
   heavy on product (validating the idea), then engineering (shipping), then product + GTM.
-- **What it is:** A domain-specific LLM harness, most likely for education. Domain not final.
-- **Who it is for:** Teachers (end users). Sold B2B to school organizations; administrators and
-  district decision-makers are the buyers. See `discovery/personas.md`.
-- **Who uses my work:** Teachers. Open question: Sprint 1 research frames the harness around
-  *students*. Settle teachers vs. students and record it in `decisions/`.
+- **What it is:** An education-focused LLM harness that knows a student's courses and checks
+  drafts against the rubric. See `specs/agent-harness-prd.md` and `specs/mvpspec.md`.
+- **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
+  Teachers supply rubrics. Who pays (students or schools) is still open.
+- **Who uses my work:** Students.
 - **Why they would use it:** Not validated yet. Comes from user interviews after the MVP spec.
 
 ## Current state
@@ -21,8 +21,8 @@ and why.
 - **This sprint's goal (Sprint 1):** Learn how LLM harnesses work and how to build one, and
   finish with an MVP spec to take to potential users. See `sprints/sprint-1-plan.md`.
 - **Where to see it:** Nothing shipped yet. Research lives in `discovery/research/`.
-- **Biggest open risk:** No confirmed user or domain yet. The product could be built for a
-  problem teachers or schools don't feel strongly enough to pay for.
+- **Biggest open risk:** Students not yet validated. The product could be built for a
+  problem students don't feel strongly enough to use, or that teachers block as cheating.
 
 ## Where things go
 
