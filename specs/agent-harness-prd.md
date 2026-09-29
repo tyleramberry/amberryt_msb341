@@ -1,10 +1,10 @@
-# Agent Harness — Product Requirements Document
+# Homeroom — Product Requirements Document
 
 Tyler Amberry · 2026-09-28 · Live doc: https://claude.ai/code/artifact/1932d9e9-be7e-4bf7-b92e-51a1d7f8d8af
 
 ## Overview
 
-The MVP is a lean, education-focused agent harness that turns a student's syllabi, deadlines and rubrics into context a frontier model can act on, then tutors and checks work against that rubric. It is built for MSB 341 (Product Management, BYU) and ships by the final product deadline, Thu Dec 10, 2026.
+Homeroom is a lean, education-focused agent harness that turns a student's syllabi, deadlines and rubrics into context a frontier model can act on, then tutors and checks work against that rubric. It is built for MSB 341 (Product Management, BYU) and ships by the final product deadline, Thu Dec 10, 2026.
 
 **The problem.** A model can only help with what it can see. Most of a student's world sits in an LMS, in PDFs and in their head, so general chat tools answer in a vacuum, forget yesterday's session, and have no way to tell whether a draft meets the rubric.
 
@@ -30,7 +30,7 @@ The MVP proves one loop end to end: a student's course context goes in, and a ru
 - Computer-use against LMS sites without an API, such as Learning Suite. Canvas is covered through its API in F1.
 - `execute_code`, subagents, MCP, and software-factory self-improvement.
 - A teacher or admin dashboard, billing, or district sales. Google Docs sync (the MVP uses markdown files).
-- Writing graded work for the student. The harness assists and checks; it does not submit.
+- Writing graded work for the student. Homeroom assists and checks; it does not submit.
 
 ## Users and core use cases
 
@@ -44,11 +44,11 @@ The primary user is a college student juggling several courses; teachers are a s
 
 **Core use cases**
 
-1. **Set up a semester.** A student drops in five syllabi; the harness builds `USER.md` plus a file per course with deadlines and rubrics.
+1. **Set up a semester.** A student drops in five syllabi; Homeroom builds `USER.md` plus a file per course with deadlines and rubrics.
 2. **Daily brief.** Each morning the student gets what is due soon and what to work on first.
-3. **Tutor a problem.** The student asks for help; the harness explains, asks checking questions, and adjusts to their level.
-4. **Check a draft.** The student submits a draft; the harness scores it against the rubric and says what is missing and why.
-5. **Pick up where they left off.** The next day, the harness knows the assignment, what was done, and what is next.
+3. **Tutor a problem.** The student asks for help; Homeroom explains, asks checking questions, and adjusts to their level.
+4. **Check a draft.** The student submits a draft; Homeroom scores it against the rubric and says what is missing and why.
+5. **Pick up where they left off.** The next day, Homeroom knows the assignment, what was done, and what is next.
 
 ## Functional requirements
 
@@ -69,7 +69,7 @@ Seven capabilities make the MVP, ordered by what the rest depends on; P0 must sh
 
 Academic integrity and student privacy decide whether a school ever buys this, so they rank above speed and features.
 
-- **Academic integrity:** the harness never submits work and defaults to teaching over answering. The line between tutoring and doing the homework is written down in `SOUL.md` and tested in the F3 eval set.
+- **Academic integrity:** Homeroom never submits work and defaults to teaching over answering. The line between tutoring and doing the homework is written down in `SOUL.md` and tested in the F3 eval set.
 - **Privacy:** student data stays on the student's machine or their own account. No real names, grades or emails in the repo or eval sets.
 - **Transparency:** all instructions, memory, persona and skills are plain markdown a student or teacher can read and edit.
 - **Reliability:** rubric checks are repeatable on objective criteria; subjective criteria are flagged as LLM-judged, not presented as certain.
@@ -79,7 +79,7 @@ Academic integrity and student privacy decide whether a school ever buys this, s
 
 ## Success metrics
 
-Success by Dec 10 means real students use the harness more than once and say the rubric check changed their work. Targets below are proposed starting points, not validated.
+Success by Dec 10 means real students use Homeroom more than once and say the rubric check changed their work. Targets below are proposed starting points, not validated.
 
 | Metric | Target by Dec 10 | How measured |
 | --- | --- | --- |

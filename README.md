@@ -1,6 +1,6 @@
-# Study harness for students
+# Homeroom
 
-> A domain-specific harness for LLMs that helps college students study: it knows their courses and checks drafts against the rubric.
+> Homeroom is an LLM harness that helps college students study: it knows their courses and checks drafts against the rubric.
 
 **Where to see it:** Not yet — product and domain still being validated
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
@@ -12,7 +12,7 @@ Fill this in during Sprint 1 and keep it current. Every sprint is read against i
 - **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
   heavy on product (validating ideas), then shifting to engineering (shipping features), then
   a mix of product and GTM (getting in front of users).
-- **What I am working on:** An education-focused LLM harness. See `specs/agent-harness-prd.md`
+- **What I am working on:** Homeroom, an education-focused LLM harness. See `specs/agent-harness-prd.md`
   and `specs/mvpspec.md`.
 - **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
   Starts as a learning and portfolio project (`decisions/002-learning-portfolio-first.md`).

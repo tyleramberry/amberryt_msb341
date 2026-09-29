@@ -9,7 +9,7 @@ and why.
 
 - **My role:** Solo founder: product, engineering, design, and go-to-market. Early sprints are
   heavy on product (validating the idea), then engineering (shipping), then product + GTM.
-- **What it is:** An education-focused LLM harness that knows a student's courses and checks
+- **What it is:** Homeroom, an education-focused LLM harness that knows a student's courses and checks
   drafts against the rubric. See `specs/agent-harness-prd.md` and `specs/mvpspec.md`.
 - **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
   Teachers supply rubrics. Starts as a learning and portfolio project, not a product sold to
@@ -43,7 +43,7 @@ Current research:
   users, parts to steal)
 - `discovery/research/agent-harness-comp.md` + `.html`: side-by-side of Codex, OpenCode,
   Hermes, OpenClaw, Pi
-- `specs/agent-harness-prd.md`: the PRD (students as users, rubric checks, P0/P1 scope,
+- `specs/agent-harness-prd.md`: the Homeroom PRD (students as users, rubric checks, P0/P1 scope,
   sprint milestones). Source for `specs/mvpspec.md`.
 - `discovery/research/harness-notes/`: background reading on harness engineering (DAIR.AI
   collection: 21 papers, 51 tools), visual notes, and a minimal runnable harness

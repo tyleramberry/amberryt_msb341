@@ -1,11 +1,11 @@
-# Decision 002: Start as a learning and portfolio project
+# Decision 002: Start Homeroom as a learning and portfolio project
 
 **Date:** 2026-09-28
 **Status:** Active
 
 ## Context
 
-The README described a harness sold B2B to school organizations. A Sep 28 note repositioned
+The README described Homeroom as a harness sold B2B to school organizations. A Sep 28 note repositioned
 it as a learning and portfolio project. With students chosen as the user
 (`decisions/001-mvp-user.md`), the framing had to be settled because it changes what the MVP
 needs: accounts, billing and school approval, or just a working tool real students use.

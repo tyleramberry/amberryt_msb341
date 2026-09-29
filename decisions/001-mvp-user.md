@@ -1,4 +1,4 @@
-# Decision 001: Students are the MVP user
+# Decision 001: Students are Homeroom's MVP user
 
 **Date:** 2026-09-28
 **Status:** Active

@@ -1,8 +1,8 @@
-# Spec 001: MVP — Study harness for students
+# Spec 001: Homeroom MVP
 
 **Status:** Draft
 **Date:** 2026-09-28
-**Built from:** [`agent-harness-prd.md`](agent-harness-prd.md) (P0 scope only)
+**Built from:** [`agent-harness-prd.md`](agent-harness-prd.md), the Homeroom PRD (P0 scope only)
 
 ## Problem
 
@@ -27,15 +27,15 @@ openly.
 
 ## What we're making
 
-A study assistant built on an open-source harness core. It knows a student's courses and
+Homeroom is a study assistant built on an open-source harness core. It knows a student's courses and
 checks their drafts against the rubric before they submit. It does one loop end to end:
 
-1. **Set up.** The student connects Canvas. The harness pulls their courses, assignments, due
+1. **Set up.** The student connects Canvas. Homeroom pulls their courses, assignments, due
    dates and rubrics, and writes them into markdown files it reads on every turn. Syllabi that
    are not in Canvas can be uploaded as PDF or text.
-2. **Ask.** The student asks for help on an assignment. The harness already knows the course,
+2. **Ask.** The student asks for help on an assignment. Homeroom already knows the course,
    the due date and the rubric, and tutors instead of handing over an answer.
-3. **Check.** The student pastes a draft. The harness scores it against the rubric, criterion by
+3. **Check.** The student pastes a draft. Homeroom scores it against the rubric, criterion by
    criterion, and says what is missing and why.
 4. **Revise.** The student fixes the draft and checks again.
 
@@ -48,7 +48,7 @@ checks their drafts against the rubric before they submit. It does one loop end 
 | F3 | Tutor persona | Help that explains and asks questions rather than writing the answer | 18 of 20 "just give me the answer" test prompts get teaching, not answers |
 | F4 | Rubric check | A per-criterion score on a draft, each with a one-line reason and a fix | The same draft scored twice gives the same result on objective criteria |
 
-### Student workspace (what the harness writes)
+### Student workspace (what Homeroom writes)
 
 Everything is plain markdown the student can open and edit:
 
@@ -70,15 +70,15 @@ workspace/
   scripts on top, rather than forking deeply.
 - **Canvas connection:** the Canvas REST API with the student's own access token (Canvas →
   Account → Settings → New access token). Pull courses, assignments with due dates and
-  rubrics, and syllabus text. Read-only: the harness never posts or submits to Canvas. The
+  rubrics, and syllabus text. Read-only: Homeroom never posts or submits to Canvas. The
   token lives in a local `.env` on the student's machine, never in the repo or workspace
   files. Re-sync on demand. My second-brain Canvas radar script already does a daily pull
   and is the starting point.
 - **Rubric check:** each rubric criterion is marked either **objective** (length, required
   sections, citations present, due date met) and checked by a script, or **subjective**
   (argument quality) and scored by an LLM judge. Judged scores are labelled as such.
-- **Interface:** students won't use a terminal. For the MVP, a minimal web chat calling the
-  harness in headless mode. In Sprint 2 it can run locally on my machine for demos.
+- **Interface:** students won't use a terminal. For the MVP, a minimal web chat calling
+  Homeroom in headless mode. In Sprint 2 it can run locally on my machine for demos.
 - **Evals:** `product/evals/tutor.json` (20 prompts for F3), `product/evals/syllabi/` (5
   anonymized syllabi + expected dates for F1), a Canvas import check comparing the workspace
   files to Canvas's own due dates (F1), `product/evals/rubric.json` (drafts + expected
