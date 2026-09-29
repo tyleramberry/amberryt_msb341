@@ -127,7 +127,8 @@ see it as a cheating tool.
       reported in `metrics/weekly.md`
 - [x] `decisions/001-mvp-user.md` (students vs. teachers) is written
 - [x] `decisions/002-learning-portfolio-first.md` (project framing) is written
-- [ ] `decisions/003-harness-core.md` (Pi or another core) is written
+- [x] `decisions/003-v0-web-stack.md` (web UI, Supabase, Cloudflare) is written
+- [ ] `decisions/004-harness-core.md` (Pi or another core) is written
 
 ## Open questions
 

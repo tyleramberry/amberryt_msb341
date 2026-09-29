@@ -22,7 +22,7 @@ and why.
 
 - **This sprint's goal (Sprint 1):** Learn how LLM harnesses work and how to build one, and
   finish with an MVP spec to take to potential users. See `sprints/sprint-1-plan.md`.
-- **Where to see it:** Nothing shipped yet. Research lives in `discovery/research/`.
+- **Where to see it:** v0 UI (placeholder agent replies) at https://homeroom.homeroom-app.workers.dev, code in `product/app/`. Research lives in `discovery/research/`.
 - **Biggest open risk:** Students not yet validated. The product could be built for a
   problem students don't feel strongly enough to use, or that teachers block as cheating.
 
@@ -62,7 +62,7 @@ Current research:
 
 ## Tools and conventions
 
-- **Stack or tools:** Not chosen yet. Decide once the MVP spec is done.
+- **Stack or tools:** v0 UI is Vite + React + TS on Cloudflare Workers, Supabase backend (`decisions/003-v0-web-stack.md`). Harness core not chosen yet (decision 004).
 - **How work ships:** Commits to `main` on GitHub (tyleramberry/amberryt_msb341). Visual pages
   may also be published as Claude artifacts and linked from the matching `.md`.
 - **Testing and style:** Fill in once there's code. Any AI feature gets an eval set in
