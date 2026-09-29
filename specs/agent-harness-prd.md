@@ -10,7 +10,7 @@ The MVP is a lean, education-focused agent harness that turns a student's syllab
 
 **The bet.** The hard parts of a harness (agent loop, tools, sessions, compaction) are solved and shared across Codex, OpenCode, Hermes, OpenClaw and Pi. The value is the domain layer on top: school context, a teaching persona, rubric-based checks, and memory that carries across sessions.
 
-**Who pays.** Working assumption: students use it, teachers supply rubrics, and schools or districts buy it. This is not yet validated (see Open questions).
+**Framing.** Nobody yet. It starts as a learning and portfolio project with students as the user (decision 001); teachers supply rubrics. Selling to schools is a later question.
 
 ## Goals and non-goals
 
@@ -27,9 +27,9 @@ The MVP proves one loop end to end: a student's course context goes in, and a ru
 **Non-goals for the MVP**
 
 - Building a harness from scratch. Reuse an open-source core (Pi-style lean loop) and add the domain layer.
-- Computer-use against Canvas or Learning Suite. Deferred until the core loop works.
+- Computer-use against LMS sites without an API, such as Learning Suite. Canvas is covered through its API in F1.
 - `execute_code`, subagents, MCP, and software-factory self-improvement.
-- A teacher or admin dashboard, billing, or district sales.
+- A teacher or admin dashboard, billing, or district sales. Google Docs sync (the MVP uses markdown files).
 - Writing graded work for the student. The harness assists and checks; it does not submit.
 
 ## Users and core use cases
@@ -56,14 +56,14 @@ Seven capabilities make the MVP, ordered by what the rest depends on; P0 must sh
 
 | # | Requirement | Priority | Borrowed from | Acceptance check |
 | --- | --- | --- | --- | --- |
-| F1 | **Student context layer:** ingest syllabi (PDF or text), deadlines and rubrics into `USER.md` and one markdown file per course | P0 | OpenClaw persona files | 5 real syllabi ingested; every due date matches the source |
+| F1 | **Student context layer:** connect to Canvas to pull courses, assignments, due dates and rubrics, with syllabus upload (PDF or text) as a fallback, into `USER.md` and one markdown file per course | P0 | OpenClaw persona files | Canvas import for a real student's term matches Canvas on every due date; 5 uploaded syllabi match too |
 | F2 | **Lean core:** agent loop with read, write, edit and bash tools, system prompt under 1,000 tokens, resumable sessions, context compaction | P0 | Pi | A session resumes after restart with prior turns intact |
 | F3 | **Tutor persona:** `SOUL.md` tuned to explain, ask checking questions and push back rather than hand over answers | P0 | OpenClaw | On 20 test prompts asking for a finished answer, it teaches instead in 18+ |
 | F4 | **Rubric evals:** turn a rubric into checks and run them against a draft, with feedback naming what failed and why | P0 | Closed feedback loop | Same draft scored twice gives the same result on objective criteria |
 | F5 | **Memory:** corrections and session state persist in `MEMORY.md` | P1 | Hermes, OpenClaw | A correction made once is not needed again next session |
 | F6 | **Crons:** daily brief and deadline reminders | P1 | OpenClaw heartbeat, Hermes | Brief arrives daily for 7 days with correct deadlines |
 | F7 | **Self-skillify:** save a repeated workflow (lab report, case write-up) as a reusable skill | P1 | Hermes | After 2 similar tasks, a `SKILL.md` exists and is used on the third |
-| F8 | `execute_code`, computer-use routing to the LMS, software-factory self-improvement | P2 | Hermes, own design | Not in MVP |
+| F8 | `execute_code`, computer-use routing for LMS sites without an API, software-factory self-improvement | P2 | Hermes, own design | Not in MVP |
 
 ## Non-functional requirements
 
@@ -96,8 +96,8 @@ The two weekly scorecard metrics for `metrics/weekly.md` are weekly returning st
 
 The milestones follow the MSB 341 sprint deadlines; each sprint ends with something a user can touch.
 
-1. **Sprint 2 (Oct 12):** decide students vs. teachers, write `specs/mvpspec.md` from this PRD, run 5 user interviews, and ship F2 (lean core) running locally.
-2. **Sprint 3 (Nov 2):** ship F1 (context layer) and F3 (tutor persona) with its eval set; first 3 students onboarded.
+1. **Sprint 2 (Oct 12):** write `specs/mvpspec.md` from this PRD, run 5 user interviews, and ship F2 (lean core) running locally.
+2. **Sprint 3 (Nov 2):** ship F1 (context layer, including Canvas) and F3 (tutor persona) with its eval set; first 3 students onboarded.
 3. **Sprint 4 (Nov 23):** ship F4 (rubric evals) and F5 (memory); 10 interviews done.
 4. **Sprint 5 (Nov 30):** ship F6 (crons) and F7 (self-skillify) if time allows; polish for peer testing (Dec 7).
 5. **Final product (Dec 10):** live, reachable by someone other than Tyler, with metrics filled in.
@@ -105,17 +105,17 @@ The milestones follow the MSB 341 sprint deadlines; each sprint ends with someth
 **Open questions**
 
 - [x] Students or teachers as the MVP user? **Students** — see `decisions/001-mvp-user.md`.
-- [ ] Is this a B2B product for schools, or a learning and portfolio project? A Sep 28 note repositions it as the latter; the README still says B2B.
+- [x] B2B product for schools, or a learning and portfolio project? **Learning and portfolio project first**; teacher approval is still tested in validation.
 - [ ] Which crons ship by default beyond the daily brief and deadline reminders?
 - [ ] Can rubric checks be deterministic, or do subjective criteria need an LLM judge?
-- [ ] Markdown files, or Google Docs, for what students see and edit?
+- [x] Markdown files or Google Docs for what students see and edit? **Markdown for the MVP**; Google Docs is later scope.
 - [ ] Which model handles computer-use when F8 arrives (Opus 5.5 vs. "Astra")?
 
 **Risks**
 
 | Risk | Why it matters | Mitigation |
 | --- | --- | --- |
-| No confirmed user or domain | Could build for a problem no one pays for | Interviews before F4; decide users in Sprint 2 |
+| Students not yet validated | Could build for a problem no one pays for | Interview 5 students before building F4 |
 | Seen as a cheating tool | Schools and teachers block it | Tutor-first persona, no auto-submit, integrity eval set |
 | Sprint 1 slipped | Only the scaffold and research exist today; the portfolio site is not live | Scope P0 only until Sprint 3; ship the portfolio site in Sprint 2 |
 | Rubric evals unreliable | Wrong feedback erodes trust | Separate objective checks from LLM-judged ones and label them |

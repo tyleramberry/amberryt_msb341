@@ -19,15 +19,20 @@ This spec exists to take to users and find out whether they feel this problem.
 
 **College students taking several courses.** Teachers matter only as the source of rubrics.
 
-Decided in [`decisions/001-mvp-user.md`](../decisions/001-mvp-user.md).
+Decided in [`decisions/001-mvp-user.md`](../decisions/001-mvp-user.md). The project starts as a
+learning and portfolio project, not a product sold to schools
+([`decisions/002-learning-portfolio-first.md`](../decisions/002-learning-portfolio-first.md)).
+Teacher approval is still tested in validation, because it decides whether students can use it
+openly.
 
 ## What we're making
 
 A study assistant built on an open-source harness core. It knows a student's courses and
 checks their drafts against the rubric before they submit. It does one loop end to end:
 
-1. **Set up.** The student uploads their syllabi and rubrics. The harness writes them into
-   markdown files it reads on every turn.
+1. **Set up.** The student connects Canvas. The harness pulls their courses, assignments, due
+   dates and rubrics, and writes them into markdown files it reads on every turn. Syllabi that
+   are not in Canvas can be uploaded as PDF or text.
 2. **Ask.** The student asks for help on an assignment. The harness already knows the course,
    the due date and the rubric, and tutors instead of handing over an answer.
 3. **Check.** The student pastes a draft. The harness scores it against the rubric, criterion by
@@ -38,7 +43,7 @@ checks their drafts against the rubric before they submit. It does one loop end 
 
 | # | Feature | What the student sees | Done when |
 |---|---|---|---|
-| F1 | Student context layer | Upload syllabi (PDF or text) → a course list with every due date and rubric | 5 real syllabi ingested; every due date matches the source |
+| F1 | Canvas connection + context layer | Connect Canvas once → a course list with every assignment, due date and rubric; syllabus upload (PDF or text) as a fallback | A real student's term imported from Canvas matches Canvas on every due date and rubric; 5 uploaded syllabi match their source |
 | F2 | Lean core | A chat that remembers the conversation after they close it and come back | A session resumes after restart with prior turns intact |
 | F3 | Tutor persona | Help that explains and asks questions rather than writing the answer | 18 of 20 "just give me the answer" test prompts get teaching, not answers |
 | F4 | Rubric check | A per-criterion score on a draft, each with a one-line reason and a fix | The same draft scored twice gives the same result on objective criteria |
@@ -52,9 +57,9 @@ workspace/
   USER.md              # major, courses this term, how they like to learn
   SOUL.md              # tutor persona: teach, question, never submit work
   courses/
-    msb341.md          # schedule, due dates, grading weights
+    msb341.md          # from Canvas: assignments, due dates, grading weights
   rubrics/
-    msb341-sprint-2.md # rubric turned into checkable criteria
+    msb341-sprint-2.md # Canvas rubric turned into checkable criteria
   sessions/            # saved conversations (F2)
 ```
 
@@ -63,13 +68,20 @@ workspace/
 - **Core:** start from Pi (TypeScript, MIT): 4 tools, a system prompt under 1,000 tokens,
   sessions saved to disk. Add the domain layer (F1, F3, F4) as prompts, skills and small
   scripts on top, rather than forking deeply.
+- **Canvas connection:** the Canvas REST API with the student's own access token (Canvas →
+  Account → Settings → New access token). Pull courses, assignments with due dates and
+  rubrics, and syllabus text. Read-only: the harness never posts or submits to Canvas. The
+  token lives in a local `.env` on the student's machine, never in the repo or workspace
+  files. Re-sync on demand. My second-brain Canvas radar script already does a daily pull
+  and is the starting point.
 - **Rubric check:** each rubric criterion is marked either **objective** (length, required
   sections, citations present, due date met) and checked by a script, or **subjective**
   (argument quality) and scored by an LLM judge. Judged scores are labelled as such.
 - **Interface:** students won't use a terminal. For the MVP, a minimal web chat calling the
   harness in headless mode. In Sprint 2 it can run locally on my machine for demos.
 - **Evals:** `product/evals/tutor.json` (20 prompts for F3), `product/evals/syllabi/` (5
-  anonymized syllabi + expected dates for F1), `product/evals/rubric.json` (drafts + expected
+  anonymized syllabi + expected dates for F1), a Canvas import check comparing the workspace
+  files to Canvas's own due dates (F1), `product/evals/rubric.json` (drafts + expected
   scores for F4).
 
 Ask before adding Pi or any other dependency (per `AGENTS.md`).
@@ -78,7 +90,9 @@ Ask before adding Pi or any other dependency (per `AGENTS.md`).
 
 - Memory across sessions beyond resuming a conversation (F5), crons and daily briefs (F6),
   self-skillify (F7)
-- Connecting to Canvas or Learning Suite, including computer-use; students upload files
+- Writing to Canvas in any way (submitting, posting, commenting)
+- Learning Suite and other LMS sites without an API, including computer-use
+- Google Docs as the workspace format; the MVP uses markdown files, Google Docs is later scope
 - `execute_code`, subagents, MCP
 - A teacher dashboard, accounts for schools, billing
 - Submitting anything on the student's behalf, ever
@@ -87,6 +101,8 @@ Ask before adding Pi or any other dependency (per `AGENTS.md`).
 ## Validation plan
 
 Before building F3 and F4, show this spec (and the F2 demo) to **5 students and 2 teachers**.
+The teacher interviews stay even though this is a portfolio project: if teachers would block
+it, students can't use it openly.
 Anonymize the notes in `discovery/interviews/`.
 
 Questions to ask:
@@ -106,16 +122,16 @@ see it as a cheating tool.
 ## Definition of done
 
 - [ ] F1–F4 pass their "done when" checks above, with eval results committed in `product/evals/`
-- [ ] Shipped: 3 students other than me have uploaded their own syllabi and checked a real draft
+- [ ] Shipped: 3 students other than me have connected their own Canvas and checked a real draft
 - [ ] Usage is tracked: sessions per student per week and drafts revised after a check,
       reported in `metrics/weekly.md`
 - [x] `decisions/001-mvp-user.md` (students vs. teachers) is written
-- [ ] `decisions/002-harness-core.md` (Pi or another core) is written
+- [x] `decisions/002-learning-portfolio-first.md` (project framing) is written
+- [ ] `decisions/003-harness-core.md` (Pi or another core) is written
 
 ## Open questions
 
-- Is this a B2B product for schools or a learning/portfolio project? Changes how much the
-  teacher-approval question matters.
+- Does BYU's Canvas let students create their own access tokens? If not, F1 needs another way
+  in (OAuth through a developer key, or a Canvas export) — check before Sprint 3.
 - Can objective rubric checks cover enough of a real rubric to be useful, or is it mostly
   subjective judgment?
-- Markdown files or Google Docs for what students see and edit?

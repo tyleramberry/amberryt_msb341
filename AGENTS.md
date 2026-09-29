@@ -12,7 +12,9 @@ and why.
 - **What it is:** An education-focused LLM harness that knows a student's courses and checks
   drafts against the rubric. See `specs/agent-harness-prd.md` and `specs/mvpspec.md`.
 - **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
-  Teachers supply rubrics. Who pays (students or schools) is still open.
+  Teachers supply rubrics. Starts as a learning and portfolio project, not a product sold to
+  schools (`decisions/002-learning-portfolio-first.md`). MVP connects to Canvas (read-only);
+  workspace files are markdown, Google Docs is later scope.
 - **Who uses my work:** Students.
 - **Why they would use it:** Not validated yet. Comes from user interviews after the MVP spec.
 

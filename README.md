@@ -15,7 +15,7 @@ Fill this in during Sprint 1 and keep it current. Every sprint is read against i
 - **What I am working on:** An education-focused LLM harness. See `specs/agent-harness-prd.md`
   and `specs/mvpspec.md`.
 - **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
-  Who pays (students or schools) is still open.
+  Starts as a learning and portfolio project (`decisions/002-learning-portfolio-first.md`).
 - **Who uses my work:** Students are the end users. Teachers supply rubrics and need to trust
   that it teaches rather than cheats.
 
