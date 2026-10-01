@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { supabase, type Agent, type Conversation, type Message } from '../lib/supabase'
-import { Avatar, GroupAvatar } from './Avatar'
-import { formatStamp } from '../lib/time'
+import { Glyph, GlyphStack } from './Avatar'
+import { slug } from './Sidebar'
 
-const STAMP_GAP_MS = 15 * 60 * 1000
+const GROUP_GAP_MS = 5 * 60 * 1000
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const clock = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+const dayLabel = (iso: string) => {
+  const d = new Date(iso)
+  const now = new Date()
+  const y = new Date(now); y.setDate(now.getDate() - 1)
+  if (d.toDateString() === now.toDateString()) return 'Today'
+  if (d.toDateString() === y.toDateString()) return 'Yesterday'
+  return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
+}
 
 type Props = {
   conversation: Conversation
@@ -17,14 +26,17 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
   const [draft, setDraft] = useState('')
-  const [typing, setTyping] = useState<Agent | null>(null)
+  const [thinking, setThinking] = useState<Agent | null>(null)
+  const [streaming, setStreaming] = useState<{ id: string; shown: number } | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
-  const endRef = useRef<HTMLDivElement>(null)
+  const feedRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const members = conversation.agentIds.map((id) => agentsById[id]).filter(Boolean).sort((a, b) => a.sort - b.sort)
-  const isGroup = conversation.kind === 'group'
+  const isChannel = conversation.kind === 'group'
+  const dmAgent = isChannel ? undefined : members[0]
+  const name = isChannel ? slug(conversation.title) : dmAgent?.name ?? conversation.title
 
   useEffect(() => {
     let live = true
@@ -38,12 +50,14 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
         setMessages(data ?? [])
         setLoading(false)
       })
+    inputRef.current?.focus()
     return () => { live = false }
   }, [conversation.id])
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages, typing])
+    const el = feedRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [messages, thinking, streaming])
 
   async function send(e?: FormEvent) {
     e?.preventDefault()
@@ -59,7 +73,7 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
       .select('id, conversation_id, sender, agent_id, body, created_at')
       .single()
     if (error || !mine) {
-      setSendError('Not delivered. Tap send to try again.')
+      setSendError('Not delivered. Press send to try again.')
       setDraft(body)
       setSending(false)
       return
@@ -67,7 +81,7 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
     setMessages((m) => [...m, mine])
 
     // Agent replies are written by the database trigger in the same insert.
-    // Reveal them one at a time with a typing indicator so a group feels like a group.
+    // Reveal each one: a thinking line, then the text streams in.
     const { data: replies } = await supabase
       .from('messages')
       .select('id, conversation_id, sender, agent_id, body, created_at')
@@ -76,11 +90,22 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
       .gt('created_at', mine.created_at)
       .order('created_at')
     for (const reply of replies ?? []) {
-      setTyping(agentsById[reply.agent_id ?? ''] ?? null)
-      await wait(650 + Math.min(reply.body.length * 8, 900))
-      setTyping(null)
+      setThinking(agentsById[reply.agent_id ?? ''] ?? null)
+      await wait(700)
+      setThinking(null)
+      setStreaming({ id: reply.id, shown: 0 })
       setMessages((m) => [...m, reply])
-      await wait(150)
+      // Time-based so a throttled background tab jumps ahead instead of stalling.
+      const duration = Math.min(1400, reply.body.length * 12)
+      const start = performance.now()
+      for (;;) {
+        const t = (performance.now() - start) / duration
+        if (t >= 1) break
+        setStreaming({ id: reply.id, shown: Math.ceil(reply.body.length * t) })
+        await wait(16)
+      }
+      setStreaming(null)
+      await wait(120)
     }
     setSending(false)
     onSent()
@@ -96,66 +121,83 @@ export function ChatView({ conversation, agentsById, onBack, onSent }: Props) {
 
   return (
     <section className="chat">
-      <header className="chat-header">
-        <button className="back" onClick={onBack} aria-label="Back">
-          <svg viewBox="0 0 12 20" width="12" height="20"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <header className="top">
+        <button className="ibtn back" onClick={onBack} aria-label="Back">
+          <svg className="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg>
         </button>
-        <div className="chat-header-center">
-          <GroupAvatar agents={members} size={40} />
-          <span className="chat-title">{conversation.title}</span>
-          <span className="chat-sub">{isGroup ? members.map((a) => a.name).join(', ') : members[0]?.role}</span>
-        </div>
-        <span className="back-spacer" />
+        <h1>{isChannel ? <span className="hash">#</span> : <Glyph agent={dmAgent} />}<span>{name}</span></h1>
+        <span className="topic">{isChannel ? members.map((a) => a.name).join(', ') : dmAgent?.role}</span>
+        <div className="right">{isChannel && <GlyphStack agents={members} />}</div>
       </header>
 
-      <div className="messages">
-        {loading && <div className="muted center pad">Loading…</div>}
-        {messages.map((m, i) => {
-          const prev = messages[i - 1]
-          const next = messages[i + 1]
-          const agent = m.agent_id ? agentsById[m.agent_id] : undefined
-          const showStamp = !prev || new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() > STAMP_GAP_MS
-          const sameAsPrev = prev && !showStamp && prev.sender === m.sender && prev.agent_id === m.agent_id
-          const sameAsNext = next && next.sender === m.sender && next.agent_id === m.agent_id &&
-            new Date(next.created_at).getTime() - new Date(m.created_at).getTime() <= STAMP_GAP_MS
-          const mine = m.sender === 'user'
-          return (
-            <div key={m.id}>
-              {showStamp && <div className="stamp">{formatStamp(m.created_at)}</div>}
-              {isGroup && !mine && !sameAsPrev && <div className="sender-name">{agent?.name}</div>}
-              <div className={`msg-row ${mine ? 'mine' : 'theirs'} ${sameAsNext ? 'grouped' : 'tail'}`}>
-                {isGroup && !mine && (sameAsNext ? <span className="avatar-gap" /> : <Avatar agent={agent} size={28} />)}
-                <div className="bubble">{m.body}</div>
+      <div className="feed" ref={feedRef}>
+        <div className="feed-inner">
+          <section className="intro">
+            <div className="eyebrow">{isChannel ? `Channel · ${members.length} agents` : 'Direct message'}</div>
+            <h2>{isChannel ? <>{name} <em>knows the rubric.</em></> : <>{name}<em>.</em></>}</h2>
+            <p>{isChannel
+              ? `${members.map((a) => a.name).join(', ')} answer here.`
+              : dmAgent?.role}</p>
+          </section>
+
+          {loading && <p className="muted tiny">Loading…</p>}
+          {messages.map((m, i) => {
+            const prev = messages[i - 1]
+            const newDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString()
+            const grouped = !!prev && !newDay && prev.sender === m.sender && prev.agent_id === m.agent_id &&
+              new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < GROUP_GAP_MS
+            const agent = m.agent_id ? agentsById[m.agent_id] : undefined
+            const isStreaming = streaming?.id === m.id
+            const text = isStreaming ? m.body.slice(0, streaming.shown) : m.body
+            return (
+              <div key={m.id}>
+                {newDay && <div className="day">{dayLabel(m.created_at)}</div>}
+                <article className={`m ${grouped ? 'grouped' : ''}`}>
+                  <div className="gutter">
+                    {grouped
+                      ? <time className="hover-time">{clock(m.created_at)}</time>
+                      : m.sender === 'user' ? <span className="me-av">You</span> : <Glyph agent={agent} size="lg" />}
+                  </div>
+                  <div className="content">
+                    {!grouped && (
+                      <div className="hd">
+                        <b>{m.sender === 'user' ? 'You' : agent?.name}</b>
+                        {m.sender === 'agent' && <span className="role">agent</span>}
+                        <time>{clock(m.created_at)}</time>
+                      </div>
+                    )}
+                    <div className="body">{text}{isStreaming && <span className="caret" />}</div>
+                  </div>
+                </article>
               </div>
-            </div>
-          )
-        })}
-        {typing && (
-          <>
-            {isGroup && <div className="sender-name">{typing.name}</div>}
-            <div className="msg-row theirs tail">
-              {isGroup && <Avatar agent={typing} size={28} />}
-              <div className="bubble typing" aria-label={`${typing.name} is typing`}><i /><i /><i /></div>
-            </div>
-          </>
-        )}
-        {sendError && <div className="send-error">{sendError}</div>}
-        <div ref={endRef} />
+            )
+          })}
+          {thinking && (
+            <div className="thinking"><Glyph agent={thinking} /><span className="shimmer">{thinking.name} is thinking…</span></div>
+          )}
+          {sendError && <div className="send-error">{sendError}</div>}
+        </div>
       </div>
 
       <form className="composer" onSubmit={send}>
-        <textarea
-          ref={inputRef}
-          rows={1}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onKey}
-          placeholder={isGroup ? 'Message the group' : `Message ${members[0]?.name ?? ''}`}
-          aria-label="Message"
-        />
-        <button type="submit" className="send" disabled={!draft.trim() || sending} aria-label="Send">
-          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
+        <div className="box">
+          <textarea
+            ref={inputRef}
+            rows={2}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onKey}
+            placeholder={isChannel ? `Message #${name}` : `Message ${name}`}
+            aria-label="Message"
+          />
+          <div className="box-ft">
+            <span className="muted tiny">{isChannel ? `${members.length} agents will reply` : `${name} will reply`}</span>
+            <button type="submit" className="send" disabled={!draft.trim() || sending} aria-label="Send">
+              <svg className="i" viewBox="0 0 24 24" style={{ strokeWidth: 2 }}><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+            </button>
+          </div>
+        </div>
+        <div className="hint"><span><b>↵</b> send</span><span><b>⇧↵</b> new line</span><span><b>⌘K</b> jump</span></div>
       </form>
     </section>
   )

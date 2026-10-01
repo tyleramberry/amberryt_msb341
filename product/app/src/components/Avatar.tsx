@@ -1,28 +1,22 @@
 import type { Agent } from '../lib/supabase'
 
-export function Avatar({ agent, size = 40 }: { agent?: Agent; size?: number }) {
-  return (
-    <span
-      className="avatar"
-      style={{ width: size, height: size, fontSize: size * 0.5, background: agent ? `${agent.color}26` : undefined }}
-      title={agent?.name}
-    >
-      {agent?.emoji ?? '?'}
-    </span>
-  )
+// Monochrome geometric marks instead of emoji: one shape per agent.
+const SHAPES: Record<string, string> = { tutor: 'tutor', rubric: 'rubric', planner: 'planner', researcher: 'research' }
+
+export function Glyph({ agent, size = 'sm' }: { agent?: Agent; size?: 'sm' | 'lg' }) {
+  const shape = (agent && SHAPES[agent.id]) ?? 'tutor'
+  return <span className={`g ${shape} ${size === 'lg' ? 'lg' : ''}`} title={agent?.name} aria-hidden />
 }
 
-// iMessage-style group avatar: up to three small circles clustered together.
-export function GroupAvatar({ agents, size = 44 }: { agents: Agent[]; size?: number }) {
-  if (agents.length <= 1) return <Avatar agent={agents[0]} size={size} />
-  const small = Math.round(size * 0.58)
+// Kept for Workspace / NewChat call sites.
+export function Avatar({ agent, size = 40 }: { agent?: Agent; size?: number }) {
+  return <Glyph agent={agent} size={size >= 24 ? 'lg' : 'sm'} />
+}
+
+export function GlyphStack({ agents }: { agents: Agent[] }) {
   return (
-    <span className="group-avatar" style={{ width: size, height: size }}>
-      {agents.slice(0, 3).map((a, i) => (
-        <span key={a.id} className={`group-avatar-item pos-${i}`}>
-          <Avatar agent={a} size={small} />
-        </span>
-      ))}
+    <span className="stack">
+      {agents.slice(0, 3).map((a) => <Glyph key={a.id} agent={a} />)}
     </span>
   )
 }

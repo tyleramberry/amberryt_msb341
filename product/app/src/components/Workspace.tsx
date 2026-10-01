@@ -13,7 +13,7 @@ export function Workspace({ section, agents, onBack }: { section: WorkspaceSecti
           <svg viewBox="0 0 12 20" width="12" height="20"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>
         <div className="ws-title">
-          <h2>{meta.icon} {meta.label}</h2>
+          <h2>{meta.label}</h2>
           <p className="muted small">{meta.blurb}</p>
         </div>
       </header>

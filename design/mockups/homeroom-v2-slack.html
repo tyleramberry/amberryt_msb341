@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homeroom v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --side: #fbfbfa;
+  --ink: #0b0b0b;
+  --ink-2: #3d3d3d;
+  --mute: #8a8a87;
+  --faint: #a6a6a2;
+  --line: #ededeb;
+  --line-2: #e2e2df;
+  --hover: #f3f3f1;
+  --press: #ebebe8;
+  --inv: #0b0b0b;
+  --inv-ink: #ffffff;
+  --shadow: 0 1px 0 rgba(0,0,0,.03), 0 8px 24px -12px rgba(0,0,0,.12);
+  --sans: 'Geist', ui-sans-serif, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, monospace;
+  --serif: 'Instrument Serif', Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --side: #0f0f0f;
+  --ink: #f4f4f2;
+  --ink-2: #c4c4c0;
+  --mute: #7a7a76;
+  --faint: #4a4a47;
+  --line: #1c1c1b;
+  --line-2: #262625;
+  --hover: #161615;
+  --press: #1e1e1d;
+  --inv: #f4f4f2;
+  --inv-ink: #0a0a0a;
+  --shadow: 0 1px 0 rgba(255,255,255,.02), 0 12px 32px -12px rgba(0,0,0,.8);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 13.5px/1.5 var(--sans); letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  transition: background .25s, color .25s;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg { display: block; }
+.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+.app { display: grid; grid-template-columns: 244px minmax(0,1fr) 0px; height: 100vh; transition: grid-template-columns .35s cubic-bezier(.2,.8,.2,1); }
+.app.thread-open { grid-template-columns: 244px minmax(0,1fr) 340px; }
+
+/* ───────── sidebar ───────── */
+.side { background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 16px 16px 12px; }
+.mark { width: 20px; height: 20px; border-radius: 6px; background: var(--inv); position: relative; }
+.mark::after { content: ''; position: absolute; inset: 6px 6px 5px; border-radius: 2px 2px 0 0; border: 1.5px solid var(--inv-ink); border-bottom: 0; }
+.brand b { font-weight: 600; font-size: 14px; letter-spacing: -0.02em; }
+.brand .term { margin-left: auto; font: 11px var(--mono); color: var(--mute); }
+
+.search { margin: 0 10px 10px; display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line-2); color: var(--mute); font-size: 12.5px; transition: border-color .15s; }
+.search:hover { border-color: var(--faint); }
+.search kbd { margin-left: auto; font: 10.5px var(--mono); color: var(--faint); }
+
+.nav { padding: 2px 8px 10px; display: grid; gap: 1px; }
+.nav button, .row { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; border-radius: 7px; color: var(--ink-2); width: 100%; text-align: left; transition: background .12s, color .12s; }
+.nav button:hover, .row:hover { background: var(--hover); color: var(--ink); }
+.nav button.on, .row.on { background: var(--press); color: var(--ink); font-weight: 500; }
+.nav .n { margin-left: auto; font: 11px var(--mono); color: var(--mute); }
+.nav .n.live { color: var(--ink); }
+
+.sect { padding: 14px 16px 4px; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--mute); font-weight: 500; }
+.sect button { color: var(--faint); width: 18px; height: 18px; display: grid; place-items: center; border-radius: 4px; }
+.sect button:hover { color: var(--ink); background: var(--hover); }
+.list { padding: 0 8px; display: grid; gap: 1px; }
+.row .hash { font: 13px var(--mono); color: var(--faint); width: 15px; text-align: center; }
+.row.on .hash { color: var(--ink); }
+.row.unread { color: var(--ink); font-weight: 500; }
+.row .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+.scroller { flex: 1; overflow-y: auto; padding-bottom: 12px; }
+
+/* agent glyphs — monochrome geometry instead of emoji */
+.g { width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0; position: relative; background: var(--inv); }
+.g::after { content: ''; position: absolute; inset: 5px; background: var(--inv-ink); }
+.g.tutor::after { border-radius: 50%; }
+.g.rubric::after { inset: 5px 4px; clip-path: polygon(0 55%, 35% 100%, 100% 10%, 85% 0, 35% 70%, 12% 42%); }
+.g.planner::after { inset: 5px; border-radius: 1px; background: none; border: 1.5px solid var(--inv-ink); border-top-width: 3px; }
+.g.research::after { inset: 4.5px; border-radius: 50%; background: none; border: 1.5px solid var(--inv-ink); }
+.g.lg { width: 28px; height: 28px; border-radius: 8px; }
+.g.lg::after { inset: 8.5px; }
+.g.lg.rubric::after { inset: 8px 7px; }
+.g.lg.planner::after { inset: 8px; border-top-width: 4px; }
+.g.lg.research::after { inset: 8px; border-width: 2px; }
+.status { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; box-shadow: 0 0 0 2px var(--side); background: var(--faint); }
+.status.on { background: var(--ink); }
+.status.busy { background: var(--ink); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+
+.me { border-top: 1px solid var(--line); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+.me .av { width: 26px; height: 26px; border-radius: 50%; background: var(--press); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+.me .who { line-height: 1.25; }
+.me .who b { font-weight: 500; font-size: 12.5px; display: block; }
+.me .who span { font-size: 11px; color: var(--mute); }
+.me .theme { margin-left: auto; color: var(--mute); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; }
+.me .theme:hover { color: var(--ink); background: var(--hover); }
+
+/* ───────── main ───────── */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.top { height: 52px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid var(--line); }
+.top h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.015em; display: flex; align-items: center; gap: 6px; }
+.top h1 .hash { font-family: var(--mono); font-weight: 400; color: var(--faint); }
+.top .topic { color: var(--mute); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.stack { display: flex; margin-right: 6px; }
+.stack .g { box-shadow: 0 0 0 2px var(--bg); }
+.stack .g + .g { margin-left: -5px; }
+.ibtn { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 7px; color: var(--mute); transition: .12s; }
+.ibtn:hover { background: var(--hover); color: var(--ink); }
+
+.feed { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+.feed-inner { max-width: 760px; margin: 0 auto; padding: 28px 28px 12px; }
+.intro { padding: 12px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.intro .eyebrow { font: 11px var(--mono); color: var(--mute); text-transform: uppercase; letter-spacing: .08em; }
+.intro h2 { font: 400 40px/1.05 var(--serif); letter-spacing: -0.02em; margin: 10px 0 8px; }
+.intro h2 em { color: var(--mute); }
+.intro p { margin: 0; color: var(--mute); max-width: 52ch; }
+
+.day { display: flex; align-items: center; gap: 12px; margin: 18px 0 10px; font: 11px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .06em; }
+.day::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+.m { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 12px; padding: 8px 10px; margin: 0 -10px; border-radius: 10px; transition: background .12s; position: relative; }
+.m:hover { background: var(--hover); }
+.m:hover .acts { opacity: 1; transform: translateY(0); }
+.m .av { width: 28px; height: 28px; border-radius: 50%; background: var(--press); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+.m .hd { display: flex; align-items: baseline; gap: 8px; }
+.m .hd b { font-weight: 600; font-size: 13.5px; }
+.m .hd .role { font: 10.5px var(--mono); color: var(--mute); }
+.m .hd time { font: 11px var(--mono); color: var(--faint); }
+.m .body { color: var(--ink-2); margin-top: 1px; text-wrap: pretty; }
+.m .body p { margin: 0 0 6px; }
+.m .body p:last-child { margin-bottom: 0; }
+.m .body strong { color: var(--ink); font-weight: 600; }
+.m .body code { font: 12px var(--mono); background: var(--hover); padding: 1px 5px; border-radius: 4px; }
+.mention { color: var(--ink); font-weight: 500; background: var(--press); padding: 0 4px; border-radius: 4px; }
+.acts { position: absolute; top: -12px; right: 10px; display: flex; background: var(--bg); border: 1px solid var(--line-2); border-radius: 8px; box-shadow: var(--shadow); opacity: 0; transform: translateY(3px); transition: .15s; }
+.acts button { width: 28px; height: 26px; display: grid; place-items: center; color: var(--mute); }
+.acts button:hover { color: var(--ink); }
+
+/* agent trace — the AI-native bit */
+.trace { margin: 6px 0 8px; display: inline-flex; flex-direction: column; gap: 0; font: 11.5px var(--mono); color: var(--mute); }
+.trace summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 3px 8px 3px 6px; border-radius: 6px; user-select: none; }
+.trace summary::-webkit-details-marker { display: none; }
+.trace summary:hover { background: var(--press); color: var(--ink); }
+.trace summary .chev { transition: transform .2s; }
+.trace[open] summary .chev { transform: rotate(90deg); }
+.trace ol { list-style: none; margin: 4px 0 0 13px; padding: 2px 0 2px 12px; border-left: 1px solid var(--line-2); display: grid; gap: 3px; }
+.trace li { display: flex; gap: 8px; }
+.trace li span:first-child { color: var(--ink-2); }
+
+/* rubric result: a table, not a card */
+.score { margin: 8px 0 4px; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; background: var(--bg); max-width: 520px; }
+.score-hd { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.score-hd span { font-size: 12.5px; color: var(--mute); }
+.score-hd b { font: 400 26px/1 var(--serif); letter-spacing: -0.02em; color: var(--ink); }
+.score-hd b small { font-size: 15px; color: var(--mute); }
+.crit { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 14px; font-size: 12.5px; }
+.crit + .crit { border-top: 1px solid var(--line); }
+.crit .why { display: block; color: var(--mute); font-size: 11.5px; margin-top: 1px; }
+.crit .v { font: 11px var(--mono); align-self: start; padding: 2px 7px; border-radius: 5px; background: var(--hover); color: var(--ink-2); }
+.crit .v.no { background: var(--inv); color: var(--inv-ink); }
+.bar { height: 2px; background: var(--line); }
+.bar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+
+.replies { margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; padding: 3px 8px 3px 4px; border-radius: 7px; font-size: 12px; color: var(--ink-2); }
+.replies:hover { background: var(--bg); box-shadow: 0 0 0 1px var(--line-2); }
+.replies .stack .g { width: 16px; height: 16px; border-radius: 4px; }
+.replies .stack .g::after { inset: 4.5px; }
+.replies b { font-weight: 500; }
+.replies span { color: var(--mute); }
+
+/* typing / streaming */
+.typing { display: flex; align-items: center; gap: 10px; padding: 6px 0 2px; font-size: 12px; color: var(--mute); height: 28px; }
+.shimmer { background: linear-gradient(90deg, var(--mute) 0%, var(--ink) 40%, var(--mute) 80%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sh 1.6s linear infinite; }
+@keyframes sh { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.caret { display: inline-block; width: 7px; height: 14px; background: var(--ink); vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* composer */
+.composer { padding: 6px 28px 20px; }
+.box { max-width: 760px; margin: 0 auto; border: 1px solid var(--line-2); border-radius: 14px; background: var(--bg); box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s; }
+.box:focus-within { border-color: var(--faint); }
+.box textarea { width: 100%; resize: none; border: 0; outline: 0; background: none; font: inherit; color: var(--ink); padding: 14px 16px 6px; height: 50px; }
+.box textarea::placeholder { color: var(--faint); }
+.box-ft { display: flex; align-items: center; gap: 4px; padding: 6px 8px 8px 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 7px; font-size: 12px; color: var(--ink-2); border: 1px solid var(--line-2); transition: .12s; }
+.pill:hover { border-color: var(--faint); color: var(--ink); }
+.pill .k { font: 10.5px var(--mono); color: var(--faint); }
+.send { margin-left: auto; width: 30px; height: 30px; border-radius: 9px; background: var(--inv); color: var(--inv-ink); display: grid; place-items: center; transition: transform .12s, opacity .12s; }
+.send:hover { transform: translateY(-1px); }
+.send:active { transform: translateY(0) scale(.96); }
+.hint { max-width: 760px; margin: 8px auto 0; font: 11px var(--mono); color: var(--faint); display: flex; gap: 14px; }
+.hint b { color: var(--mute); font-weight: 500; }
+
+/* ───────── thread ───────── */
+.thread { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--bg); }
+.thread .top { padding: 0 14px 0 18px; }
+.thread .top h1 { font-size: 13.5px; }
+.thread .top .topic { font-family: var(--mono); font-size: 11.5px; }
+.thread-body { flex: 1; overflow-y: auto; padding: 18px; }
+.thread .m { grid-template-columns: 24px minmax(0,1fr); gap: 10px; }
+.thread .m .g.lg, .thread .m .av { width: 24px; height: 24px; }
+.thread .m .g.lg::after { inset: 7px; }
+.sep { display: flex; align-items: center; gap: 10px; margin: 10px 0; font: 11px var(--mono); color: var(--faint); }
+.sep::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.diff { margin-top: 6px; border: 1px solid var(--line-2); border-radius: 8px; font: 11.5px/1.6 var(--mono); overflow: hidden; }
+.diff div { padding: 1px 10px; }
+.diff .del { color: var(--mute); text-decoration: line-through; text-decoration-color: var(--faint); }
+.diff .add { background: var(--hover); color: var(--ink); }
+.diff .add::before { content: '+ '; color: var(--mute); }
+.diff .del::before { content: '− '; }
+.thread .composer { padding: 10px 14px 14px; }
+.thread .box textarea { height: 40px; padding: 10px 12px 2px; }
+
+/* ⌘K */
+.scrim { position: fixed; inset: 0; background: color-mix(in oklab, var(--bg) 55%, transparent); backdrop-filter: blur(2px); display: none; place-items: start center; padding-top: 14vh; z-index: 10; }
+.scrim.on { display: grid; animation: fade .15s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.pal { width: min(560px, 92vw); background: var(--bg); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.35); overflow: hidden; animation: rise .18s cubic-bezier(.2,.8,.2,1); }
+@keyframes rise { from { transform: translateY(6px) scale(.985); opacity: 0; } }
+.pal input { width: 100%; border: 0; outline: 0; background: none; font: 15px var(--sans); color: var(--ink); padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.pal input::placeholder { color: var(--faint); }
+.pal .grp { padding: 8px 8px 4px; font: 10.5px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .07em; padding-left: 12px; }
+.pal .opt { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; margin: 0 6px; border-radius: 8px; color: var(--ink-2); }
+.pal .opt.sel { background: var(--hover); color: var(--ink); }
+.pal .opt kbd { margin-left: auto; font: 10.5px var(--mono); color: var(--faint); }
+.pal .opt .d { color: var(--mute); font-size: 12px; }
+.pal .foot { border-top: 1px solid var(--line); padding: 8px 14px; font: 10.5px var(--mono); color: var(--faint); display: flex; gap: 14px; margin-top: 6px; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+:hover::-webkit-scrollbar-thumb { background-color: var(--line-2); }
+.crit { padding: 10px 14px; }
+.crit .why { margin-top: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 860px) { .app, .app.thread-open { grid-template-columns: 1fr; } .side, .thread { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="app thread-open" id="app">
+
+  <!-- ───────── sidebar ───────── -->
+  <aside class="side">
+    <div class="brand"><span class="mark"></span><b>Homeroom</b><span class="term">FALL 26</span></div>
+    <button class="search" id="openK">
+      <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Ask or search
+      <kbd>⌘K</kbd>
+    </button>
+
+    <nav class="nav">
+      <button><svg class="i" viewBox="0 0 24 24"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5.5 5h13L21 13v6H3v-6z"/></svg>Inbox<span class="n live">3</span></button>
+      <button><svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3"/></svg>Agents<span class="n">4</span></button>
+      <button><svg class="i" viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>Skills<span class="n">12</span></button>
+      <button><svg class="i" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Context</button>
+      <button><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Routines<span class="n">2</span></button>
+    </nav>
+
+    <div class="scroller">
+      <div class="sect">Channels<button aria-label="New channel"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      <div class="list" id="channels">
+        <button class="row on" data-ch="msb-341" data-topic="Product Management · Sprint 2"><span class="hash">#</span>msb-341</button>
+        <button class="row unread" data-ch="strat-401" data-topic="Competitive strategy · case due Mon"><span class="hash">#</span>strat-401<span class="dot"></span></button>
+        <button class="row" data-ch="strat-402" data-topic="Corporate strategy"><span class="hash">#</span>strat-402</button>
+        <button class="row" data-ch="msb-300" data-topic="Business writing"><span class="hash">#</span>msb-300</button>
+        <button class="row" data-ch="study-hall" data-topic="Anything that isn't one class"><span class="hash">#</span>study-hall</button>
+      </div>
+
+      <div class="sect">Direct messages<button aria-label="New message"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      <div class="list">
+        <button class="row"><span class="g tutor"></span>Tutor<span class="status on"></span></button>
+        <button class="row"><span class="g rubric"></span>Rubric<span class="status busy"></span></button>
+        <button class="row"><span class="g planner"></span>Planner<span class="status on"></span></button>
+        <button class="row"><span class="g research"></span>Research<span class="status"></span></button>
+      </div>
+    </div>
+
+    <div class="me">
+      <div class="av">TA</div>
+      <div class="who"><b>Tyler</b><span>Tutor mode · on</span></div>
+      <button class="theme" id="theme" aria-label="Toggle theme">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ───────── main ───────── -->
+  <main class="main">
+    <header class="top">
+      <h1><span class="hash">#</span><span id="chName">msb-341</span></h1>
+      <span class="topic" id="chTopic">Product Management · Sprint 2</span>
+      <div class="right">
+        <div class="stack"><span class="g tutor"></span><span class="g rubric"></span><span class="g planner"></span></div>
+        <button class="ibtn" aria-label="Files"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></button>
+        <button class="ibtn" aria-label="More"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+      </div>
+    </header>
+
+    <div class="feed" id="feed">
+      <div class="feed-inner" id="feedInner">
+        <section class="intro">
+          <div class="eyebrow">Channel · 3 agents</div>
+          <h2>msb-341 <em>knows the rubric.</em></h2>
+          <p>Tutor, Rubric and Planner read this course's Canvas assignments and due dates before every reply.</p>
+        </section>
+
+        <div class="day">Today</div>
+
+        <article class="m">
+          <span class="g lg planner"></span>
+          <div>
+            <div class="hd"><b>Planner</b><span class="role">agent</span><time>9:02</time></div>
+            <div class="body">
+              <p>Two things block Sprint 2 before Friday: <strong>3 more student interviews</strong> (you need 4 of 5 to validate) and scoring <strong>2 of 3 problems</strong> on the worksheet.</p>
+            </div>
+          </div>
+          <div class="acts"><button aria-label="Reply"><svg class="i" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v4"/></svg></button><button aria-label="Pin"><svg class="i" viewBox="0 0 24 24"><path d="M12 17v5M8 3h8l-1 6 3 3v2H6v-2l3-3z"/></svg></button></div>
+        </article>
+
+        <article class="m">
+          <div class="av">TA</div>
+          <div>
+            <div class="hd"><b>Tyler</b><time>9:31</time></div>
+            <div class="body"><p><span class="mention">@Rubric</span> check my worksheet intro against the Sprint 2 rubric</p></div>
+          </div>
+        </article>
+
+        <article class="m">
+          <span class="g lg rubric"></span>
+          <div>
+            <div class="hd"><b>Rubric</b><span class="role">agent</span><time>9:32</time></div>
+            <details class="trace">
+              <summary><svg class="i chev" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="m9 6 6 6-6 6"/></svg>Worked for 6s · 3 steps</summary>
+              <ol>
+                <li><span>read</span>courses/msb341.md</li>
+                <li><span>read</span>rubrics/sprint-2.md</li>
+                <li><span>skill</span>rubric-check · 4 criteria</li>
+              </ol>
+            </details>
+            <div class="body"><p>You name the ICP clearly, but the problem is asserted, not evidenced.</p></div>
+            <div class="score">
+              <div class="score-hd"><span>Worksheet intro · Sprint 2</span><b>6<small>/10</small></b></div>
+              <div class="bar"><i id="bar"></i></div>
+              <div class="crit"><div>Problem backed by interview evidence<span class="why">No quotes or counts yet</span></div><span class="v no">missing</span></div>
+              <div class="crit"><div>ICP stated<span class="why">"Students taking 4+ courses"</span></div><span class="v">met</span></div>
+              <div class="crit"><div>150–300 words<span class="why">212 words</span></div><span class="v">met</span></div>
+              <div class="crit"><div>Two sources cited<span class="why">0 found</span></div><span class="v no">0 / 2</span></div>
+            </div>
+            <button class="replies" id="openThread">
+              <span class="stack"><span class="g tutor"></span><span class="g rubric"></span></span>
+              <b>3 replies</b><span>Last 9:36</span>
+            </button>
+          </div>
+          <div class="acts"><button aria-label="Reply"><svg class="i" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v4"/></svg></button><button aria-label="Re-run"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div>
+        </article>
+
+        <div id="live"></div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="box">
+        <textarea id="input" placeholder="Message #msb-341, or / for skills"></textarea>
+        <div class="box-ft">
+          <button class="pill"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Attach</button>
+          <button class="pill"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/></svg>rubric-check<span class="k">/</span></button>
+          <button class="pill">@ agent</button>
+          <button class="send" id="send" aria-label="Send"><svg class="i" viewBox="0 0 24 24" style="stroke-width:2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="hint"><span><b>↵</b> send</span><span><b>/</b> skills</span><span><b>@</b> agents</span><span><b>⌘K</b> anything</span></div>
+    </div>
+  </main>
+
+  <!-- ───────── thread ───────── -->
+  <aside class="thread">
+    <header class="top">
+      <h1>Thread</h1><span class="topic">#msb-341</span>
+      <div class="right"><button class="ibtn" id="closeThread" aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    </header>
+    <div class="thread-body">
+      <article class="m">
+        <span class="g lg rubric"></span>
+        <div><div class="hd"><b>Rubric</b><time>9:32</time></div>
+        <div class="body"><p>Scored 6/10. Two criteria unmet: evidence and sources.</p></div></div>
+      </article>
+      <div class="sep">3 replies</div>
+      <article class="m">
+        <div class="av">TA</div>
+        <div><div class="hd"><b>Tyler</b><time>9:34</time></div>
+        <div class="body"><p>Can you just rewrite the first line?</p></div></div>
+      </article>
+      <article class="m">
+        <span class="g lg tutor"></span>
+        <div><div class="hd"><b>Tutor</b><time>9:35</time></div>
+        <div class="body"><p>I won't write it, but here's the shape. What did interview 3 actually say when you asked how they track rubrics?</p></div></div>
+      </article>
+      <article class="m">
+        <div class="av">TA</div>
+        <div><div class="hd"><b>Tyler</b><time>9:36</time></div>
+        <div class="body"><p>"I open the rubric once, then never again."</p>
+          <div class="diff">
+            <div class="del">Students struggle with rubrics.</div>
+            <div class="add">"I open the rubric once, then never again."</div>
+          </div>
+        </div></div>
+      </article>
+    </div>
+    <div class="composer">
+      <div class="box"><textarea placeholder="Reply…"></textarea></div>
+    </div>
+  </aside>
+</div>
+
+<!-- ⌘K -->
+<div class="scrim" id="scrim">
+  <div class="pal" role="dialog" aria-label="Command menu">
+    <input id="kq" placeholder="Ask an agent, run a skill, jump anywhere…" autocomplete="off">
+    <div class="grp">Skills</div>
+    <div class="opt sel"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/></svg>rubric-check <span class="d">Score a draft against the rubric</span><kbd>↵</kbd></div>
+    <div class="opt"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/></svg>explain-it-back <span class="d">Teach it to me in my words</span></div>
+    <div class="grp">Agents</div>
+    <div class="opt"><span class="g tutor"></span>Tutor <span class="d">Explains, never answers</span></div>
+    <div class="opt"><span class="g planner"></span>Planner <span class="d">What's due next</span></div>
+    <div class="grp">Jump to</div>
+    <div class="opt"><span class="hash" style="font-family:var(--mono);color:var(--faint);width:15px;text-align:center">#</span>strat-401</div>
+    <div class="foot"><span>↑↓ move</span><span>↵ open</span><span>esc close</span></div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const app = $('#app');
+
+// rubric bar animates in
+requestAnimationFrame(() => setTimeout(() => $('#bar').style.width = '60%', 250));
+
+// theme
+const saved = localStorage.getItem('hr-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+$('#theme').onclick = () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('hr-theme', t);
+};
+
+// thread
+$('#openThread').onclick = () => app.classList.add('thread-open');
+$('#closeThread').onclick = () => app.classList.remove('thread-open');
+
+// channels
+document.querySelectorAll('#channels .row').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('#channels .row').forEach((x) => x.classList.remove('on'));
+  b.classList.add('on'); b.classList.remove('unread'); b.querySelector('.dot')?.remove();
+  $('#chName').textContent = b.dataset.ch;
+  $('#chTopic').textContent = b.dataset.topic;
+  $('#input').placeholder = `Message #${b.dataset.ch}, or / for skills`;
+});
+
+// ⌘K
+const scrim = $('#scrim');
+const openK = () => { scrim.classList.add('on'); setTimeout(() => $('#kq').focus(), 10); };
+$('#openK').onclick = openK;
+scrim.onclick = (e) => { if (e.target === scrim) scrim.classList.remove('on'); };
+addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openK(); }
+  if (e.key === 'Escape') scrim.classList.remove('on');
+});
+
+// send → agent streams a reply
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const now = () => new Date().toTimeString().slice(0, 5);
+function send() {
+  const v = $('#input').value.trim();
+  if (!v) return;
+  $('#input').value = '';
+  const live = $('#live');
+  live.insertAdjacentHTML('beforeend', `
+    <article class="m"><div class="av">TA</div><div>
+      <div class="hd"><b>Tyler</b><time>${now()}</time></div>
+      <div class="body"><p>${esc(v)}</p></div></div></article>`);
+  const t = document.createElement('div');
+  t.className = 'typing';
+  t.innerHTML = `<span class="g tutor"></span><span class="shimmer">Tutor is reading your course context…</span>`;
+  live.appendChild(t);
+  $('#feed').scrollTop = 1e9;
+
+  const reply = "Before I weigh in, what do you think the rubric is really asking for here? Say it in one sentence and I'll push on it.";
+  setTimeout(() => {
+    t.remove();
+    const el = document.createElement('article');
+    el.className = 'm';
+    el.innerHTML = `<span class="g lg tutor"></span><div>
+      <div class="hd"><b>Tutor</b><span class="role">agent</span><time>${now()}</time></div>
+      <details class="trace"><summary><svg class="i chev" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="m9 6 6 6-6 6"/></svg>Worked for 2s · 1 step</summary>
+        <ol><li><span>read</span>courses/msb341.md</li></ol></details>
+      <div class="body"><p><span class="out"></span><span class="caret"></span></p></div></div>`;
+    live.appendChild(el);
+    const out = el.querySelector('.out');
+    let i = 0;
+    const tick = setInterval(() => {
+      i += 2; out.textContent = reply.slice(0, i);
+      $('#feed').scrollTop = 1e9;
+      if (i >= reply.length) { clearInterval(tick); el.querySelector('.caret').remove(); }
+    }, 18);
+  }, 1300);
+}
+$('#send').onclick = send;
+$('#input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+</script>
+</body>
+</html>

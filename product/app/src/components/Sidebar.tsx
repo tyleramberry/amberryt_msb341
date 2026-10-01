@@ -1,87 +1,94 @@
+import type { ReactNode } from 'react'
 import type { Agent, Conversation } from '../lib/supabase'
-import { GroupAvatar } from './Avatar'
-import { formatListTime } from '../lib/time'
+import { Glyph } from './Avatar'
 
-export type Tab = 'group' | 'direct' | 'workspace'
 export type WorkspaceSection = 'skills' | 'crons' | 'context' | 'agents' | 'settings'
+export type View = { type: 'inbox' } | { type: 'conv'; id: string } | { type: 'section'; section: WorkspaceSection }
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'group', label: 'Groups' },
-  { id: 'direct', label: 'Chats' },
-  { id: 'workspace', label: 'Workspace' },
+const I = ({ d }: { d: ReactNode }) => <svg className="i" viewBox="0 0 24 24">{d}</svg>
+
+export const SECTIONS: { id: WorkspaceSection; label: string; blurb: string; icon: ReactNode }[] = [
+  { id: 'agents', label: 'Agents', blurb: 'Who is in your study group', icon: <I d={<><rect x="4" y="4" width="16" height="16" rx="5" /><circle cx="12" cy="12" r="3" /></>} /> },
+  { id: 'skills', label: 'Skills', blurb: 'Reusable workflows your agents can run', icon: <I d={<><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z" /><path d="m4 7.5 8 4.5 8-4.5M12 12v9" /></>} /> },
+  { id: 'context', label: 'Context', blurb: 'USER.md, SOUL.md and course files', icon: <I d={<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></>} /> },
+  { id: 'crons', label: 'Routines', blurb: 'Briefs and reminders on a schedule', icon: <I d={<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>} /> },
+  { id: 'settings', label: 'Settings', blurb: 'Model, tutor mode, Canvas', icon: <I d={<><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></>} /> },
 ]
 
-export const SECTIONS: { id: WorkspaceSection; label: string; icon: string; blurb: string }[] = [
-  { id: 'skills', label: 'Skills', icon: '🧩', blurb: 'Reusable workflows your agents can run' },
-  { id: 'crons', label: 'Cron jobs', icon: '⏰', blurb: 'Briefs and reminders on a schedule' },
-  { id: 'context', label: 'Context', icon: '📄', blurb: 'USER.md, SOUL.md and course files' },
-  { id: 'agents', label: 'Agents', icon: '🤖', blurb: 'Who is in your study group' },
-  { id: 'settings', label: 'Settings', icon: '⚙️', blurb: 'Model, tutor mode, Canvas' },
-]
+export const InboxIcon = <I d={<><path d="M3 13h5l1.5 3h5L16 13h5" /><path d="M5.5 5h13L21 13v6H3v-6z" /></>} />
+const Plus = <I d={<path d="M12 5v14M5 12h14" />} />
+
+export const slug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 type Props = {
-  tab: Tab
-  onTab: (t: Tab) => void
-  conversations: Conversation[]
+  view: View
+  onView: (v: View) => void
+  channels: Conversation[]
+  dms: Conversation[]
   agentsById: Record<string, Agent>
-  selectedId: string | null
-  onSelect: (id: string) => void
-  section: WorkspaceSection
-  onSection: (s: WorkspaceSection) => void
-  onCompose: () => void
+  unread: Set<string>
+  onCompose: (kind: 'group' | 'direct') => void
+  onSearch: () => void
+  theme: 'light' | 'dark'
+  onTheme: () => void
 }
 
 export function Sidebar(p: Props) {
+  const isConv = (id: string) => p.view.type === 'conv' && p.view.id === id
+  const isSection = (s: WorkspaceSection) => p.view.type === 'section' && p.view.section === s
   return (
-    <aside className="sidebar">
-      <header className="sidebar-header">
-        <div className="sidebar-title-row">
-          <h1>Homeroom</h1>
-          {p.tab !== 'workspace' && (
-            <button className="icon-btn" onClick={p.onCompose} aria-label={p.tab === 'group' ? 'New group chat' : 'New chat'}>
-              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-            </button>
-          )}
-        </div>
-        <div className="segmented" role="tablist">
-          {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={p.tab === t.id} className={p.tab === t.id ? 'on' : ''} onClick={() => p.onTab(t.id)}>
-              {t.label}
+    <aside className="side">
+      <div className="brand"><span className="mark" /><b>Homeroom</b><span className="term">FALL 26</span></div>
+      <button className="search" onClick={p.onSearch}>
+        <I d={<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>} />
+        Jump to anything
+        <kbd>⌘K</kbd>
+      </button>
+
+      <nav className="nav">
+        <button className={p.view.type === 'inbox' ? 'on' : ''} onClick={() => p.onView({ type: 'inbox' })}>
+          {InboxIcon}Inbox{p.unread.size > 0 && <span className="n live">{p.unread.size}</span>}
+        </button>
+        {SECTIONS.map((s) => (
+          <button key={s.id} className={isSection(s.id) ? 'on' : ''} onClick={() => p.onView({ type: 'section', section: s.id })}>
+            {s.icon}{s.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="scroller">
+        <div className="sect">Channels<button aria-label="New channel" onClick={() => p.onCompose('group')}>{Plus}</button></div>
+        <div className="list">
+          {p.channels.map((c) => (
+            <button key={c.id} className={`row ${isConv(c.id) ? 'on' : ''} ${p.unread.has(c.id) ? 'unread' : ''}`} onClick={() => p.onView({ type: 'conv', id: c.id })}>
+              <span className="hash">#</span><span className="label">{slug(c.title)}</span>
+              {p.unread.has(c.id) && !isConv(c.id) && <span className="dot" />}
             </button>
           ))}
+          {p.channels.length === 0 && <p className="muted tiny pad-x">No channels yet.</p>}
         </div>
-      </header>
 
-      <nav className="sidebar-list">
-        {p.tab === 'workspace'
-          ? SECTIONS.map((s) => (
-              <button key={s.id} className={`row ${p.section === s.id ? 'selected' : ''}`} onClick={() => p.onSection(s.id)}>
-                <span className="section-icon">{s.icon}</span>
-                <span className="row-text">
-                  <span className="row-top"><strong>{s.label}</strong></span>
-                  <span className="row-preview">{s.blurb}</span>
-                </span>
+        <div className="sect">Direct messages<button aria-label="New message" onClick={() => p.onCompose('direct')}>{Plus}</button></div>
+        <div className="list">
+          {p.dms.map((c) => {
+            const agent = p.agentsById[c.agentIds[0]]
+            return (
+              <button key={c.id} className={`row ${isConv(c.id) ? 'on' : ''} ${p.unread.has(c.id) ? 'unread' : ''}`} onClick={() => p.onView({ type: 'conv', id: c.id })}>
+                <Glyph agent={agent} /><span className="label">{agent?.name ?? c.title}</span>
+                <span className="status" />
               </button>
-            ))
-          : p.conversations.map((c) => {
-              const agents = c.agentIds.map((id) => p.agentsById[id]).filter(Boolean).sort((a, b) => a.sort - b.sort)
-              return (
-                <button key={c.id} className={`row ${p.selectedId === c.id ? 'selected' : ''}`} onClick={() => p.onSelect(c.id)}>
-                  <GroupAvatar agents={agents} />
-                  <span className="row-text">
-                    <span className="row-top">
-                      <strong>{c.title}</strong>
-                      <time>{c.last ? formatListTime(c.last.created_at) : ''}</time>
-                    </span>
-                    <span className="row-preview">{c.last?.body ?? agents.map((a) => a.name).join(', ')}</span>
-                  </span>
-                </button>
-              )
-            })}
-        {p.tab !== 'workspace' && p.conversations.length === 0 && (
-          <p className="muted pad">Nothing here yet. Tap the pencil to start.</p>
-        )}
-      </nav>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="me">
+        <span className="me-av">You</span>
+        <div className="who"><b>Student</b><span>Tutor mode · on</span></div>
+        <button className="theme" onClick={p.onTheme} aria-label={`Switch to ${p.theme === 'dark' ? 'light' : 'dark'} mode`}>
+          <I d={<><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" /></>} />
+        </button>
+      </div>
     </aside>
   )
 }

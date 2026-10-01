@@ -15,7 +15,7 @@ export function NewChat({ kind, agents, onClose, onCreated }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isGroup = kind === 'group'
-  const valid = isGroup ? picked.length >= 2 : picked.length === 1
+  const valid = isGroup ? picked.length >= 1 && title.trim().length > 0 : picked.length === 1
 
   function toggle(id: string) {
     setPicked((p) => (isGroup ? (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]) : [id]))
@@ -35,16 +35,16 @@ export function NewChat({ kind, agents, onClose, onCreated }: Props) {
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={isGroup ? 'New group chat' : 'New chat'} onClick={(e) => e.stopPropagation()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={isGroup ? 'New channel' : 'New message'} onClick={(e) => e.stopPropagation()}>
         <header className="sheet-header">
           <button className="link" onClick={onClose}>Cancel</button>
-          <strong>{isGroup ? 'New Group' : 'New Chat'}</strong>
+          <strong>{isGroup ? 'New channel' : 'New message'}</strong>
           <button className="link bold" disabled={!valid || busy} onClick={create}>Create</button>
         </header>
         {isGroup && (
-          <input className="field" placeholder="Group name (optional)" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input className="field" placeholder="channel-name" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} />
         )}
-        <p className="muted small">{isGroup ? 'Pick two or more agents.' : 'Pick one agent.'}</p>
+        <p className="muted small">{isGroup ? 'Name it, then pick who answers in it.' : 'Pick an agent to message.'}</p>
         <div className="agent-picker">
           {agents.map((a) => (
             <button key={a.id} className={`agent-option ${picked.includes(a.id) ? 'on' : ''}`} onClick={() => toggle(a.id)}>
