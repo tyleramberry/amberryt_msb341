@@ -2,12 +2,29 @@
 
 > Homeroom is an LLM harness that helps college students study: it knows their courses and checks drafts against the rubric.
 
-**Where to see it:** Not yet — product and domain still being validated
+**Where to see it:** the v0 chat UI, live at https://homeroom.homeroom-app.workers.dev — a
+clickable prototype whose agent replies are placeholders. The harness core is not wired up yet,
+and the problem itself is only partly validated.
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
+
+## Where the work lives
+
+Everything needed to check this sprint's output, in one place.
+
+| Output | Where | Access |
+|---|---|---|
+| Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
+| Homeroom v0 chat UI | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no harness core yet |
+| Discovery interviews, synthesis, ICP | `discovery/` — `interviews/`, `worksheet.md`, `insights.md`, `icp.md`, `jtbd.md` | In-repo, names removed |
+| Sprint plans and reviews | `sprints/sprint-N-plan.md`, `sprints/sprint-N-review.md` | In-repo |
+| AI interview conversation (worksheet Part 2) | linked from `discovery/worksheet.md` | Public share link |
+| Sprint 2 demo | 60–90 second Loom | Recorded Mon, Oct 12 — link added here when it exists |
+
+No other repo holds this work.
 
 ## Context
 
-Fill this in during Sprint 1 and keep it current. Every sprint is read against it.
+Every sprint is read against this. Revise it when it changes and note what changed.
 
 - **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
   heavy on product (validating ideas), then shifting to engineering (shipping features), then
@@ -44,7 +61,21 @@ whether a change to a prompt helped or hurt.
 
 ## Running it
 
-[If your work includes code: how to run it locally. Delete this section if it does not.]
+The v0 UI is in `product/app/` — Vite + React + TS, Supabase, deployed to Cloudflare Workers
+static assets (`decisions/003-v0-web-stack.md`).
+
+```bash
+cd product/app
+npm install
+npm run dev       # local dev server
+npm run build     # type-check, then build to dist/
+npm run deploy    # build, then wrangler deploy (needs `npx wrangler login` once)
+```
+
+It runs against the Supabase project committed in `src/lib/supabase.ts` with no setup: each
+browser signs in anonymously. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` override
+that if you need a different project. Agent replies come from a database trigger, so what you
+see in the UI is not a harness talking yet.
 
 ## Sprints
 

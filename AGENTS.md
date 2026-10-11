@@ -16,15 +16,23 @@ and why.
   schools (`decisions/002-learning-portfolio-first.md`). MVP connects to Canvas (read-only);
   workspace files are markdown, Google Docs is later scope.
 - **Who uses my work:** Students.
-- **Why they would use it:** Not validated yet. Comes from user interviews after the MVP spec.
+- **Why they would use it:** Partly validated. One defensible interview — a college student outside
+  the household — describes hand-running the rubric check himself, unprompted; the interview folder
+  also holds notes that are filed but not evidence. The Canvas dependency is still unmeasured.
 
 ## Current state
 
-- **This sprint's goal (Sprint 1):** Learn how LLM harnesses work and how to build one, and
-  finish with an MVP spec to take to potential users. See `sprints/sprint-1-plan.md`.
-- **Where to see it:** v0 UI (placeholder agent replies) at https://homeroom.homeroom-app.workers.dev, code in `product/app/`. Research lives in `discovery/research/`.
-- **Biggest open risk:** Students not yet validated. The product could be built for a
-  problem students don't feel strongly enough to use, or that teachers block as cheating.
+- **This sprint's goal (Sprint 2):** Validate the problem before building more — student and
+  professor interviews, a scored Problem Discovery Worksheet, an AI interview, and a committed ICP
+  with JTBD and value proposition. See `sprints/sprint-2-plan.md`.
+- **Where to see it:** the discovery work in `discovery/` (interviews, `worksheet.md`, `icp.md`,
+  `jtbd.md`) and the v0 UI (placeholder agent replies) at https://homeroom.homeroom-app.workers.dev,
+  code in `product/app/`. Research lives in `discovery/research/`.
+- **Where the work lives:** `README.md` lists every repo and live link. Keep it current — it is what
+  the graders use to find the work.
+- **Biggest open risk:** The Canvas dependency is unmeasured. No interview has established what share
+  of a real BYU student's courses are on Canvas rather than Learning Suite, and the ICP's basic
+  mechanic rests on it. Second: faculty acceptance is untested until the two professor interviews run.
 
 ## Where things go
 
@@ -32,6 +40,7 @@ and why.
 |---|---|
 | Research, competitive analysis, reading notes | `discovery/research/` |
 | Interviews (anonymized) | `discovery/interviews/` |
+| Problem Discovery Worksheet, ICP, JTBD | `discovery/worksheet.md`, `discovery/icp.md`, `discovery/jtbd.md` |
 | Personas, insights | `discovery/personas.md`, `discovery/insights.md` |
 | Specs, including the MVP spec (`specs/mvpspec.md`) | `specs/` |
 | Decisions, numbered (`001-...md`) | `decisions/` |
