@@ -12,7 +12,7 @@
 - Talk less than 20% of the time. Dig with "tell me more", "give me an example".
 - Record their words, not your interpretation.
 
-## The five questions
+## The six questions
 
 ### 1. Walk me through the last written assignment you had to turn in — what did the process look like from finding out about it to hitting submit?
 
@@ -40,6 +40,19 @@ If most courses are Learning Suite, the F1 dependency breaks and the ICP doesn't
 
 Tests willingness to pay from real spend, not a hypothetical number.
 Never ask "would you pay for this". Ask what they already pay.
+
+## Optional closing question (product-touching)
+
+Ask **last**, only after the five behavior questions have run their course. This one breaks the ground rules above on purpose — it invites them to picture a solution — so record the answer as a bet, not as evidence.
+
+### 6. You said you [their actual workaround]. What would have to be true about the thing that fixed that for you to be worth paying for — and what would make you decide not to?
+
+Source: closing question ("What would have to be true for something to be worth paying for?") from the MSB 341 chapter *Finding and Validating the Problem*, adapted to Homeroom's workaround.
+
+Why it holds up: it asks for a condition, not an opinion, so it passes the chapter's test that good evidence is evidence that would look different if you were wrong. Anchor it to the spend question above, since the chapter says real WTP is what the problem already costs them (workaround price, hours lost, the substitute they buy), not a number they invent.
+
+Strong: they name a specific condition and a number unprompted, or benchmark it against something they already pay for (the Grammarly AI Grader free-tier cap, a tutor, a textbook).
+Weak: "yeah, I'd probably pay for that", or a condition so vague it can't be falsified — that is the chapter's **false positive** (polite agreement), not validation.
 
 ## Close-out
 
