@@ -22,8 +22,8 @@ and why.
 
 ## Current state
 
-- **This sprint's goal (Sprint 2):** Validate the problem before building more — student and
-  professor interviews, a scored Problem Discovery Worksheet, an AI interview, and a committed ICP
+- **This sprint's goal (Sprint 2):** Validate the problem before building more — five student
+  interviews, a scored Problem Discovery Worksheet, an AI interview, and a committed ICP
   with JTBD and value proposition. See `sprints/sprint-2-plan.md`.
 - **Where to see it:** the discovery work in `discovery/` (interviews, `worksheet.md`, `icp.md`,
   `jtbd.md`) and the v0 UI (placeholder agent replies) at https://homeroom.homeroom-app.workers.dev,
@@ -32,7 +32,8 @@ and why.
   the graders use to find the work.
 - **Biggest open risk:** The Canvas dependency is unmeasured. No interview has established what share
   of a real BYU student's courses are on Canvas rather than Learning Suite, and the ICP's basic
-  mechanic rests on it. Second: faculty acceptance is untested until the two professor interviews run.
+  mechanic rests on it. Second: faculty acceptance is untested;
+  professor interviews were dropped from Sprint 2 (Oct 12) and deferred until the build needs them.
 
 ## Where things go
 

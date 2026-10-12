@@ -27,7 +27,7 @@ Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its
 |---|---|---|
 | 5 student interviews | 5 done (one is a high-school student, outside the ICP; 05 is notes, not a recording) | [01](discovery/interviews/2026-10-07-interview-01.md) · [02](discovery/interviews/2026-10-08-interview-02.md) · [03](discovery/interviews/2026-10-08-interview-03.md) · [04](discovery/interviews/2026-10-10-interview-04.md) · [05](discovery/interviews/2026-10-12-interview-05.md) |
 | Interview scripts | Done | [student](discovery/interviews/2026-10-07-interview-questions.md) · [professor](discovery/interviews/2026-10-08-professor-interview-questions.md) |
-| 2 professor interviews | Not yet | — |
+| 2 professor interviews | Dropped Oct 12; deferred past Sprint 2 (see plan Changes) | — |
 | Problem Discovery Worksheet (3 described, 2 scored) | 3 described; scoring pending the AI interview | [`discovery/worksheet.md`](discovery/worksheet.md) |
 | AI interview | Prompt written; conversation not yet run | [`discovery/ai-interview-prompt.md`](discovery/ai-interview-prompt.md) |
 | ICP and JTBD | Baseline v0 committed | [`discovery/icp.md`](discovery/icp.md) · [`discovery/jtbd.md`](discovery/jtbd.md) |
