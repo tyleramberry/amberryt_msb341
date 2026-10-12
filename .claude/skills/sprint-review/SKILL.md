@@ -63,6 +63,16 @@ repo among the confirmed projects. For each, summarize its commits in the window
 and messages. Never copy code or file contents from another repo into the report; a company
 repo may be private, and dates, messages, and file names are enough.
 
+Then list the `/learn` sessions logged in this repo during the window:
+
+```bash
+python3 <skill-dir>/scripts/sprint_scan.py --since <ISO date> --learning .
+```
+
+It reads only `learning/YYYY-MM-DD-*.md` in this repo: the section, time, whether it finished,
+the axis it was logged against, what the builder asked about, starting point and confidence (both 1 to 5), and the
+question they still had, plus a count by axis.
+
 ### 5. Work out what happened
 
 - **When they worked.** Which days, and whether it was spread or bunched.
@@ -71,11 +81,14 @@ repo may be private, and dates, messages, and file names are enough.
 - **What took the most time.** By session duration and prompt volume, not by commit count.
 - **Which axis this advanced.** Pick exactly one, from the work itself rather than from what
   they intended:
-  - **Agentic Workflow**: directing the agent, CLAUDE.md, slash commands, subagents, specs
+  - **Agentic Workflow**: directing the agent, CLAUDE.md, slash commands, subagents, specs;
+    building AI into the product: prompts, tool use, agent loops, evals
   - **Discovery**: users, interviews, problem framing, validation, positioning research
   - **Design**: interface, layout, flow, usability, responsive work
-  - **Application Architecture**: data, auth, APIs, deployment, tests, refactoring
-  - **AI Systems**: model calls in the product, prompts in the product, evals
+  - **Application Architecture**: data, auth, APIs, deployment, tests, refactoring, wiring a
+    model in (API calls, retrieval pipelines, cost and latency)
+  - **AI Systems**: learning how the models work: neural networks, next-word prediction,
+    training and fine-tuning, embeddings and RAG, context windows, why models hallucinate
   - **Launch and Learn**: landing pages, acquisition, pricing, analytics, metrics
   If it is genuinely split, name the one with the most time and say so.
 
@@ -106,6 +119,16 @@ URL. For a repo that is not shared, a short list of its commits in the window: d
 ## What took the most time
 
 <by session time and prompt volume>
+
+## Learning sessions
+
+<count of /learn sessions logged in the window, and the count by axis. For each: date, section,
+axis, minutes, what they asked about, starting point and confidence (1 to 5), and the question they still
+had. Then one plain sentence putting learning beside building: which axes they studied and which
+axis the sprint's work advanced (from the Axis section below), for example "You studied three
+Architecture sections and the sprint advanced Architecture" or "You studied Design; the sprint's
+work was Discovery." State it; do not judge it. "None logged this sprint" if there were none. Facts
+only: not a grade, no judgment of how many is enough, no check scores>
 
 ## Axis
 
@@ -179,3 +202,5 @@ If they want to change an answer later, they edit the file and commit again; tha
 - Never copy transcript text into the report. Summarize.
 - Never name an excluded project. Report the count only.
 - If no sessions are found, say so and write the report from git alone.
+- Learning sessions are reported, never graded or scored. Do not copy check results into the
+  report.
