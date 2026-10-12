@@ -9,55 +9,68 @@ and the problem itself is only partly validated.
 
 ## Where the work lives
 
-Everything needed to check this sprint's output, in one place.
-
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
 | Homeroom v0 chat UI | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no harness core yet |
-| Discovery interviews, synthesis, ICP | `discovery/` — `interviews/`, `worksheet.md`, `insights.md`, `icp.md`, `jtbd.md` | In-repo, names removed |
-| Sprint plans and reviews | `sprints/sprint-N-plan.md`, `sprints/sprint-N-review.md` | In-repo |
-| AI interview conversation (worksheet Part 2) | linked from `discovery/worksheet.md` | Public share link |
-| Sprint 2 demo | 60–90 second Loom | Recorded Mon, Oct 12 — link added here when it exists |
+| UI code | [`product/app/`](product/app/) | In-repo |
+| AI interview conversation (worksheet Part 2) | linked from [`discovery/worksheet.md`](discovery/worksheet.md) | Not done yet |
+| Sprint 2 demo | 60–90 second Loom | Not recorded yet |
 
 No other repo holds this work.
 
-## Context
+## Sprint 2: Validate the problem (in progress)
 
-Every sprint is read against this. Revise it when it changes and note what changed.
+Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its "Done looks like":
+
+| Deliverable | Status | Where |
+|---|---|---|
+| 5 student interviews | 5 done (one is a high-school student, outside the ICP; 05 is notes, not a recording) | [01](discovery/interviews/2026-10-07-interview-01.md) · [02](discovery/interviews/2026-10-08-interview-02.md) · [03](discovery/interviews/2026-10-08-interview-03.md) · [04](discovery/interviews/2026-10-10-interview-04.md) · [05](discovery/interviews/2026-10-12-interview-05.md) |
+| Interview scripts | Done | [student](discovery/interviews/2026-10-07-interview-questions.md) · [professor](discovery/interviews/2026-10-08-professor-interview-questions.md) |
+| 2 professor interviews | Not yet | — |
+| Problem Discovery Worksheet (3 described, 2 scored) | 3 described; scoring pending the AI interview | [`discovery/worksheet.md`](discovery/worksheet.md) |
+| AI interview | Prompt written; conversation not yet run | [`discovery/ai-interview-prompt.md`](discovery/ai-interview-prompt.md) |
+| ICP and JTBD | Baseline v0 committed | [`discovery/icp.md`](discovery/icp.md) · [`discovery/jtbd.md`](discovery/jtbd.md) |
+| Insights from interviews | 9 beliefs from interviews 01–04 | [`discovery/insights.md`](discovery/insights.md) |
+| MVP spec updated from interviews | Not yet | [`specs/mvpspec.md`](specs/mvpspec.md) |
+| UI redesign (Slack-style channels, DMs, inbox) | Shipped | live UI above · [mockup](design/mockups/homeroom-v2-slack.html) |
+
+## Sprint 1: Learn harnesses, write the MVP spec (done)
+
+[Plan](sprints/sprint-1-plan.md) · [Review and retro](sprints/sprint-1-review.md)
+
+- **Research:** [harness notes](discovery/research/harnessresearch.md) ·
+  [competitive comparison of Codex, OpenCode, Hermes, OpenClaw, Pi](discovery/research/agent-harness-comp.md) ·
+  [harness-engineering reading (21 papers, 51 tools) and a minimal runnable harness](discovery/research/harness-notes/)
+- **Specs:** [PRD](specs/agent-harness-prd.md) · [MVP spec](specs/mvpspec.md)
+- **Decisions:** [001 students are the MVP user](decisions/001-mvp-user.md) ·
+  [002 learning/portfolio project first](decisions/002-learning-portfolio-first.md) ·
+  [003 v0 web stack](decisions/003-v0-web-stack.md)
+- **Shipped:** Homeroom v0 UI on Cloudflare Workers + Supabase
+
+## Context
 
 - **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
   heavy on product (validating ideas), then shifting to engineering (shipping features), then
   a mix of product and GTM (getting in front of users).
-- **What I am working on:** Homeroom, an education-focused LLM harness. See `specs/agent-harness-prd.md`
-  and `specs/mvpspec.md`.
-- **Who it is for:** College students taking several courses (`decisions/001-mvp-user.md`).
-  Starts as a learning and portfolio project (`decisions/002-learning-portfolio-first.md`).
+- **What I am working on:** Homeroom, an education-focused LLM harness. See the
+  [PRD](specs/agent-harness-prd.md) and [MVP spec](specs/mvpspec.md).
+- **Who it is for:** College students taking several courses ([decision 001](decisions/001-mvp-user.md)).
+  Starts as a learning and portfolio project ([decision 002](decisions/002-learning-portfolio-first.md)).
 - **Who uses my work:** Students are the end users. Teachers supply rubrics and need to trust
   that it teaches rather than cheats.
-
-If your situation changes, revise this and note what changed. That is normal; a silent
-mismatch between this file and your work is not.
 
 ## What is in this repo
 
 | Folder | What lives here |
 |---|---|
-| `sprints/` | One plan and one review per sprint |
-| `discovery/` | Interviews, personas, what you learned about your user |
-| `design/` | Flows, screens, usability test notes |
-| `product/` | The work itself: code, a pricing model, a copy deck, an automation |
-| `specs/` | One spec per piece of work, written before you make it |
-| `gtm/` | Launch, channels, copy, experiments |
-| `metrics/` | What you measure and what it says |
-| `decisions/` | Numbered records of what you decided and why |
-
-Not everyone in this course ships software. An interview, a pricing model, a landing page
-draft, and a usability finding are all artifacts, and they get committed like anything else.
-Use the folders that fit your role and ignore the rest.
-
-If you build an AI feature, put its eval set in `product/evals/`. A test set is how you know
-whether a change to a prompt helped or hurt.
+| [`sprints/`](sprints/) | One plan and one review per sprint |
+| [`discovery/`](discovery/) | Interviews, worksheet, ICP, JTBD, insights, research |
+| [`specs/`](specs/) | PRD and MVP spec, written before the work |
+| [`decisions/`](decisions/) | Numbered records of what I decided and why |
+| [`product/`](product/) | The v0 UI code |
+| [`design/`](design/) | UI mockups |
+| `.claude/skills/` | Course skills (`/sprint-plan`, `/sprint-review`, `/learn`, `/eli5`) |
 
 ## Running it
 
