@@ -53,12 +53,13 @@ outside the repo.
 
 Scored from what the five student interviews actually show, not from what I hope. Each score
 links to the interview behind it (<sup>01</sup>–<sup>05</sup>). The AI interview
-([prompt](ai-interview-prompt.md)) is still to run; if its scores differ from these, the gap gets
-noted here rather than overwritten.
+([prompt](ai-interview-prompt.md)) ran on 2026-10-12; its scores are in
+[AI interview scores](#ai-interview-scores-2026-10-12) below, with the gaps noted rather than
+overwritten.
 
 **AI interview conversation URL:**
 
-> _pending: paste the share link here after the interview_
+> Run in a Claude Code session on 2026-10-12 (no share link). Scores transcribed below.
 
 ### Opportunity Score (1–5)
 
@@ -96,6 +97,42 @@ noted here rather than overwritten.
 | Expands Agency | Yes — the student checks their own work and decides what to change; nothing is written for them | Yes — they see everything due and plan their own week |
 | Supports Becoming | Yes — gaps and questions, never replacement sentences, so they learn to self-grade<sup>[03] [04]</sup> | Neutral |
 | Deepens Connection | Watch — the trusted check today is a classmate or office hours<sup>[03] [04]</sup>. Homeroom should send them there with a sharper question, not replace them | Neutral |
+
+### AI interview scores (2026-10-12)
+
+The AI scored only from my answers in the interview plus its own knowledge. Where it differs from
+my scores above, the gap is in the last column.
+
+| Dimension | Problem 1 — Rubric check | Problem 2 — Deadline sprawl | Gap vs. my scores |
+|---|---|---|---|
+| Frequency | 4 (Weekly). About half my assignments are graded against a rubric or stated criteria | 4 (Weekly). 5 late discoveries in about 7 weeks; I maintain a shared Google Doc of due dates weekly | P2: mine 3. I told the AI about my own late finds; my scores above used only interview 03 |
+| Intensity | 3 (Annoying). No observed case of lost points; "could be pretty bad" is imagined | 4 (Frustrating). Real consequence plus a hand-built workaround | P1: mine 4. P2: mine 2. The AI weighted my own Google Doc behavior; I did not mention interview 04/05 evidence |
+| Willingness to Pay | 2 (Unlikely). I said WTP is very low given free tools | 2 (Unlikely) | P1: mine 3. I did not mention the $5–10 stated band<sup>[04]</sup> or the Claude Pro user<sup>[05]</sup> |
+| Market Size | 4 (Large segment). Evidence is business writing only | 2 (Small niche, shrinking) | P2: mine 3 |
+| **Opportunity total** | **13 / 20** | **12 / 20** | Mine: 15 vs 10 |
+| Personal Pain | 1. I check by hand | 1. 5 late finds, the Google Doc | Same |
+| Close Relationship | 1. Wife and brother | 0. They are all-Canvas; their pain is not the two-system split | Same |
+| Moral Calling | 0. I called it an inefficiency | 0 | P1: mine 1. I did not raise the "AI that writes means no learning" argument |
+| Unique Insight | 0. I said "not that much, I'm still not sure" | 0 | P1: mine 1. I did not raise the objective-vs-judged criteria split |
+| **Conviction** | **2 / 4 — Moderate** | **1 / 4 — Low** | P1 mine: 4 |
+| Data/API Access | 1. Student Canvas token only. Use no admin credentials | 1. Canvas plus Learning Suite calendar export | Same |
+| Technology Readiness | 1. Calibration unproven; a false "you're fine" is the costly error, so an eval set is needed | 1. Easy, which is why it is already built | Same |
+| No Blockers | 1. Only on the student's own token | 1 | Same |
+| **Feasibility** | **3 / 3 — Clear path** | **3 / 3 — Clear path** | Same |
+| Expands Agency | Yes | Yes | Same |
+| Supports Becoming | Depends on design: questions = growth, scores = rubric-gaming | Neutral | P1: mine Yes |
+| Deepens Connection | Leans negative if it replaces office hours or the TA | Neutral | Same direction |
+
+**What the gap says.** Both sets rank Problem 1 ahead, but the AI's margin is much smaller (13 vs 12
+on Opportunity, not 15 vs 10). Most of the gap is evidence I have on disk but did not say in the
+interview: the WTP band, the Claude Pro user, the moral argument, and the research insight. The
+gaps the AI interview found that my own scoring hid:
+
+- **No observed point loss.** Problem 1's intensity rests on anxiety, not a named criterion that
+  cost someone points. One such story would raise it.
+- **Unique insight is thin when said out loud.** I could not name it unprompted.
+- **My own deadline pain is real.** My scores above under-scored Problem 2's frequency and
+  intensity because they used only interview 03.
 
 ---
 
