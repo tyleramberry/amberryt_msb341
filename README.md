@@ -14,8 +14,8 @@ and the problem itself is only partly validated.
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
 | Homeroom v0 chat UI | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no harness core yet |
 | UI code | [`product/app/`](product/app/) | In-repo |
-| AI interview conversation (worksheet Part 2) | linked from [`discovery/worksheet.md`](discovery/worksheet.md) | Not done yet |
-| Sprint 2 demo | 60–90 second Loom | Not recorded yet |
+| AI interview conversation (worksheet Part 2) | scores in [`discovery/worksheet.md`](discovery/worksheet.md) | Run 2026-10-12 in Claude Code; no share link yet |
+| Sprint 2 reflection video | https://www.loom.com/share/c10c024c9abc4ecf94669d5471a5a845 | Loom |
 
 No other repo holds this work.
 
