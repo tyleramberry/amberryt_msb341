@@ -1,6 +1,6 @@
 # Problem Discovery Worksheet (Sprint 2)
 
-**Date:** 2026-10-10 · **Updated:** 2026-10-12 · **Status:** Part 1 complete (3 problems described). Part 2 scored from the five student interviews; the AI interview link is still to come.
+**Date:** 2026-10-10 · **Updated:** 2026-10-12 · **Status:** Part 1 complete (3 problems described). Part 2 scored from the five student interviews and the AI interview.
 **Source:** course Problem Discovery Worksheet + [Problem Discovery Framework](https://byu-strategy.github.io/product-management/94-problem-discovery-framework.html)
 
 **Anonymization note.** The worksheet template asks for "a real person's name" in the **Who**
@@ -57,9 +57,9 @@ links to the interview behind it (<sup>01</sup>–<sup>05</sup>). The AI intervi
 [AI interview scores](#ai-interview-scores-2026-10-12) below, with the gaps noted rather than
 overwritten.
 
-**AI interview conversation URL:**
+**AI interview conversation URL:** https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73
 
-> Run in a Claude Code session on 2026-10-12 (no share link). Scores transcribed below.
+> Run in a Claude Code session on 2026-10-12, then reposted word for word to Claude.ai so it could be shared. Scores transcribed below.
 
 ### Opportunity Score (1–5)
 

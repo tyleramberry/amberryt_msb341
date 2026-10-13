@@ -14,7 +14,7 @@ and the problem itself is only partly validated.
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
 | Homeroom v0 chat UI | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no harness core yet |
 | UI code | [`product/app/`](product/app/) | In-repo |
-| AI interview conversation (worksheet Part 2) | scores in [`discovery/worksheet.md`](discovery/worksheet.md) | Run 2026-10-12 in Claude Code; no share link yet |
+| AI interview conversation (worksheet Part 2) | https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73 | Public link; scores in [`discovery/worksheet.md`](discovery/worksheet.md) |
 | Sprint 2 reflection video | https://www.loom.com/share/c10c024c9abc4ecf94669d5471a5a845 | Loom |
 
 No other repo holds this work.
@@ -29,7 +29,7 @@ Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its
 | Interview scripts | Done | [student](discovery/interviews/2026-10-07-interview-questions.md) · [professor](discovery/interviews/2026-10-08-professor-interview-questions.md) |
 | 2 professor interviews | Dropped Oct 12; deferred past Sprint 2 (see plan Changes) | — |
 | Problem Discovery Worksheet (3 described, 2 scored) | Done: 3 described, 2 scored from the interviews; Problem 1 (rubric check) chosen | [`discovery/worksheet.md`](discovery/worksheet.md) |
-| AI interview | Run 2026-10-12 in Claude Code; scores in the worksheet, no share link yet | [`discovery/ai-interview-prompt.md`](discovery/ai-interview-prompt.md) |
+| AI interview | Done 2026-10-12; [conversation](https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73), scores in the worksheet | [`discovery/ai-interview-prompt.md`](discovery/ai-interview-prompt.md) |
 | ICP, JTBD, value proposition | ICP and JTBD baseline v0; value proposition v1 from the interviews | [`discovery/icp.md`](discovery/icp.md) · [`discovery/jtbd.md`](discovery/jtbd.md) · [`discovery/value-prop.md`](discovery/value-prop.md) |
 | Insights and persona | 10 beliefs from interviews 01–05; one persona (the rubric self-checker) | [`discovery/insights.md`](discovery/insights.md) · [`discovery/personas.md`](discovery/personas.md) |
 | MVP spec updated from interviews | Done (Oct 12): context layer, rubric check, evals, validation status | [`specs/mvpspec.md`](specs/mvpspec.md) · [decision 005](decisions/005-learning-suite-by-upload.md) |
