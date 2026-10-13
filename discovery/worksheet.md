@@ -1,6 +1,6 @@
 # Problem Discovery Worksheet (Sprint 2)
 
-**Date:** 2026-10-10 · **Status:** Part 1 complete (3 problems described). Part 2 scores pending the AI interview.
+**Date:** 2026-10-10 · **Updated:** 2026-10-12 · **Status:** Part 1 complete (3 problems described). Part 2 scored from the five student interviews; the AI interview link is still to come.
 **Source:** course Problem Discovery Worksheet + [Problem Discovery Framework](https://byu-strategy.github.io/product-management/94-problem-discovery-framework.html)
 
 **Anonymization note.** The worksheet template asks for "a real person's name" in the **Who**
@@ -49,54 +49,69 @@ outside the repo.
 
 ---
 
-## Part 2: Scores (to be filled from the AI interview)
+## Part 2: Scores
 
-Paste the prompt in [`ai-interview-prompt.md`](ai-interview-prompt.md) into Claude.ai, ChatGPT, or Gemini, answer its questions, then transcribe the scores it assigns here.
+Scored from what the five student interviews actually show, not from what I hope. Each score
+links to the interview behind it (<sup>01</sup>–<sup>05</sup>). The AI interview
+([prompt](ai-interview-prompt.md)) is still to run; if its scores differ from these, the gap gets
+noted here rather than overwritten.
 
 **AI interview conversation URL:**
 
-> _pending — paste the share link here after the interview_
+> _pending: paste the share link here after the interview_
 
 ### Opportunity Score (1–5)
 
 | Dimension | Problem 1 — Rubric check | Problem 2 — Deadline sprawl |
 |---|---|---|
-| Frequency | | |
-| Intensity | | |
-| Willingness to Pay | | |
-| Market Size | | |
+| Frequency | **4 (Weekly).** One student does it "for most" assignments<sup>[01]</sup>; others do it on every rubric-graded memo<sup>[04] [05]</sup> | **3 (Monthly).** Nobody described missing a deadline. The night-before memo was procrastination, not a missed date: they found the deadline when they checked<sup>[03]</sup> |
+| Intensity | **4 (Frustrating).** "Am I actually hitting the rubric" anxiety is one of the two painful parts, and self-grading "only gets me so far"<sup>[04]</sup>; one student built their own Canvas-to-Claude workaround<sup>[05]</sup> | **2 (Minor annoyance).** No one raised deadlines unprompted. Canvas already shows assignments two weeks out<sup>[04]</sup> |
+| Willingness to Pay | **3 (Might pay).** Stated band $5–10/mo for "a coach that checks my work against the rubric"<sup>[04]</sup>; one already pays for Claude Pro and uses it for this job<sup>[05]</sup>; one pays $0<sup>[01]</sup>. Stated, not yet paid for this product | **2 (Unlikely).** No one mentioned paying; the free Canvas to-do list and browser extensions already cover it (`icp.md`) |
+| Market Size | **4 (Large segment).** Any college student with rubric-graded writing; 57% of students use AI weekly (`icp.md`, Gallup 2026) | **3 (Moderate, shrinking).** The pain is the split across two systems<sup>[03]</sup>, and BYU is retiring Learning Suite, so the split closes on its own |
+| **Total (of 20)** | **15** | **10** |
 
 ### Conviction (0/1 each, sum of 4)
 
 | Dimension | Problem 1 | Problem 2 |
 |---|---|---|
-| Personal Pain | | |
-| Close Relationship | | |
-| Moral Calling | | |
-| Unique Insight or Skills | | |
-| **Sum** | | |
+| Personal Pain | 1 — I'm a student on rubric-graded courses and test on my own term ([decision 001](../decisions/001-mvp-user.md)) | 1 — I built a daily Canvas pull for my own deadlines (`specs/mvpspec.md`) |
+| Close Relationship | 1 — someone in my household runs this loop by hand<sup>[01]</sup> | 0 — no one close to me named it |
+| Moral Calling | 1 — AI that writes the work at the deadline means no learning happens; a check that teaches is the alternative<sup>[01]</sup> | 0 |
+| Unique Insight or Skills | 1 — harness research, and the objective-vs-judged split for rubric criteria ([research](research/harnessresearch.md)) | 0 — I have the skills, but deadline aggregation is already solved by others |
+| **Sum** | **4 — High** | **1 — Low (reconsider)** |
 
 ### Technical Feasibility (0/1 each, sum of 3)
 
 | Dimension | Problem 1 | Problem 2 |
 |---|---|---|
-| Data/API Access | | |
-| Technology Readiness | | |
-| No Hardware or Regulatory Blockers | | |
-| **Sum** | | |
+| Data/API Access | 1 — Canvas API for rubrics where tokens are allowed (one student already connected their own<sup>[05]</sup>), and syllabus/rubric upload for everything else ([decision 005](../decisions/005-learning-suite-by-upload.md)). Risk: schools blocking student tokens (`icp.md` risk 1) | 1 — same Canvas API plus upload |
+| Technology Readiness | 1 — objective criteria are script-checked; subjective ones get a labelled LLM judge that says "cannot verify" on domain substance, because a confident wrong answer is what students already distrust<sup>[04]</sup> | 1 — a dated list is simple |
+| No Hardware or Regulatory Blockers | 1 — read-only, the student's own data, nothing submitted | 1 |
+| **Sum** | **3 — Clear path (with the token risk planned for)** | **3 — Clear path** |
 
 ### Gospel framework (directional)
 
 | Check | Problem 1 | Problem 2 |
 |---|---|---|
-| Expands Agency | | |
-| Supports Becoming | | |
-| Deepens Connection | | |
+| Expands Agency | Yes — the student checks their own work and decides what to change; nothing is written for them | Yes — they see everything due and plan their own week |
+| Supports Becoming | Yes — gaps and questions, never replacement sentences, so they learn to self-grade<sup>[03] [04]</sup> | Neutral |
+| Deepens Connection | Watch — the trusted check today is a classmate or office hours<sup>[03] [04]</sup>. Homeroom should send them there with a sharper question, not replace them | Neutral |
 
 ---
 
 ## The decision
 
-> _pending the AI interview — which problem gets the rest of the semester, and why._
-> The highest score does not have to win. The course's stated test is which one you are most
-> excited to build.
+> **Problem 1: check the draft against the rubric.** It wins on every scored dimension except
+> feasibility, where both are clear: Opportunity 15 vs 10, Conviction 4 vs 1. More importantly, it's
+> the behavior students already do on their own: three students run the rubric-paste loop by
+> hand<sup>[01] [04] [05]</sup> and one has already built a rough version with Claude and the
+> Canvas API<sup>[05]</sup>. Problem 2 is a feature of Problem 1 (Homeroom knows the due dates
+> because it knows the course), not a product of its own, and the Learning Suite retirement shrinks
+> it further. The course's final test is which one I'm most excited to build; I confirm that in
+> the AI interview.
+
+[01]: interviews/2026-10-07-interview-01.md
+[02]: interviews/2026-10-08-interview-02.md
+[03]: interviews/2026-10-08-interview-03.md
+[04]: interviews/2026-10-10-interview-04.md
+[05]: interviews/2026-10-12-interview-05.md
