@@ -32,7 +32,7 @@ Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its
 | AI interview | Prompt written; conversation not yet run | [`discovery/ai-interview-prompt.md`](discovery/ai-interview-prompt.md) |
 | ICP and JTBD | Baseline v0 committed | [`discovery/icp.md`](discovery/icp.md) · [`discovery/jtbd.md`](discovery/jtbd.md) |
 | Insights from interviews | 9 beliefs from interviews 01–04 | [`discovery/insights.md`](discovery/insights.md) |
-| MVP spec updated from interviews | Not yet | [`specs/mvpspec.md`](specs/mvpspec.md) |
+| MVP spec updated from interviews | Done (Oct 12): context layer, rubric check, evals, validation status | [`specs/mvpspec.md`](specs/mvpspec.md) · [decision 005](decisions/005-learning-suite-by-upload.md) |
 | UI redesign (Slack-style channels, DMs, inbox) | Shipped | live UI above · [mockup](design/mockups/homeroom-v2-slack.html) |
 
 ## Sprint 1: Learn harnesses, write the MVP spec (done)
