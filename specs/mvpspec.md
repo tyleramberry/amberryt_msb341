@@ -117,9 +117,10 @@ Ask before adding Pi or any other dependency (per `AGENTS.md`).
 
 ## Validation plan
 
-Before building F3 and F4, show this spec (and the F2 demo) to **5 students and 2 teachers**.
-The teacher interviews stay even though this is a portfolio project: if teachers would block
-it, students can't use it openly.
+Before building F3 and F4, show this spec (and the F2 demo) to **5 students**, then to
+**2 teachers** before F3 and F4 ship. The teacher interviews were moved out of Sprint 2
+(Oct 12, [plan Changes](../sprints/sprint-2-plan.md)) but still happen before launch: if
+teachers would block it, students can't use it openly.
 Anonymize the notes in `discovery/interviews/`.
 
 Questions to ask (the full script is
@@ -139,9 +140,10 @@ assignment this month, and neither teacher would block it.
 
 **Status after the first round (Oct 7–12): not yet validated.** Five student interviews are
 filed, but one is a high-school student outside the ICP<sup>[02]</sup> and one is a household
-pilot of the script<sup>[01]</sup>, so fewer than 4 of 5 count toward the bar. No professor
-interviews have run yet (the [question set](../discovery/interviews/2026-10-08-professor-interview-questions.md)
-is ready). The bar stays at 4 of 5; the next round fills it.
+pilot of the script<sup>[01]</sup>, so fewer than 4 of 5 count toward the bar. Professor
+interviews are deferred until the build needs them (the
+[question set](../discovery/interviews/2026-10-08-professor-interview-questions.md) is ready).
+The bar stays at 4 of 5; the next round fills it.
 **Rethink if:** students only want deadline tracking (already served by the LMS), or teachers
 see it as a cheating tool.
 
