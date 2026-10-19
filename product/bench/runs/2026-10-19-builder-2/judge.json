@@ -1,0 +1,5 @@
+[
+ {"eval_id":"e1","label":"A","criteria_scores":[5,3,5,2,4,4,4],"overall":6,"reason":"Warm and complete, but invents what the intake form asks about and adds promises; the extra explanation under steps 2 and 3 makes the list harder to scan."},
+ {"eval_id":"e1","label":"B","criteria_scores":[5,3,5,4,5,3,3],"overall":6,"reason":"Covers everything with clean steps, but the '[Your name]' placeholder and stock phrases read like a template; the closing paragraph and long subject line add bulk."},
+ {"eval_id":"e1","label":"C","criteria_scores":[5,5,4,5,5,4,4],"overall":8,"reason":"Tight and friendly, three easy-to-scan steps, nothing invented; only implies (doesn't state) that payment starts the Blueprint process."}
+]

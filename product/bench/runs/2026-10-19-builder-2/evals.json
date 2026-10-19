@@ -1,0 +1,18 @@
+[
+  {
+    "id": "e1",
+    "category": "writing",
+    "title": "Post-intro-call client email",
+    "prompt": "Write an email to Casey, a new Space Tiger client. Tell her it was great to meet, give her the link to the payment page, and lay out the next steps.",
+    "context": "We just had an intro call to learn about her and her business. The payment starts the Blueprint process. Next steps: 1) pay, 2) fill out the intake form, 3) book our Blueprint call. Payment link: [payment link]. Intake form: [intake form link]. Booking: [booking link].",
+    "criteria": [
+      "Cordial",
+      "Concise, nothing unnecessary",
+      "Covers every point given",
+      "No invented details (what we discussed, prices, dates, promises)",
+      "The three next steps are in order and easy to scan",
+      "Sounds like a person wrote it, not a template",
+      "Has a short, clear subject line"
+    ]
+  }
+]

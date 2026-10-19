@@ -1,0 +1,20 @@
+[
+  {
+    "eval_id": "e1",
+    "model": "haiku",
+    "text": "Subject: Great meeting you, Casey. Next steps for Blueprint\n\nHi Casey,\n\nIt was great meeting you. I enjoyed learning about you and your business, and I'm excited about what we can build together.\n\nHere are the next steps to start your Blueprint process:\n\n1. **Pay:** Complete your payment here: [payment link]\n2. **Fill out the intake form:** This helps us prepare for your Blueprint call: [intake form link]\n3. **Book your Blueprint call:** Pick a time that works for you: [booking link]\n\nOnce payment is in, we'll get started. If you have any questions along the way, just reply to this email.\n\nTalk soon,\n\nTyler\nSpace Tiger",
+    "duration_ms": 3917
+  },
+  {
+    "eval_id": "e1",
+    "model": "sonnet",
+    "text": "Subject: Great meeting you, Casey, and your next steps\n\nHi Casey,\n\nIt was great to meet you today. I really enjoyed learning about you and your business, and I'm excited about what we can build together.\n\nHere's how we get started. Payment kicks off the Blueprint process, and there are three quick steps:\n\n1. **Pay.** You can complete payment here: [payment link]\n2. **Fill out the intake form.** This helps us understand your business before we dig in: [intake form link]\n3. **Book our Blueprint call.** Pick a time that works for you: [booking link]\n\nThe sooner you finish the first two, the more prepared we'll be for the Blueprint call, so we can make the most of our time together.\n\nIf you have any questions along the way, just reply to this email.\n\nLooking forward to working with you,\n\n[Your name]\nSpace Tiger",
+    "duration_ms": 7185
+  },
+  {
+    "eval_id": "e1",
+    "model": "opus",
+    "text": "Subject: Great meeting you, Casey: next steps for your Blueprint\n\nHi Casey,\n\nIt was great meeting you today. Thanks for walking me through your business and where you want to take it. I'm excited to get started.\n\nYour payment kicks off the Blueprint process. Here are the next steps:\n\n1. **Complete your payment:** [payment link]\n2. **Fill out the intake form:** [intake form link]\n   It tells us about your business, your current tools, and where you're losing time. Your answers shape what we prepare for the Blueprint call, so the more detail the better.\n3. **Book your Blueprint call:** [booking link]\n   Choose any time that works for you. Please try to finish the intake form before the call so we can bring specific ideas instead of starting from scratch.\n\nIf you have questions along the way, just reply to this email.\n\nLooking forward to it,\n\nTyler\nSpace Tiger",
+    "duration_ms": 4292
+  }
+]

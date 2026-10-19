@@ -191,9 +191,11 @@ For each eval, use AskUserQuestion with two questions:
 - "Task <n>: <title>. Which answer is best?" (header "Best")
 - "Which answer is worst?" (header "Worst")
 
-Each question's options are the labels (`Answer A`, `Answer B`, `Answer C`), and each option's
-`preview` is that answer's full text. Put the prompt in the question text if it fits; otherwise
-show the prompt in chat just before asking. Don't show judge scores or hint at which model is
+Before asking, run `open <run_dir>/blind.md` and tell them the answers are there as Response A,
+B, C. Option previews don't render in every Claude Code client (they didn't in the desktop app),
+so don't rely on them. Each question's options are the labels (`Answer A`, `Answer B`,
+`Answer C`), each described as "Response A in blind.md" and so on. Put the prompt in the
+question text. Don't show judge scores or hint at which model is
 which. If they pick the same answer for best and worst, or type a tie, ask that eval again.
 
 For **file-mode** evals, a preview of raw HTML or code is useless. Run `open` on `blind/A.<ext>`,
