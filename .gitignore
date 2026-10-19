@@ -8,3 +8,6 @@ dist/
 build/
 .venv/
 .obsidian/
+
+# personal-bench source material (often copyrighted or private)
+product/bench/runs/*/context/

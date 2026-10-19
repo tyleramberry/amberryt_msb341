@@ -20,6 +20,8 @@ Each run gets its own folder: `product/bench/runs/<YYYY-MM-DD>-<who>/`, where `<
 anonymous label the person picks or accepts (`tester-1`, `spouse`). Never a real name. The folder
 holds `meta.json`, `evals.json`, `responses.json`, `blind.json`, `blind.md`, `judge.json`,
 `human.json` and `report.md`. Their formats are in the docstring of `scripts/bench.py`.
+File-mode tasks (below) also use `context/` (source material, gitignored), `out/` (each model's
+file) and `blind/` (the same files renamed A, B, C).
 
 `scripts/bench.py` (in this skill's folder) does the shuffling and the math. Never compute
 rankings or pick the A/B/C order yourself.
@@ -38,7 +40,19 @@ Ask for the anonymous label, create the run folder, and write `meta.json`:
 ### 2. Interview
 
 Goal: 5 to 10 test tasks drawn from real work they do or would hand to an AI, spread over 2 to 4
-categories (for example "writing", "planning", "research", "explaining").
+categories (for example "writing", "planning", "research", "explaining"). If they only want to
+test fewer, that's their call: run what they give you and say once that fewer tasks means a
+noisier ranking.
+
+**Two kinds of task.** Decide for each task as you write it up:
+- **Text mode** (the default): the answer is short enough to read in chat (an email, a plan, an
+  explanation), and any context is a paragraph or two.
+- **File mode:** the answer is a file (a web page, an interactive artifact, a document, code),
+  or the context is long source material (a reading, a report). Save the source material as a
+  plain-text file in `<run_dir>/context/` (convert `.docx` with `textutil -convert txt`, PDFs with
+  the pdf skill). In the eval, `context` describes the file instead of holding its text, and the
+  eval gets two extra fields: `"mode": "file"` and `"output": "<extension>"` (for example
+  `"html"`).
 
 How to run the conversation (the same rules as Sundae's onboarding engine, which broke when it
 pattern-matched instead of listening):
@@ -98,7 +112,40 @@ call errors or uses a tool, retry it once. If it fails again, tell them and cont
 
 Keep them company while it runs: one short line per eval ("Task 3 of 8 done").
 
+**File mode** works differently. Copying a long answer through chat is slow and can introduce
+mistakes, so each model reads the source and writes its answer to disk. Launch the three calls
+together with `run_in_background: true` (a web page can take 1 to 5 minutes; tell them that), and
+use this prompt:
+
+```
+You are being tested as a plain assistant. The only tools you may use are Read (to read the
+context) and Write (to save your answer). Do not use any other tools, do not search the web,
+and do not look at any other files. If something is unclear, make a reasonable assumption
+rather than asking.
+
+TASK:
+<prompt>
+
+CONTEXT:
+<absolute paths of the files in context/, or "None">
+
+OUTPUT:
+Save your answer as one self-contained <output> file (for HTML: inline CSS and JS, no external
+files or network requests) at exactly:
+<run_dir>/out/<model>.<output>
+Then reply with only the word: saved
+```
+
+When all three are done, take `duration_ms` from each completion notice. Check that no file names
+its model (`grep -ioE "haiku|sonnet|opus|claude|anthropic"`) or loads anything from the network.
+Then build `responses.json` with a short Python script that reads each file's text, so the text
+is exact. Don't print file sizes or anything else that could tell you which model is which later.
+
 Then run: `python3 <skill_dir>/scripts/bench.py blind <run_dir>`
+
+For file-mode evals, copy each file into `blind/` under its label, with a Python one-liner that
+reads `blind.json` without printing it:
+`python3 -c "import json,shutil;[shutil.copy(f'out/{m}.<ext>', f'blind/{l}.<ext>') for l,m in json.load(open('blind.json'))['<eval_id>'].items()]"`
 
 ### 5. Judge
 
@@ -127,6 +174,14 @@ Return only JSON, no prose around it:
   "reason": "<one sentence>"}, ...]
 ```
 
+For **file-mode** evals, don't paste the answers. Give the judge the `context/` path and the
+`blind/A.<ext>`, `blind/B.<ext>`, ... paths instead, allow only Read on those files, and add:
+"Read the whole context first. For each criterion about coverage, list the source's critical
+ideas and check each response for them. For each criterion about accuracy, check specific facts,
+numbers, names and examples against the source. Anything not in the source counts against it.
+Judge graphics as the HTML/CSS/SVG would render." Ask for a reason of one or two sentences that
+names specific misses or made-up facts.
+
 Parse the JSON, add `eval_id` to each item, and write them all to `judge.json`. If the JSON doesn't
 parse, re-ask that judge once.
 
@@ -140,6 +195,10 @@ Each question's options are the labels (`Answer A`, `Answer B`, `Answer C`), and
 `preview` is that answer's full text. Put the prompt in the question text if it fits; otherwise
 show the prompt in chat just before asking. Don't show judge scores or hint at which model is
 which. If they pick the same answer for best and worst, or type a tie, ask that eval again.
+
+For **file-mode** evals, a preview of raw HTML or code is useless. Run `open` on `blind/A.<ext>`,
+`blind/B.<ext>`, ... first, and make each option's description the file name instead of a
+preview. Ask them to look through each the way they would really use it, then answer.
 
 Append `{eval_id, best, worst, note}` to `human.json` (`note` = anything they typed, or `""`).
 Write after each eval. They can stop early; the report uses whatever is rated.
@@ -156,7 +215,9 @@ them. Then reveal which model wrote each answer they picked as best. Run `open <
 
 The run folder holds their real tasks. Ask before committing it. If they agree, commit the run
 folder to `main` with the message `Personal bench run: <who> <date>` and push. If not, leave it
-uncommitted and say where it is.
+uncommitted and say where it is. `context/` is gitignored, because source material is often
+copyrighted (course readings) or private. The models' outputs, which quote the source, are
+committed with the run; say so when you ask.
 
 ## Known limits (say so if asked)
 

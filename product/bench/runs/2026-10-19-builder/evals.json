@@ -1,0 +1,16 @@
+[
+  {
+    "id": "e1",
+    "category": "learning",
+    "title": "Value chain reading to artifact",
+    "prompt": "Here's my STRAT 401 reading on the value chain. Make me an interactive, visual artifact (a single HTML page) that teaches me everything I would learn from doing the reading, without me actually doing it.",
+    "context": "The full STRAT 401 reading (5,461 words), at context/reading.txt in the run folder (gitignored). Each model read it from that file.",
+    "criteria": [
+      "Simple, effective graphics",
+      "Concise, but leaves out nothing critical for class prep",
+      "No made-up facts: everything comes from the reading"
+    ],
+    "mode": "file",
+    "output": "html"
+  }
+]

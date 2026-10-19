@@ -9,7 +9,7 @@ the ranking math. Standard library only (Python 3.9+).
     python3 bench.py report <run_dir>   # + judge.json [+ human.json] -> report.md
 
 Run dir files:
-    evals.json      [{id, category, title, prompt, context, criteria: [str]}]
+    evals.json      [{id, category, title, prompt, context, criteria: [str], mode?: "file", output?: ext}]
     responses.json  [{eval_id, model, text, duration_ms}]
     blind.json      {eval_id: {"A": model, ...}}             (written by `blind`)
     judge.json      [{eval_id, label, criteria_scores: [1-5], overall: 1-10, reason}]
@@ -170,7 +170,7 @@ def report(run):
     if agree:
         out.append(f"- The judge's top pick matched yours on {sum(agree)} of {len(agree)} evals "
                    f"({100 * sum(agree) / len(agree):.0f}%).")
-    out += [f"- {len(evals)} evals, one answer per model each. Models vary run to run, so a small gap "
+    out += [f"- {len(evals)} eval{'s' if len(evals) != 1 else ''}, one answer per model each. Models vary run to run, so a small gap "
             "between two models may be luck.",
             "- The judge is a Claude model grading Claude models, blind and in shuffled order. "
             "Your picks count more than the judge's.",

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Value Chain Study Guide</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--ink:#1d2330;--mute:#5d6676;--line:#dcd9d0;--a:#c8102e;--b:#1f4e8c;--c:#2a7f62;--d:#b7791f;--soft:#eef2f8;--bad:#b42318;--good:#18794e}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8eaee;--mute:#9aa3b2;--line:#323946;--a:#ff5470;--b:#6ea8ff;--c:#4cc9a0;--d:#f2b84b;--soft:#232a36;--bad:#ff7b72;--good:#4cc9a0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:28px 16px 12px;max-width:980px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.9rem}
+.sub{color:var(--mute);margin:0}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:8px 16px;max-width:none}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font:inherit;font-size:.9rem}
+nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{max-width:980px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+h2{margin:8px 0 6px;font-size:1.5rem}
+h3{margin:22px 0 8px;font-size:1.1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.big{font-size:1.15rem}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.pill{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--mute);margin-right:4px}
+.stat{font-size:1.8rem;font-weight:700;line-height:1.1}
+.mute{color:var(--mute);font-size:.9rem}
+button.act{background:var(--b);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+button.act.alt{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.chain{display:grid;grid-template-columns:repeat(5,1fr) 70px;gap:6px;margin-top:6px}
+.sup{grid-column:1/6;background:var(--soft);border:1px dashed var(--line);border-radius:8px;padding:10px;cursor:pointer;font-size:.9rem;text-align:center}
+.pri{background:var(--b);color:#fff;border-radius:8px;padding:30px 4px;text-align:center;cursor:pointer;font-size:.9rem;font-weight:600;min-height:90px;display:flex;align-items:center;justify-content:center}
+.sup.sel,.pri.sel{outline:3px solid var(--d)}
+.margin{grid-row:1/6;grid-column:6;background:var(--c);color:#fff;border-radius:0 40px 40px 0;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-weight:700;cursor:pointer}
+.chain.link .pri{background:var(--a)}
+@media(max-width:600px){.chain{grid-template-columns:repeat(5,1fr)}.margin{grid-row:auto;grid-column:1/6;writing-mode:horizontal-tb;border-radius:8px;padding:8px}.pri{font-size:.7rem;padding:20px 2px}}
+details{border-top:1px solid var(--line);padding:10px 0}
+summary{cursor:pointer;font-weight:600}
+.bar{height:26px;border-radius:5px;display:flex;align-items:center;padding-left:8px;color:#fff;font-size:.85rem;font-weight:600;white-space:nowrap;transition:width .6s}
+.row{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;margin:6px 0}
+.chips span{display:inline-block;margin:3px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer;font-size:.85rem}
+.chips span.on{background:var(--d);color:#000;border-color:var(--d)}
+.tri{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.node{flex:1 1 200px;border:2px solid var(--b);border-radius:10px;padding:12px;text-align:center;background:var(--card);cursor:pointer;transition:.3s}
+.node.off{opacity:.35;border-style:dashed;border-color:var(--bad)}
+.q{margin:14px 0}
+.opt{display:block;width:100%;text-align:left;margin:5px 0;padding:9px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;cursor:pointer;font:inherit}
+.opt.right{background:var(--good);color:#fff;border-color:var(--good)}
+.opt.wrong{background:var(--bad);color:#fff;border-color:var(--bad)}
+.fb{font-size:.9rem;color:var(--mute);margin-top:4px}
+.mm{display:flex;height:220px;border:1px solid var(--line);border-radius:8px;overflow:hidden;align-items:flex-end}
+.mm div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;color:#fff;font-size:.72rem;text-align:center;transition:all .6s;height:100%}
+.mm div span{padding:2px}
+.tl{display:flex;align-items:flex-end;gap:2px;height:130px;margin-top:8px}
+.tl div{flex:1;background:var(--b);border-radius:4px 4px 0 0;position:relative;min-width:0}
+.tl small{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:.7rem;white-space:nowrap}
+.tl em{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:.65rem;font-style:normal;color:var(--mute);white-space:nowrap}
+.flip{cursor:pointer}
+.flip .back{display:none}.flip.on .back{display:block}.flip.on .front{display:none}
+.cheat{columns:2 300px;column-gap:16px}.cheat .card{break-inside:avoid}
+.key{border-left:4px solid var(--d);padding:6px 12px;background:var(--soft);border-radius:0 8px 8px 0;margin:10px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>The Value Chain</h1>
+<p class="sub">STRAT 401 reading, rebuilt as something you can click through. Start at the top tab and move right; about 20 minutes.</p>
+</header>
+<nav id="nav"></nav>
+<main>
+
+<section id="s0">
+<h2>The big idea</h2>
+<div class="card big">A <b>five-dollar pizza</b> sat in a warming rack in Michigan from 2004 until January 2022. The easy explanation is cheap cheese. The reading says that is wrong: the price came from a chain of about a dozen activities, each designed to cost less than the same activity at Domino's or Pizza Hut, and one of them (the delivery driver) was simply <b>deleted</b>.</div>
+<div class="grid">
+<div class="card"><div class="stat">9</div>Generic activities in Porter's chain: 5 primary, 4 support.</div>
+<div class="card"><div class="stat">5</div>Steps in a value chain analysis.</div>
+<div class="card"><div class="stat">10</div>Cost drivers to check before you assume "scale".</div>
+<div class="card"><div class="stat">4</div>Steps to map a profit pool.</div>
+</div>
+<h3>The four takeaways</h3>
+<div class="card">
+<ol>
+<li><b>Firms do not have costs; activities do.</b> Advantage is won or lost activity by activity.</li>
+<li><b>The advantage often sits between the boxes</b> (linkages), which is why chains are hard to copy.</li>
+<li><b>A value chain shows where cost went out, not who kept the savings.</b> Little Caesars' savings were partly captured by the franchisor. Ask both questions.</li>
+<li><b>Profit pools:</b> profit is often concentrated in a very different part of the chain than revenue. Value chain = efficiency tool (your ledger). Profit pool = positioning tool (industry filings).</li>
+</ol></div>
+<div class="key">The closing challenge: draw <i>your</i> chain, split until boxes have different economics, put a cost and an asset on each, then ask: if you could defend only one activity to the last dollar, which is it, and is it the one you are funding?</div>
+<button class="act" onclick="go(1)">Start: Porter's chain</button>
+</section>
+
+<section id="s1">
+<h2>Porter's chain (1985)</h2>
+<p>Michael Porter's radical move: stop treating advantage as a property of "well run" firms. A firm is a bundle of discrete activities. <b>Click any box</b> to see what it means and what Little Caesars does there.</p>
+<div class="card">
+<div class="chain" id="chain"></div>
+<div style="margin:10px 0"><button class="act alt" id="lnkbtn" onclick="toggleLinks()">Show linkages</button></div>
+<div id="chainInfo" class="key">Click a box.</div>
+</div>
+<h3>Two things routinely missed</h3>
+<div class="card">
+<b>1. The boxes are a starting point.</b> Split an activity when its parts have different economics. "Operations" at an airline is not one thing: gate turnaround and engine overhaul have almost nothing in common. If every activity in your chain has the same cost driver, you have not cut finely enough.
+<hr style="border:0;border-top:1px solid var(--line)">
+<b>2. Advantage may live between the boxes (linkages).</b> A linkage exists when one activity's cost depends on how another is performed. Examples: spend more on inbound inspection, spend less on rework. Hold more inventory, spend less on expediting. Design a snap-fit part, shorten assembly.
+</div>
+<h3>Case: Amazon's 2023 network redesign (a linkage story)</h3>
+<div class="card">
+<p class="mute">Eight largely self-sufficient US regions. No single activity got cheaper; the relationships changed.</p>
+<div class="grid">
+<div><div class="stat">-15%</div>distance, site to customer</div>
+<div><div class="stat">-12%</div>middle-mile touch points</div>
+<div><div class="stat">62 to 76%</div>orders fulfilled inside own region</div>
+<div><div class="stat">-$0.45</div>per unit, first cut since 2018</div>
+</div></div>
+<h3>Why rivals cannot copy it</h3>
+<div class="card">A rival can observe any single activity: store layouts, prices, job postings, patents. What they cannot see is <b>which activity is subsidizing which</b>.</div>
+<button class="act" onclick="go(2)">Next: how to run the analysis</button>
+</section>
+
+<section id="s2">
+<h2>How to run a value chain analysis</h2>
+<p>The framework is descriptive; the analysis is not. Open each step for the question that keeps it honest.</p>
+<div class="card" id="steps"></div>
+<h3>Porter's ten cost drivers</h3>
+<p class="mute">Click to mark the ones you think drive cost in a pretend activity of your own. The point: go through all ten, not just scale.</p>
+<div class="card chips" id="drivers"></div>
+<div class="mute" id="drvmsg"></div>
+<div class="key"><b>Test of step 2:</b> "If we had to sell this activity as a standalone business tomorrow, what would its income statement look like?" An activity that is cheap to run but eats working capital is not cheap.</div>
+<button class="act" onclick="go(3)">Next: Little Caesars</button>
+</section>
+
+<section id="s3">
+<h2>Little Caesars: cost built activity by activity</h2>
+<div class="card">
+<b>Key insight:</b> the biggest saving is what LC <i>does not perform at all</i>: no order-taking before making pizza, no drivers, no counter at the Portal. Deleting an activity is the most reliable cost reduction because a rival cannot answer by simply doing it cheaper.</div>
+<h3>Exhibit 2: the chain, tap each</h3>
+<div class="grid" id="lcact"></div>
+
+<h3>The linkage triangle: pull one out</h3>
+<p class="mute">Click a node to remove it and see what happens.</p>
+<div class="card">
+<div class="tri" id="tri"></div>
+<div class="key" id="trimsg">All three hold each other up. This is why "just sell a cheaper pizza" has never worked for anyone else.</div>
+</div>
+
+<h3>The twist: the story usually told is incomplete</h3>
+<p>The reading argues LC pairs <b>low cost with low throughput</b>, unlike Walmart (low cost with enormous volume). Fixed costs get spread over fewer dollars.</p>
+<div class="card">
+<b>Average sales per restaurant</b> (QSR, FY2025)
+<div id="auv"></div>
+<p class="mute">LC is about 69% of Domino's volume, stable for two years. LC figure is a QSR estimate.</p>
+</div>
+<div class="card">
+<b>Franchisee fee load (royalty + marketing)</b>
+<div id="fees"></div>
+<p class="mute">Debunked claim: "LC spends less on advertising because the price does the selling." The one mandatory, disclosed comparable says otherwise. Marketing can rise to 7%.</p>
+</div>
+<div class="card">
+<b>Initial investment floor</b>
+<div id="inv"></div>
+<p class="mute">Over 4x Domino's, driven by a mandatory pre-opening Blue Line equipment and inventory buy of $250,500 to $369,500. Source caveat: LC's own site says $376,500; the FDD abstracts say $446,500. Unresolved.</p>
+</div>
+<div class="card">
+<b>Governance contrast: same vertical integration, opposite rules</b>
+<div class="grid">
+<div class="card"><b>Domino's</b><br>22 US supply chain centers. Franchisees are <u>not required</u> to buy. Those who buy everything get 50% of the supply chain's pre-tax profit. Must win business yearly.</div>
+<div class="card"><b>Little Caesars</b><br>Blue Line is mandatory (franchisees bought $1.64B in FY2021). No profit share disclosed. Does not have to win it.</div>
+</div></div>
+
+<h3>The price advantage has narrowed</h3>
+<div class="card">
+<div class="tl" id="tl"></div>
+<p class="mute" style="margin-top:26px">Hot-N-Ready price: $5 (2004 to Jan 2022), $5.55 (Jan 2022, with 33% more pepperoni), about $6.79 per third-party trackers now. Domino's has repeatedly run a $9.99 "Best Deal Ever". In July 2025 LC launched its first-ever value menu at $9.99, online only. The reading's read: it was following, not setting, and online-only moves the offer away from the walk-in, no-wait, no-decision mechanic the chain was built for.</p>
+</div>
+<div class="card">
+<b>Satisfaction (ACSI 2026)</b>
+<div id="acsi"></div>
+<p class="mute">LC wins on price perception (Datassential's value leader), loses on satisfaction. "What a low-price, low-volume position looks like from the outside." Yet net US units still grew by 93 in 2025 while the category shrank.</p>
+</div>
+<div class="key"><b>Verdict:</b> A value chain tells you where cost went out. It does not tell you <u>who kept it</u>. Ask both.</div>
+<button class="act" onclick="go(4)">Next: owning one link</button>
+</section>
+
+<section id="s4">
+<h2>Own one link</h2>
+<p>The opposite of LC's strategy: take one activity and be so far beyond everyone that the industry has to come to you. Tap a card to flip it for the mechanism.</p>
+<div class="grid" id="links"></div>
+<div class="key">Pattern: in each case the advantage is a <b>mechanism</b> (chokepoint control, a promise, a lease, externalizing a cost center), not just "being good".</div>
+<button class="act" onclick="go(5)">Next: profit pools</button>
+</section>
+
+<section id="s5">
+<h2>Profit pools</h2>
+<div class="card">
+<b>U-Haul (late 1990s):</b> earned a 10% operating margin when consumer truck rental earned under 3%. The money was in boxes, tape, insurance, hitches and storage, bought after the customer signed and stopped comparison shopping. U-Haul held truck rates down on purpose: the low-margin activity acquires the customer for the high-margin one.</div>
+<div class="key"><b>Definition</b> (Gadiesh and Gilbert, HBR 1998): total profit earned at every point along an industry's value chain. Profit concentration is often very different from revenue concentration.<br><b>Value chain</b> = from your general ledger, shows your costs, efficiency instrument. <b>Profit pool</b> = from industry filings, shows everyone's profit, positioning instrument ("am I standing in the right part of the chain?").</div>
+<h3>The four steps</h3>
+<div class="card">
+<ol><li><b>Define boundaries.</b> This step determines the answer, and no principle exists for drawing the line.</li>
+<li><b>Estimate total pool size</b> (profit, not revenue).</li>
+<li><b>Estimate each activity's share.</b> Hard; margins are rarely disclosed, so use pure-play comparables and triangulation.</li>
+<li><b>Check and reconcile.</b> A quarter of the method is reconciliation: the authors knew the numbers would not tie out.</li></ol>
+<p class="mute">Drawing convention: x-axis = share of industry revenue, y-axis = operating margin, so block area = profit. Tall and narrow = small and rich. Wide and flat = large and poor.</p></div>
+
+<h3>Exhibit 6: inside a car dealership (AutoNation 2025)</h3>
+<div class="card">
+<button class="act" id="mmbtn" onclick="toggleMM()">Switch to gross profit view</button>
+<div class="mm" id="mm" style="margin-top:10px"></div>
+<p class="mute" id="mmcap"></p>
+<p>$27.6B revenue, $4.9B gross profit. Parts and service plus finance and insurance are 22.8% of sales but <b>77.2%</b> of gross profit. "Used and other" below is the remainder I computed; the reading does not itemize it.</p>
+</div>
+
+<h3>Coffee: where €9.71 per kg goes (Germany, 2021)</h3>
+<div class="card">
+<div id="coffee"></div>
+<p class="mute">Itemized shares total 88%; the rest is not broken out in the reading (study shares are modeled and rounded). Excise tax at 23% would not appear in a US version: do not over-generalize. Finding: farmer prices are disconnected from consumer prices; value concentrates between importer and retailer.</p>
+<p class="mute"><b>iPhone warning:</b> the famous "Apple takes 58% of iPhone 4 price as profit vs about 2% for China labor" uses 2010 data and is not a full retail-dollar decomposition (Apple was paid by carriers then).</p>
+</div>
+
+<h3>Three more pools</h3>
+<div class="grid">
+<div class="card"><b>Delta is a credit card</b><div class="stat">141%</div>Amex remuneration $8.2B (up 11%) = 12.9% of $63.4B revenue and 141% of $5.8B operating income.</div>
+<div class="card"><b>Apple is a phone industry</b><div class="stat">85%</div>of industry operating profit (last published, 2023). 49% of revenue in Q2 2026 on 23% of shipments.</div>
+<div class="card"><b>Booking beats Marriott</b><div class="stat">2.1x</div>Booking: $186.1B booked, $26.9B revenue, $8.825B operating income, no rooms owned. Marriott: $4.141B. Hotel owners (property, debt, cycle) have the shallowest pool per dollar of capital.</div>
+</div>
+<button class="act" onclick="go(6)">Next: test yourself</button>
+</section>
+
+<section id="s6">
+<h2>Check yourself</h2>
+<p class="mute">Eight questions, with explanations.</p>
+<div id="quiz"></div>
+<div class="card big" id="score"></div>
+</section>
+
+<section id="s7">
+<h2>One-page cheat sheet</h2>
+<div class="cheat">
+<div class="card"><b>Core claim</b><br>Advantage lives in activities and in the links between them, not in "firms."</div>
+<div class="card"><b>Porter's 9</b><br>Primary: inbound logistics, operations, outbound logistics, marketing and sales, service. Support: firm infrastructure, HR, technology development, procurement. Margin = willingness to pay minus total cost.</div>
+<div class="card"><b>5 analysis steps</b><br>1 Disaggregate. 2 Cost and asset per box. 3 Cost drivers. 4 Work the linkages. 5 Own / buy / let someone else's brand ride.</div>
+<div class="card"><b>10 cost drivers</b><br>Scale, learning, capacity utilization, linkages, interrelationships across units, vertical integration, timing of entry, discretionary policy, location, institutional factors.</div>
+<div class="card"><b>Little Caesars</b><br>Delete activities (drivers, order-taking, counter). Made-ahead + narrow menu + low price reinforce each other. But: AUV about $950K vs $1,385K, fees 11% vs 9.5%, floor $446.5K vs $107K, price up to $5.55 then about $6.79, ACSI 78 (last of 4).</div>
+<div class="card"><b>Own one link</b><br>ASML (supplier chokepoint, Zeiss stake), TSMC (promise not to compete), YKK (machines leased into customers' factories), Amazon (cost center sold to rivals' customers), Ritz-Carlton ($2,000 discretion).</div>
+<div class="card"><b>Profit pool</b><br>Total profit at every point in the chain. 4 steps: boundaries, size, shares, reconcile. Map: x = revenue share, y = margin, area = profit.</div>
+<div class="card"><b>Examples</b><br>U-Haul accessories. Dealership: P&amp;S + F&amp;I = 22.8% of sales, 77.2% of gross profit. Coffee farm 21%. Delta Amex 141% of op. income. Booking 2x Marriott.</div>
+<div class="card"><b>Always ask</b><br>Where did the cost go out, and <i>who kept it</i>? Am I standing in the right part of the chain?</div>
+</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const tabs=["Big idea","Porter's chain","Method","Little Caesars","Own one link","Profit pools","Quiz","Cheat sheet"];
+function go(i){document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',i===j));[...$('nav').children].forEach((b,j)=>b.classList.toggle('on',i===j));scrollTo(0,0);}
+tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>go(i);$('nav').appendChild(b)});
+go(0);
+
+/* Chain */
+const prim=[["Inbound logistics","Receiving, storing and distributing inputs.","Blue Line, an Ilitch-owned distributor, is the required supplier: one captive distributor, one truck, one negotiation."],
+["Operations","Turning inputs into the product.","Pizza made to forecast and held in a warming rack; narrow menu; small stores run ovens at high utilization."],
+["Outbound logistics","Getting the product to the buyer.","Carryout only 1959 to 2019; delivery via DoorDash Drive, no owned fleet; the Pizza Portal self-service locker."],
+["Marketing and sales","Making buyers aware and willing.","One number for 18 years: $5, Hot-N-Ready, no coupon. A price that needs no explanation is cheaper to communicate."],
+["Service","Keeping the product's value after sale.","Not a focus in the reading for LC; Ritz-Carlton is the example (up to $2,000 per employee to fix a problem)."]];
+const sup=[["Firm infrastructure","General management, finance, legal."],["Human resources","Hiring, training, pay. Ritz-Carlton: 250 to 310 hours first-year training."],["Technology development","Product and process know-how. Often not costed at all."],["Procurement","Buying inputs. Most firms cannot put a cost on it, which is why surprises hide here."]];
+function info(h,t){$('chainInfo').innerHTML=h+t}
+const ch=$('chain');
+sup.forEach(s=>{const d=document.createElement('div');d.className='sup';d.style.gridColumn='1/6';d.innerHTML='<b>'+s[0]+'</b> <span class="mute">(support)</span>';d.onclick=()=>{sel(d);info('<b>'+s[0]+'</b> (support activity, runs across all primary ones). ',s[1])};ch.appendChild(d)});
+prim.forEach(p=>{const d=document.createElement('div');d.className='pri';d.textContent=p[0];d.onclick=()=>{sel(d);info('<b>'+p[0]+'</b> (primary). '+p[1]+'<br><b>Example:</b> ',p[2])};ch.appendChild(d)});
+const m=document.createElement('div');m.className='margin';m.textContent='MARGIN';m.onclick=()=>{sel(m);info('<b>Margin</b>: what is left when the buyer\'s willingness to pay exceeds the collective cost of all activities.','')};ch.appendChild(m);
+ch.querySelectorAll('.sup').forEach((s,i)=>s.style.gridRow=String(i+1));
+ch.querySelectorAll('.pri').forEach(p=>p.style.gridRow='5 / span 1');
+function sel(el){ch.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));el.classList.add('sel')}
+let lk=false;
+function toggleLinks(){lk=!lk;ch.classList.toggle('link',lk);$('lnkbtn').textContent=lk?'Hide linkages':'Show linkages';
+info(lk?'<b>Linkages</b> (red): the cost or effectiveness of one activity depends on how another is done. Inspection vs rework. Inventory vs expediting. Snap-fit design vs assembly time. LC: made-ahead production needs a narrow menu, which needs a low price, which needs high throughput per labor hour.':'Click a box.','')}
+
+/* Steps */
+const steps=[["Disaggregate until activities have different economics","Which activities have genuinely different cost behavior? Which are a large or growing share of cost? Which does the buyer perceive?"],
+["Put a cost and an asset against every box","Most firms can do this for the plant, almost none for procurement or technology development, which is where surprises are. Standalone-business test: what would its income statement look like?"],
+["Ask what drives cost in each box","Go through all ten drivers. Is cost driven by how much we do, how long we have done it, or a policy set in 1998?"],
+["Work the linkages, not the boxes","Find pairs where spending more in one place saves more in another, and local optimizations that push cost downstream. Includes supplier and channel chains. Whose budget absorbs the cost of our choice, and do they know?"],
+["Decide what to own, buy, or let someone else's brand ride on","The chain is a map of make-or-buy decisions mostly made by accident. Which would we defend to the last dollar, and which do we do only because we always have?"]];
+steps.forEach((s,i)=>{const d=document.createElement('details');if(!i)d.open=true;d.innerHTML='<summary>Step '+(i+1)+': '+s[0]+'</summary><p>'+s[1]+'</p>';$('steps').appendChild(d)});
+const drv=["Scale","Learning","Capacity utilization","Linkages","Interrelationships across units","Vertical integration","Timing of entry","Discretionary policy","Location","Institutional factors (regulation, unions)"];
+drv.forEach(n=>{const s=document.createElement('span');s.textContent=n;s.onclick=()=>{s.classList.toggle('on');const c=document.querySelectorAll('#drivers .on').length;$('drvmsg').textContent=c+' of 10 selected. '+(c<3?'Keep going: the discipline is checking all ten.':'Good: now ask which one actually dominates.')};$('drivers').appendChild(s)});
+
+/* LC */
+const lc=[["Inbound and procurement","Blue Line is the required supplier; Pepsi exclusive beverage.","One captive distributor, one truck, one negotiation. $1.64B bought via it in FY2021."],
+["Operations","Made to forecast, warming rack, narrow menu, 1,000 to 1,600 sq ft stores (modular opens in about 90 days).","Ovens run at high utilization. Less space, rent, equipment, training, energy."],
+["Outbound","Carryout only 1959 to 2019. Delivery via DoorDash Drive. Pizza Portal locker (Sept 2018).","No drivers, no vehicle insurance, no scheduling risk, and with Portal, no counter transaction."],
+["Marketing and sales","$5, Hot-N-Ready, no coupon, no wait, no decision for 18 years.","A price needing no explanation is cheaper to communicate than an offer that does."]];
+lc.forEach(a=>{const d=document.createElement('div');d.className='card flip';d.innerHTML='<div class="front"><b>'+a[0]+'</b><p>'+a[1]+'</p><span class="mute">tap for why it costs less</span></div><div class="back"><b>Why it costs less</b><p>'+a[2]+'</p></div>';d.onclick=()=>d.classList.toggle('on');$('lcact').appendChild(d)});
+const tri=[["Made-ahead production","gives high throughput per labor hour"],["Narrow menu","makes a forecast over 4 products tractable (not 40)"],["Low price","works because variety is demanded when price is high"]];
+const triMsg=["Without made-ahead production, throughput per labor hour falls, so the low price stops working, and a narrow menu loses its reason to exist.","Without a narrow menu you cannot forecast over forty items, so made-ahead production breaks.","Without a low price buyers demand variety, so the narrow menu fails, and high throughput no longer pays."];
+tri.forEach((t,i)=>{const d=document.createElement('div');d.className='node';d.innerHTML='<b>'+t[0]+'</b><br><span class="mute">'+t[1]+'</span>';d.onclick=()=>{const was=d.classList.contains('off');document.querySelectorAll('.node').forEach(n=>n.classList.remove('off'));if(!was){d.classList.add('off');$('trimsg').textContent=triMsg[i]}else $('trimsg').textContent='All three hold each other up.'};$('tri').appendChild(d)});
+function bars(id,data,max,fmt,cols){$(id).innerHTML=data.map((d,i)=>'<div class="row"><span>'+d[0]+'</span><div class="bar" style="width:'+(d[1]/max*100)+'%;background:'+(cols?cols[i]:'var(--b)')+'">'+fmt(d[1])+'</div></div>').join('')}
+const R='var(--a)',B='var(--b)';
+bars('auv',[["Little Caesars",950000],["Domino's",1385000]],1385000,v=>'$'+(v/1000).toLocaleString()+'K',[R,B]);
+bars('fees',[["Little Caesars",11],["Pizza Hut",10.75],["Domino's",9.5]],11,v=>v+'%',[R,B,B]);
+bars('inv',[["Little Caesars",446500],["Domino's",107450]],446500,v=>'$'+v.toLocaleString(),[R,B]);
+bars('acsi',[["Pizza Hut",80],["Papa Johns",80],["Domino's",79],["Little Caesars",78]],80,v=>v+' (industry avg 79)',[B,B,B,R]);
+const tl=[["2004",5],["2021",5],["Jan 2022",5.55],["Now (tracker)",6.79],["Jul 2025 value menu*",9.99]];
+tl.forEach(t=>{const d=document.createElement('div');d.style.height=(t[1]/10*100)+'%';d.style.background=t[1]>=9?'var(--d)':'var(--b)';d.innerHTML='<small>$'+t[1]+'</small><em>'+t[0]+'</em>';$('tl').appendChild(d)});
+
+/* Links */
+const lnk=[["Inbound logistics","ASML","Only maker of EUV lithography. 2025: EUR 32.7B sales, 52.8% gross, 34.6% operating margin; EUR 38.8B backlog; sold out into 2027. JPMorgan: 94% of lithography.","It coordinates 5,100 suppliers. In 2016 paid EUR 1B for 24.9% of Carl Zeiss SMT, the only EUV mirror optics house, plus EUR 220M R&D and EUR 540M capital funding. Buying the chokepoint inside the chokepoint. A rival would need to rebuild a three-decade supplier network."],
+["Operations","TSMC","72.5% of global foundry revenue in Q2 2026 (Samsung 5.9%). 67.7% gross, 60.3% operating margin.","Built on a promise: it never competes with its customers. So Nvidia, Apple, AMD, Qualcomm shed their fabs, concentrating demand into one queue, funding capex, sustaining the node lead, attracting demand. It gave up designing chips to own the activity nobody else wanted to fund."],
+["Operations","YKK","About 40% of world zippers; over 10 billion units a year (3 million km, about 80x around Earth).","Makes its own brass, alloys, tape, machinery. Leases machines into customers' factories (a switching cost). Zipper is about 1% of garment cost yet carries the only legible logo, so brands specify YKK. Private: no margins published (a limit on the case)."],
+["Outbound logistics","Amazon","2025: 6.7B US parcels, passing USPS, 1.5x UPS. May 2026: sells the capability (Amazon Supply Chain Services) to P&G, 3M, Lands' End, American Eagle. FedEx and UPS shares fell about 10%.","Porter's argument on one activity: internal cost center, optimized into an advantage, then externalized and sold to incumbents' own customers."],
+["Service","The Ritz-Carlton","Any employee may spend up to $2,000 to fix a guest problem on the spot.","Results: RevPAR over 300% above industry average; pre-tax ROI 5.3% to 9.8% (1995 to 1998); 250 to 310 training hours in year one; turnover down nine straight years."]];
+lnk.forEach(l=>{const d=document.createElement('div');d.className='card flip';d.innerHTML='<div class="front"><span class="pill">'+l[0]+'</span><h3 style="margin:6px 0">'+l[1]+'</h3><p>'+l[2]+'</p><span class="mute">tap for the mechanism</span></div><div class="back"><span class="pill">'+l[0]+'</span><h3 style="margin:6px 0">'+l[1]+': mechanism</h3><p>'+l[3]+'</p></div>';d.onclick=()=>d.classList.toggle('on');$('links').appendChild(d)});
+
+/* Marimekko */
+const mmData=[["New vehicles",48.9,13.4,"#1f4e8c"],["Used and other*",28.3,9.4,"#7a8699"],["Finance and insurance*",5.3,29.6,"#b7791f"],["Parts and service",17.5,47.6,"#2a7f62"]];
+let prof=false;
+function drawMM(){$('mm').innerHTML=mmData.map(d=>{const w=d[1],h=prof?d[2]:d[1];return '<div style="width:'+w+'%;background:'+d[3]+';height:'+(prof?d[2]/47.6*100:d[1]/48.9*100)+'%"><span>'+d[0]+'<br><b>'+(prof?d[2]:d[1])+'%</b></span></div>'}).join('');
+$('mmcap').textContent=prof?'Bar height = share of gross profit (width = share of revenue). Parts and service is skinny but towering.':'Bar height = share of revenue. New vehicles dominate by volume.';
+$('mmbtn').textContent=prof?'Switch to revenue view':'Switch to gross profit view'}
+function toggleMM(){prof=!prof;drawMM()}drawMM();
+$('mmcap').insertAdjacentHTML('afterend','<p class="mute">*F&I derived as 22.8% minus 17.5% = 5.3% of revenue and 77.2% minus 47.6% = 29.6% of profit. Used/other = remainder.</p>');
+
+/* Coffee */
+bars('coffee',[["German excise tax",23],["Roasting",22],["Retail",22],["Farm / cultivation",21]],23,v=>v+'%',['#7a8699','#b7791f','#b7791f','#2a7f62']);
+
+/* Quiz */
+const Q=[["Per Porter, where do costs actually reside?",["In the firm as a whole","In discrete activities","In the brand","In the CEO's decisions"],1,"A firm has no costs; its activities do. A firm wins or loses in each separately."],
+["What is a linkage?",["Two firms merging","When the cost or effectiveness of one activity depends on how another is performed","A supplier contract","A support activity"],1,"E.g. more inbound inspection, less rework."],
+["Why is deleting an activity the most reliable cost reduction?",["It is easy","Regulators like it","A rival cannot answer by doing it more cheaply, since it is gone","It raises quality"],2,"Doing it cheaper invites the rival to respond in kind."],
+["Which is TRUE about Little Caesars versus Domino's per the reading?",["LC has higher volume per store","LC franchisees pay lower total fees","LC's initial investment floor is over 4x Domino's","LC leads on satisfaction"],2,"$446,500 vs $107,450. Volume is about 69% of Domino's; fees 11% vs 9.5%; ACSI 78 vs 79."],
+["What does a value chain analysis NOT tell you?",["Where cost went out","Which activities drive cost","Who kept the savings","Which activities differ in economics"],2,"The reading: ask both where cost went out and who kept it."],
+["How does TSMC own the operations link?",["Cheapest wages","Promising never to compete with its customers","Patents on zippers","Owning designs"],1,"The promise let customers shed fabs, concentrating demand in one queue."],
+["In AutoNation's 2025 results, parts and service plus finance and insurance were:",["22.8% of sales and 77.2% of gross profit","77.2% of sales and 22.8% of gross profit","50% of both","New vehicles' share"],0,"Pattern of profit differs sharply from pattern of revenue."],
+["Value chain vs profit pool: which is the positioning tool?",["Value chain","Profit pool","Both","Neither"],1,"A profit pool asks whether you are standing in the right part of the chain at all; the value chain is an efficiency instrument."]];
+let sc=0,ans=0;
+Q.forEach((q,i)=>{const d=document.createElement('div');d.className='card q';d.innerHTML='<b>'+(i+1)+'. '+q[0]+'</b>';const fb=document.createElement('div');fb.className='fb';
+q[1].forEach((o,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=o;b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;ans++;if(j===q[2]){sc++;b.classList.add('right')}else{b.classList.add('wrong');d.querySelectorAll('.opt')[q[2]].classList.add('right')}fb.textContent=q[3];$('score').textContent='Score: '+sc+' / '+ans+' answered (of '+Q.length+')'+(ans===Q.length?(sc>=7?'. You have got it.':'. Revisit the tabs for the ones you missed.'):'')};d.appendChild(b)});
+d.appendChild(fb);$('quiz').appendChild(d)});
+$('score').textContent='Score: 0 / 0 answered';
+</script>
+</body>
+</html>
