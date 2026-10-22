@@ -63,3 +63,18 @@ Measure what the spec lists: connected alone and how long, interview minutes, ta
 ## Standing risks to re-check each release
 - Tool call time under about 60s on every tool (`run_models` returns at once).
 - Setup page shows the exact connector URL for the current host and, after identity lands, the personal `/mcp/u/<key>` URL rather than a shared one.
+
+## Against spec 001 (PR #1)
+
+Built now (26 tests passing):
+- `blindness.mjs`: `assertBlind(text, {allow})` scans any tool result or `/r/<run_id>` page source for model names, judge/cost/latency fields, dollar amounts and label maps. Self-tested in `blindness.test.mjs`. Every tool test should call it on the full result (text block and `structuredContent`) before `get_results`. Caveat: a real task answer can mention "Google" or "Meta" legitimately, so for `get_answers` scan the envelope fields and use `allow` for words that appear in the person's own test text.
+- `golden.test.mjs`: `bench.py` reproduces `report.md` byte for byte for both builder runs today. When the TS port lands, swap `render()` to call it. The new cost column is the only allowed difference, so strip it before comparing.
+
+Spec 001 cases not yet written (need the tools):
+- Limits: 11 tests refused; field limits (title 80, prompt 4,000, context 8,000, criteria 1 to 7 at 200 each) name the test and field in the error; `run_models` twice returns the same status, never a second job; `save_tests` after the run leaves `draft` is refused; `submit_rating` after `get_results` is refused; re-rating overwrites; `best` equals `worst` is refused.
+- Scrub: emails and phones become `[email]` and `[phone]` and are reported; "As ChatGPT", "I'm Claude", "Gemini here", "as an OpenAI model" become "[model name removed]" in display text while the raw text is kept for the report.
+- Shape: every result has `next_step` in the text block and the same data in `structuredContent`.
+- Failure modes (fake OpenRouter): one model failing twice still leaves the test ratable with 2+ answers; fewer than 2 models answering most tests fails the run with a plain reason; judge JSON that doesn't parse is retried once then skipped; estimated cost above the per-run cap is refused with a plain sentence.
+- Abuse limits: per-IP cap on `start_benchmark` and `run_models`, global daily run counter.
+- Page: `/r/<run_id>` unknown ID is 404; page source passes `assertBlind` until the reveal; `POST /r/<run_id>/rate` writes the same rating `check_run` sees.
+- Cost: spec asks for a credit limit on the OpenRouter key before the URL is shared. Not testable in code; add it to Tyler's pre-launch checklist.
