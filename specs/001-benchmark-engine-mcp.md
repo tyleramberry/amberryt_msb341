@@ -82,14 +82,14 @@ later chat: "which AI should I use for this email?"
 |---|---|---|---|
 | `check_connection` | none | "MySI is connected", and the first sentence to say. Renamed from `ping`. | yes |
 | `start_benchmark` | `{label?, from_run?}` | `{run_id, rating_url}`, the intro and the interview guide; or, if this person has an unfinished run, its state so the host can resume. `from_run` copies an old run's tests. | no |
-| `get_task_ideas` | `{about_person}`: role and tasks named so far | 3–5 ideas for the host to *ask about*, never to save as tasks. One call to a cheap model. | yes |
-| `save_tests` | `{run_id, tests: [{category, title, prompt, context, criteria[]}]}` | The saved tests as Markdown cards, `coaching_notes` per test, `ready_to_confirm`, anything scrubbed. Replaces the whole set; allowed only while the run is `draft`. | no |
+| `get_task_ideas` | `{about_person}`: role and tasks named so far | 3–5 ideas for the host to *ask about* and adapt, never to save as tasks. Fixed idea questions, no model call. | yes |
+| `save_tests` | `{run_id, tests: [{category, title, prompt, context, criteria[]}], person_done?}` | The saved tests as Markdown cards, `coaching_notes` per test, `ready_to_confirm`, anything scrubbed. Replaces the whole set; allowed only while the run is `draft`. | no |
 | `run_models` | `{run_id, person_confirmed: true, models?}` | The lineup **by company only**, an estimate in minutes, the cost cap. Starts the background job. Refuses without `person_confirmed`. A second call returns the same status, never a second job. | no |
 | `check_run` | `{run_id}` | Run status (`draft`, `running`, `ready`, `finished`, `failed`) and each test's status (`queued`, `running`, `ready_to_rate`, `rated`), plus what to do next. | yes |
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
 | `get_results` | `{run_id}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, report_url, cost_usd}`. Ranks on whatever is rated (the second opinion only, labelled as such, if nothing is). Reveals every label and marks the run `finished`, so no more ratings. | yes* |
-| `which_model` | `{task_description?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Needs identity (below). | yes |
+| `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Until identity (below) is decided it takes a `run_id` and answers from that run only. | yes |
 | `rerun_test` | `{run_id, model?}` | Sprint 3 stub: says it's coming soon and records the interest. | no |
 
 \* `get_results` changes the run's state, but only to close rating. It is marked read-only so hosts
@@ -149,8 +149,8 @@ Coaching notes are deterministic rules, not a model call, so they're fast, free 
 | 3 or more tests, all in one category | ask about a different kind of work |
 | The prompt asks for a file (web page, spreadsheet, slides, code, a long document) | say it isn't supported yet; ask for a chat-sized version |
 
-`ready_to_confirm` is true once there are 5 or more tests with no open notes, or the host says the
-person is done.
+`ready_to_confirm` is true once there are 5 or more tests with no open notes, or the host passes
+`person_done: true`.
 
 ### Model calls
 
@@ -165,9 +165,9 @@ person is done.
 - **Privacy:** request providers that don't train on or retain prompts (OpenRouter's
   `provider.data_collection: "deny"`). A model with no such provider is left out of the default
   lineup.
-- **Order:** tests run in order (all of `t1`'s models, then `t1`'s judging, then `t2`…), so `t1`
-  is usually ready to rate within a minute and the person rates while the rest run. At most 4
-  calls in flight.
+- **Order:** tests run in order (all of `t1`'s models, then `t1`'s judging, then `t2`…). A test is
+  `ready_to_rate` as soon as its answers are in, before its judging finishes, so `t1` is usually
+  ready within a minute and the person rates while the rest run. At most 4 calls in flight.
 - Per answer, store the raw text, the scrubbed display text, latency, input and output tokens, and
   cost (OpenRouter returns cost per request).
 - Each call times out at 120 s and is retried twice with backoff. If a model still fails, its
@@ -195,8 +195,9 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
 
 - Your score: best = 2, worst = 0, the rest = 1, averaged over rated tests. If only `best` was
   given, best = 2 and the rest = 1. Ranked by your score; judge score breaks ties.
-- Columns: rank, model, your score, your picks for best, second-opinion score (1–10), median time,
-  and a new **cost per answer** (the skill couldn't measure cost; the API can).
+- Columns: rank, model, your score, your picks for best, judge score (1–10), median time, and a
+  new **cost per answer** (the skill couldn't measure cost; the API can). This full report is what
+  the rating page shows; the chat table labels the judge column "Second opinion".
 - Sections: ranking, by category, each test, how much to trust this (agreement between the person
   and the second opinion, number of tests, the note that small gaps may be luck).
 - `get_results` also builds the chat version from the same numbers: a one-sentence headline
@@ -264,10 +265,11 @@ The connector is public and has no sign-in, so anyone with the URL can spend my 
 - At most 10 tests × 5 models per run, 2 judges.
 - A hard credit limit on the OpenRouter key, set before the connector URL is shared (for example
   US$5 with a monthly reset). This is the real backstop.
-- A global daily run counter (for example 20 runs a day across everyone), plus a rate limit per
-  IP on `start_benchmark` and `run_models` (for example 5 a day).
-- A run refuses to start if its estimated cost, from token counts and current prices, is above a
-  per-run cap (start at US$2). The refusal is a plain sentence the host can pass on.
+- A global daily run cap: 20 runs a day across everyone. No per-IP limit: Claude.ai calls
+  connectors from shared IPs, so one would throttle every Claude user at once.
+- A per-run spend cap of US$2, checked between steps against the cost OpenRouter reports. When a
+  run hits it, it stops and keeps what it has, and the host gets a plain sentence to pass on.
+  (An up-front estimate was dropped: prices and answer lengths vary too much to estimate well.)
 - Workers paid plan (US$5 a month): the free plan's 10 ms of CPU per request is too tight for JSON
   work on long answers.
 - If abuse shows up anyway: a shared secret in the URL path (the personal URL already is one),
@@ -332,8 +334,9 @@ In `product/evals/`:
 
 - Identity: personal connector URL, a spoken code, or no memory for Sprint 3 (asked 2026-10-22).
 - Does my wife get through adding the connector alone? (Build step 1's real test.)
-- Default lineup and judge pool: exact model IDs, chosen at build time from current OpenRouter
-  prices and data policies.
+- Default lineup and judge pool: exact model IDs are in config but unverified, because OpenRouter
+  was blocked from the build environment. `npm run check-models` checks them; run it before the
+  first real run.
 - ChatGPT needs Developer mode (web only, paid plans) for a custom connector, a bigger hurdle than
   Claude's "Add custom connector". Claude is the first supported app; ChatGPT is tested but not
   promised for Sprint 3.
@@ -349,6 +352,6 @@ In `product/evals/`:
 - [ ] The TypeScript ranking matches `report.md` for both builder runs (eval 1).
 - [ ] No tool result or page shows a model name, judge score or cost before the reveal (checked by
       the testing thread).
-- [ ] Costs are capped: OpenRouter key limit set, daily and per-IP limits on, per-run cap
+- [ ] Costs are capped: OpenRouter key limit set, daily run cap on, per-run spend cap
       enforced. Cost per run is recorded from her run.
 - [ ] Every place she got stuck is written down in `sprints/`.
