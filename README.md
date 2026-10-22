@@ -4,7 +4,8 @@
 > the work you actually use AI for into test tasks, runs them on several models, and tells you
 > which model is best for *your* work.
 
-**Where to see it:** no live app yet. Sprint 3 builds it. The working prototype is the
+**Where to see it:** https://personal-bench.homeroom-app.workers.dev: setup steps for the MCP
+connector (step 1 of [the spec](specs/bench-mcp.md); it answers a `ping` tool so far). The working prototype is the
 `/personal-bench` Claude Code skill, which has run twice on my own work (one test task each, on
 Claude Haiku, Sonnet and Opus). The results are in [`product/bench/runs/`](product/bench/runs/).
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
@@ -19,6 +20,8 @@ history.
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
+| Personal Bench connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. Step 1: a `ping` tool only |
+| Personal Bench engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
 | Benchmark runs | [`product/bench/runs/`](product/bench/runs/) | In-repo |
 | Homeroom v0 chat UI (retired) | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no longer developed |
@@ -34,7 +37,7 @@ Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its
 
 | Deliverable | Status | Where |
 |---|---|---|
-| Live app with a link, code in this repo | Not started. Form factor chosen: a hosted engine reached through an MCP connector, plus one page for blind rating | [decision 006](decisions/006-pivot-to-personal-benchmark.md) |
+| Live app with a link, code in this repo | Step 1 of 6 shipped: the MCP connector is live with a `ping` tool. Next: port `bench.py`, then the real tools | [spec](specs/bench-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
 | One other person (my wife) builds her own tests through the product | Not started | — |
 | Tests 3 to 5 models and outputs her ranking table | Prototype ranks 3 Claude models; no other vendors yet | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
 | Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
@@ -88,10 +91,11 @@ its "Done looks like":
 |---|---|
 | [`sprints/`](sprints/) | One plan and one review per sprint |
 | [`decisions/`](decisions/) | Numbered records of what I decided and why |
+| [`product/engine/`](product/engine/) | Personal Bench engine: MCP server on Cloudflare Workers |
 | [`product/bench/`](product/bench/) | Personal benchmark runs |
 | [`product/app/`](product/app/) | Homeroom v0 UI code (retired) |
 | [`discovery/`](discovery/) | Homeroom interviews, worksheet, ICP, JTBD, insights, research |
-| [`specs/`](specs/) | Homeroom PRD and MVP spec, written before the work |
+| [`specs/`](specs/) | [Personal Bench spec](specs/bench-mcp.md); Homeroom PRD and MVP spec, written before the work |
 | [`design/`](design/) | Homeroom UI mockups |
 | `.claude/skills/` | `/personal-bench` prototype, plus course skills (`/sprint-plan`, `/sprint-review`, `/sprint-coach`, `/learn`, `/eli5`) |
 
@@ -101,6 +105,17 @@ its "Done looks like":
 interviews you about your work, turns it into test tasks you approve, runs them on Claude Haiku,
 Sonnet and Opus, has a blind judge score the answers, asks you to blind-rate them, and writes a
 ranking to `product/bench/runs/<date>-<label>/report.md`. Takes about 20 to 30 minutes.
+
+**Personal Bench engine.** In `product/engine/`: a Cloudflare Worker serving a stateless MCP
+server at `/mcp` (Cloudflare `agents` + `@modelcontextprotocol/server`) and the setup page at `/`.
+
+```bash
+cd product/engine
+npm install
+npm run dev       # local server on :8787, MCP at /mcp
+npm run typecheck
+npm run deploy    # wrangler deploy (needs `npx wrangler login` once)
+```
 
 **Homeroom v0 UI (retired).** In `product/app/`: Vite + React + TS, Supabase, deployed to
 Cloudflare Workers static assets (`decisions/003-v0-web-stack.md`).

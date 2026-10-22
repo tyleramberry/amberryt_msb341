@@ -1,0 +1,9 @@
+{
+  // Personal benchmark engine: remote MCP server at /mcp, pages at /.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "personal-bench",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true }
+}
