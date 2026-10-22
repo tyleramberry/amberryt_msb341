@@ -256,9 +256,9 @@ so ChatGPT and Claude ask fewer permission questions.
 | `save_tests` | After each task drafted, and after each edit | `run_id`, `tests[]` (full set, replaces previous) | normalized cards, coaching notes per task, count, `ready_to_confirm` | no |
 | `run_models` | Person confirmed the test | `run_id`, `person_confirmed: true` | lineup by company, ETA, cost cap | no |
 | `check_run` | After `run_models`, and when the person says "check" | `run_id` | per-task status (running, ready to rate, rated), what to do next | yes |
-| `get_answers` | A task is ready to rate | `run_id`, `task_id` | task, blind answers A–D, display rules, page link, widget ref | yes |
-| `submit_rating` | Person picked best and worst | `run_id`, `task_id`, `best`, `worst?`, `note?` | saved, next task ready or not | no |
-| `get_results` | All rated, or the person asks to stop | `run_id` | headline, table, by-category, reveal, trust lines, memory line, report link | yes |
+| `get_answers` | A task is ready to rate | `run_id`, `test_id?` (omitted = next one ready to rate) | task, blind answers A–D, display rules, page link, widget ref | yes |
+| `submit_rating` | Person picked best and worst | `run_id`, `test_id`, `best`, `worst?`, `note?` | saved, next task ready or not | no |
+| `get_results` | All rated, or the person asks to stop | `run_id` | headline, table, by-category, reveal, trust lines, memory line, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
 | `which_model` | Later chats: "which AI for this?", "my results" | `task_description?` | best model for that kind of work, past benchmarks | yes |
 | `rerun_test` | "Test the new model on my stuff" | `run_id`, `model?` | Sprint 3: "coming soon", records interest | no |
 
@@ -360,7 +360,7 @@ Log per tool call with timestamps. Then, by hand afterwards:
 
 ## Open questions for Tyler
 
-1. Identity: personal connector URL (recommended) or a spoken code?
+1. Identity: personal connector URL (recommended) or a spoken code? (Asked from the specs thread.)
 2. Default size: 5 to 8 tasks and 4 models? Fewer tasks is less noise-tolerant but less tiring.
 3. Should the "second opinion" show at all for the first version, or only the person's picks?
 
