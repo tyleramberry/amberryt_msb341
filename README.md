@@ -1,27 +1,47 @@
-# Homeroom
+# Personal Bench (working name)
 
-> Homeroom is an LLM harness that helps college students study: it knows their courses and checks drafts against the rubric.
+> A personal model benchmark: it turns the work you actually use AI for into test tasks, runs them
+> on several models, and tells you which model is best for *your* work.
 
-**Where to see it:** the v0 chat UI, live at https://homeroom.homeroom-app.workers.dev — a
-clickable prototype whose agent replies are placeholders. The harness core is not wired up yet,
-and the problem itself is only partly validated.
+**Where to see it:** no live app yet. Sprint 3 builds it. The working prototype is the
+`/personal-bench` Claude Code skill, which has run twice on my own work (one test task each, on
+Claude Haiku, Sonnet and Opus). The results are in [`product/bench/runs/`](product/bench/runs/).
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
+
+This repo started as **Homeroom**, a study harness for college students. Sprint 2's validation
+was weak, so Sprint 3 pivots to the personal benchmark
+([decision 006](decisions/006-pivot-to-personal-benchmark.md)). The Homeroom work stays below as
+history.
 
 ## Where the work lives
 
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
-| Homeroom v0 chat UI | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no harness core yet |
-| UI code | [`product/app/`](product/app/) | In-repo |
-| AI interview conversation (worksheet Part 2) | https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73 | Public link; scores in [`discovery/worksheet.md`](discovery/worksheet.md) |
+| Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
+| Benchmark runs | [`product/bench/runs/`](product/bench/runs/) | In-repo |
+| Homeroom v0 chat UI (retired) | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no longer developed |
+| Homeroom UI code (retired) | [`product/app/`](product/app/) | In-repo |
+| AI interview conversation (Sprint 2 worksheet Part 2) | https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73 | Public link; scores in [`discovery/worksheet.md`](discovery/worksheet.md) |
 | Sprint 2 reflection video | https://www.loom.com/share/c10c024c9abc4ecf94669d5471a5a845 | Loom |
 
 No other repo holds this work.
 
-## Sprint 2: Validate the problem (in progress)
+## Sprint 3: Build a working personal benchmark (in progress)
 
-Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its "Done looks like":
+Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its "Done looks like":
+
+| Deliverable | Status | Where |
+|---|---|---|
+| Live app with a link, code in this repo | Not started. Form factor chosen: a hosted engine reached through an MCP connector, plus one page for blind rating | [decision 006](decisions/006-pivot-to-personal-benchmark.md) |
+| One other person (my wife) builds her own tests through the product | Not started | — |
+| Tests 3 to 5 models and outputs her ranking table | Prototype ranks 3 Claude models; no other vendors yet | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
+| Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
+
+## Sprint 2: Validate the problem (done; led to the pivot)
+
+[Plan](sprints/sprint-2-plan.md) · [Review and retro](sprints/sprint-2-review.md). Status against
+its "Done looks like":
 
 | Deliverable | Status | Where |
 |---|---|---|
@@ -53,29 +73,36 @@ Plan: [`sprints/sprint-2-plan.md`](sprints/sprint-2-plan.md). Status against its
 - **My role:** Solo founder — product, engineering, design, and go-to-market. Early sprints
   heavy on product (validating ideas), then shifting to engineering (shipping features), then
   a mix of product and GTM (getting in front of users).
-- **What I am working on:** Homeroom, an education-focused LLM harness. See the
-  [PRD](specs/agent-harness-prd.md) and [MVP spec](specs/mvpspec.md).
-- **Who it is for:** College students taking several courses ([decision 001](decisions/001-mvp-user.md)).
-  Starts as a learning and portfolio project ([decision 002](decisions/002-learning-portfolio-first.md)).
-- **Who uses my work:** Students are the end users. Teachers supply rubrics and need to trust
-  that it teaches rather than cheats.
+- **What I am working on:** a personal model benchmark. Each person should own their own
+  personal superintelligence, and part of that is knowing which model to use for which task.
+  Models come out faster than anyone can follow, and public leaderboards don't say which one is
+  good at *your* work ([decision 006](decisions/006-pivot-to-personal-benchmark.md)).
+- **Who it is for:** people who use AI for their own work and agents but can't keep up with
+  model releases. Not yet validated with interviews.
+- **Who uses my work:** the first outside user is my wife (Sprint 3).
 
 ## What is in this repo
 
 | Folder | What lives here |
 |---|---|
 | [`sprints/`](sprints/) | One plan and one review per sprint |
-| [`discovery/`](discovery/) | Interviews, worksheet, ICP, JTBD, insights, research |
-| [`specs/`](specs/) | PRD and MVP spec, written before the work |
 | [`decisions/`](decisions/) | Numbered records of what I decided and why |
-| [`product/`](product/) | The v0 UI code |
-| [`design/`](design/) | UI mockups |
-| `.claude/skills/` | Course skills (`/sprint-plan`, `/sprint-review`, `/learn`, `/eli5`) |
+| [`product/bench/`](product/bench/) | Personal benchmark runs |
+| [`product/app/`](product/app/) | Homeroom v0 UI code (retired) |
+| [`discovery/`](discovery/) | Homeroom interviews, worksheet, ICP, JTBD, insights, research |
+| [`specs/`](specs/) | Homeroom PRD and MVP spec, written before the work |
+| [`design/`](design/) | Homeroom UI mockups |
+| `.claude/skills/` | `/personal-bench` prototype, plus course skills (`/sprint-plan`, `/sprint-review`, `/sprint-coach`, `/learn`, `/eli5`) |
 
 ## Running it
 
-The v0 UI is in `product/app/` — Vite + React + TS, Supabase, deployed to Cloudflare Workers
-static assets (`decisions/003-v0-web-stack.md`).
+**Personal benchmark prototype.** Open this repo in Claude Code and type `/personal-bench`. It
+interviews you about your work, turns it into test tasks you approve, runs them on Claude Haiku,
+Sonnet and Opus, has a blind judge score the answers, asks you to blind-rate them, and writes a
+ranking to `product/bench/runs/<date>-<label>/report.md`. Takes about 20 to 30 minutes.
+
+**Homeroom v0 UI (retired).** In `product/app/`: Vite + React + TS, Supabase, deployed to
+Cloudflare Workers static assets (`decisions/003-v0-web-stack.md`).
 
 ```bash
 cd product/app
@@ -88,7 +115,7 @@ npm run deploy    # build, then wrangler deploy (needs `npx wrangler login` once
 It runs against the Supabase project committed in `src/lib/supabase.ts` with no setup: each
 browser signs in anonymously. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` override
 that if you need a different project. Agent replies come from a database trigger, so what you
-see in the UI is not a harness talking yet.
+see in the UI is not a harness talking.
 
 ## Sprints
 
