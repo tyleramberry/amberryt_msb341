@@ -9,8 +9,9 @@ and why.
 
 - **My role:** Solo founder: product, engineering, design, and go-to-market. Early sprints are
   heavy on product (validating the idea), then engineering (shipping), then product + GTM.
-- **What it is:** Personal Bench (working name), a personal model benchmark. It turns the work a
-  person actually uses AI for into test tasks, runs them on several models, and ranks the models
+- **What it is:** MySI ("my SI", short for my superintelligence; name chosen 2026-10-21, may
+  change), a personal model benchmark. It turns the work a person actually uses AI for into test
+  tasks, runs them on several models, and ranks the models
   for that person. Pivoted from Homeroom in Sprint 3 (`decisions/006-pivot-to-personal-benchmark.md`).
 - **Why:** Each person should own their own personal superintelligence, and part of that is
   knowing which model to use for which task and being free to switch models and providers.

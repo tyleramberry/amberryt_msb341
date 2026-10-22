@@ -1,7 +1,8 @@
-# Personal Bench (working name)
+# MySI
 
-> A personal model benchmark: it turns the work you actually use AI for into test tasks, runs them
-> on several models, and tells you which model is best for *your* work.
+> Own your personal superintelligence. MySI ("my SI") is a personal model benchmark: it turns
+> the work you actually use AI for into test tasks, runs them on several models, and tells you
+> which model is best for *your* work.
 
 **Where to see it:** no live app yet. Sprint 3 builds it. The working prototype is the
 `/personal-bench` Claude Code skill, which has run twice on my own work (one test task each, on

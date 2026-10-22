@@ -5,7 +5,7 @@ description: Build a personal AI benchmark from a guided conversation, then run 
 
 # Personal Bench
 
-The Sprint 3 prototype of the personal benchmarking product, run inside Claude Code before it
+The Sprint 3 prototype of MySI, the personal benchmarking product, run inside Claude Code before it
 becomes an app. One run goes: **describe your work → evals → run the models → grade → rank.**
 
 The person being benchmarked may not be the builder (Sprint 3's test user is Tyler's wife). Talk
