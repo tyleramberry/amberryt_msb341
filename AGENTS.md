@@ -39,7 +39,8 @@ and why.
   she can't, the hosted page becomes the main way in. Second: whether blind ratings show real
   differences between models on personal tasks at all. If not, the product idea needs
   rethinking.
-- **No spec yet.** Write `specs/` for the engine and MCP connector before building it.
+- **Specs:** `specs/001-benchmark-engine-mcp.md` (the engine and its tools) and
+  `specs/002-harness-ux.md` (what the person sees inside their chat app). Build to these.
 - **Homeroom (retired):** the v0 UI at https://homeroom.homeroom-app.workers.dev (code in
   `product/app/`), its discovery work in `discovery/`, and its specs in `specs/` stay as history.
   Don't extend them.
@@ -80,9 +81,9 @@ Background research (from the Homeroom sprints, still useful for agent and harne
 
 ## Tools and conventions
 
-- **Stack or tools:** Cloudflare Workers + Supabase (`decisions/003-v0-web-stack.md`), kept for the
-  benchmark engine (decision 006). Models from other vendors go through OpenRouter. The
-  prototype skill's `scripts/bench.py` does the shuffling and ranking math; port it, don't rewrite it.
+- **Stack or tools:** Cloudflare Workers, with each run stored in its own Durable Object
+  (`decisions/007-engine-storage-durable-objects.md`; the engine doesn't use Supabase). Models
+  from other vendors go through OpenRouter. The prototype skill's `scripts/bench.py` does the shuffling and ranking math; port it, don't rewrite it.
 - **How work ships:** Commits to `main` on GitHub (tyleramberry/amberryt_msb341). Visual pages
   may also be published as Claude artifacts and linked from the matching `.md`.
 - **Testing and style:** Fill in once there's code. Any AI feature gets an eval set in
