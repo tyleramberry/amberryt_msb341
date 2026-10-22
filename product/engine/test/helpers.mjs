@@ -4,6 +4,8 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 
 const engineDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let child;
@@ -13,7 +15,9 @@ export async function startTarget({ vars = {}, persist = false } = {}) {
   const port = 8700 + Math.floor(Math.random() * 200);
   const base = `http://127.0.0.1:${port}`;
   const varArgs = Object.entries({ MAX_RUNS_PER_DAY: "1000", ...vars }).flatMap(([k, v]) => ["--var", `${k}:${v}`]);
-  child = spawn("npx", ["wrangler", "dev", "--port", String(port), "--ip", "127.0.0.1", ...varArgs], {
+  // A fresh state dir unless asked to persist, so counters like the daily run cap start at zero.
+  const stateArgs = persist ? [] : ["--persist-to", mkdtempSync(path.join(tmpdir(), "mysi-test-"))];
+  child = spawn("npx", ["wrangler", "dev", "--port", String(port), "--ip", "127.0.0.1", ...varArgs, ...stateArgs], {
     cwd: engineDir,
     stdio: "ignore",
   });

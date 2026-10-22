@@ -22,7 +22,8 @@ async function ratingRoutes(request: Request, env: Env, url: URL): Promise<Respo
   if (!(await run.exists())) return html(notFoundPage(), 404);
 
   if (request.method === "POST" && action === "/rate") {
-    const form = await request.formData();
+    const form = await request.formData().catch(() => null);
+    if (!form) return new Response("Send the rating as a form.", { status: 400 });
     const testId = String(form.get("test_id") ?? "");
     const r = await run.rate(testId, String(form.get("best") ?? ""), String(form.get("worst") ?? "") || null, String(form.get("note") ?? ""), "page");
     if (!r.ok) return redirect(`/r/${runId}?t=${encodeURIComponent(testId)}`);
