@@ -7,7 +7,12 @@
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
     "deploy": "wrangler deploy",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.ts test/blindness.test.mjs test/golden.test.mjs",
+    "test:protocol": "node --test --test-concurrency=1 test/mcp.test.mjs",
+    "test:tools": "node --test --test-concurrency=1 test/tools.test.mjs test/limits.test.mjs",
+    "test:all": "npm test && npm run test:protocol && npm run test:tools",
+    "test:flow": "node --test test/flow.test.mjs",
+    "check-models": "node scripts/check-models.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261022.1",

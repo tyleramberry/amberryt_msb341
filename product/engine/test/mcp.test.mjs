@@ -36,7 +36,7 @@ describe("protocol", () => {
     const r = await rpc(base, init);
     assert.equal(r.status, 200);
     assert.equal(r.body.id, 1);
-    assert.equal(r.body.result.serverInfo.name, "personal-bench");
+    assert.equal(r.body.result.serverInfo.name, "mysi");
     assert.ok(r.body.result.capabilities.tools);
     assert.ok(r.body.result.protocolVersion);
   });
@@ -83,10 +83,11 @@ describe("protocol", () => {
   });
 
   test("two calls in a row both work (no per-connection state leaks)", async () => {
-    const a = await call(base, "ping", { name: "A" }, 1);
-    const b = await call(base, "ping", { name: "B" }, 2);
-    assert.match(text(a), /, A\./);
-    assert.match(text(b), /, B\./);
+    const a = await call(base, "start_benchmark", { label: "A" }, 1);
+    const b = await call(base, "start_benchmark", { label: "B" }, 2);
+    const ida = a.body.result.structuredContent.run_id;
+    const idb = b.body.result.structuredContent.run_id;
+    assert.notEqual(ida, idb);
   });
 });
 
@@ -111,45 +112,30 @@ describe("every tool (generic)", () => {
   });
 });
 
-describe("ping", () => {
-  test("is listed with an optional string `name`", async () => {
+describe("check_connection", () => {
+  test("is read-only, takes no arguments, and says what to type next", async () => {
     const { body } = await rpc(base, { jsonrpc: "2.0", id: 1, method: "tools/list" });
-    const ping = body.result.tools.find((t) => t.name === "ping");
-    assert.ok(ping, "ping missing");
-    assert.equal(ping.inputSchema.properties.name.type, "string");
-    assert.ok(!ping.inputSchema.required?.includes("name"));
-  });
-
-  test("works with no arguments", async () => {
-    const r = await call(base, "ping");
+    const t = body.result.tools.find((x) => x.name === "check_connection");
+    assert.ok(t, "check_connection missing");
+    assert.equal(t.annotations?.readOnlyHint, true);
+    const r = await call(base, "check_connection");
     assert.ok(!r.body.result.isError);
-    assert.match(text(r), /^Personal Bench is connected\. /);
-  });
-
-  test("greets the name it is given", async () => {
-    const r = await call(base, "ping", { name: "Tyler" });
-    assert.match(text(r), /^Personal Bench is connected, Tyler\. /);
+    assert.match(text(r), /find my best AI model/i);
   });
 
   test("reports a current ISO server time", async () => {
     const before = Date.now();
-    const r = await call(base, "ping");
-    const iso = text(r).match(/Server time: (\S+?)\./)?.[1];
-    assert.ok(iso, "no timestamp in reply");
-    const t = Date.parse(iso);
-    assert.ok(Math.abs(t - before) < 60_000, `timestamp ${iso} is not near now`);
+    const r = await call(base, "check_connection");
+    const t = Date.parse(r.body.result.structuredContent.server_time);
+    assert.ok(Math.abs(t - before) < 60_000);
   });
 
-  test("rejects a non-string name with isError, not a crash", async () => {
-    const r = await call(base, "ping", { name: 5 });
-    assert.equal(r.status, 200);
-    assert.equal(r.body.result.isError, true);
-    assert.match(text(r), /validation/i);
-  });
-
-  test("handles unicode and long names", async () => {
-    const name = "Zoë 😀 " + "x".repeat(2000);
-    const r = await call(base, "ping", { name });
-    assert.ok(text(r).includes(name));
+  test("POST / serves MCP too, for people who paste the bare URL", async () => {
+    const res = await fetch(base + "/", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+    assert.equal(res.status, 200);
   });
 });

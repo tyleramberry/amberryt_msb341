@@ -78,3 +78,12 @@ Spec 001 cases not yet written (need the tools):
 - Abuse limits: per-IP cap on `start_benchmark` and `run_models`, global daily run counter.
 - Page: `/r/<run_id>` unknown ID is 404; page source passes `assertBlind` until the reveal; `POST /r/<run_id>/rate` writes the same rating `check_run` sees.
 - Cost: spec asks for a credit limit on the OpenRouter key before the URL is shared. Not testable in code; add it to Tyler's pre-launch checklist.
+
+## Status against build PR #2 (merged into this branch)
+
+`npm run test:all` runs unit + golden + blindness self-tests, the protocol suite and the tool suite, each starting its own local Worker with mock models and `MAX_RUNS_PER_DAY=1000`. `npm run test:flow` is the build thread's happy-path flow (needs a running dev server). Suites run one at a time because parallel `wrangler dev` starts collide.
+
+Covered in `tools.test.mjs`: read-only annotations, `next_step` on every result, plain-language errors, run-ID entropy, save_tests limits and scrubbing and coaching, run_models refusals and company-only lineup, blindness of every tool result and of the rating-page source, stable label order, rating rules, judge-only results, rating closed after the reveal, page 404 and escaping, rerun_test stub; `limits.test.mjs` covers the daily cap.
+
+Open bugs found: see the build thread (POST /r/<id>/rate with a non-form body returns 500).
+Not covered yet: per-IP rate limit (not built), self-identification scrub end to end (mock answers never name a model; unit tests in `coach.test.ts` cover the function), judge disagreement, the real OpenRouter path.

@@ -8,11 +8,12 @@ import path from "node:path";
 const engineDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let child;
 
-export async function startTarget() {
+export async function startTarget({ vars = {}, persist = false } = {}) {
   if (process.env.MCP_URL) return process.env.MCP_URL.replace(/\/$/, "");
   const port = 8700 + Math.floor(Math.random() * 200);
   const base = `http://127.0.0.1:${port}`;
-  child = spawn("npx", ["wrangler", "dev", "--port", String(port), "--ip", "127.0.0.1"], {
+  const varArgs = Object.entries({ MAX_RUNS_PER_DAY: "1000", ...vars }).flatMap(([k, v]) => ["--var", `${k}:${v}`]);
+  child = spawn("npx", ["wrangler", "dev", "--port", String(port), "--ip", "127.0.0.1", ...varArgs], {
     cwd: engineDir,
     stdio: "ignore",
   });
