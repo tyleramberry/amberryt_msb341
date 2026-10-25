@@ -1,6 +1,6 @@
 # Spec 002: MySI user experience inside the person's chat app
 
-**Status:** Draft for review
+**Status:** Built; kept current with the engine (see spec 001)
 **Date:** 2026-10-22
 **Goes with:** the engine spec ([001](001-benchmark-engine-mcp.md)), [decision 006](../decisions/006-pivot-to-personal-benchmark.md)
 
@@ -53,15 +53,16 @@ The person never sees "eval", "judge model", "OpenRouter", "run ID" or JSON.
 
 ### Step 0: Connect (one time, the riskiest step)
 
-The setup page (the Worker's `/`) is where a person starts. It already exists for `ping`.
-Changes:
+The setup page (the Worker's `/`) is where a person starts. As built:
 
 - **Rename to MySI** everywhere the person sees it (page, server name, connector name).
 - **Give each person their own connector URL**, `https://<host>/mcp/u/<key>`, created when they
-  click "Get my link". The key is long and random. This is how MySI remembers them across chats
-  without accounts or OAuth (see "Identity" below).
-- Steps per harness with screenshots: Claude.ai/Desktop, ChatGPT (developer mode), Claude Code
-  (`claude mcp add --transport http mysi <url>`), Cursor (`mcp.json` snippet).
+  press the one button, "Use it in Claude". The key is long and random. This is how MySI
+  remembers them across chats without accounts or OAuth (see "Identity" below).
+- The button copies a prompt with that link to paste into Claude: Claude Code adds the connector
+  itself; claude.ai walks the person through Settings > Connectors. The prompt warns not to add
+  it in a cloud session (the first user's snag). Other harnesses (ChatGPT developer mode, Cursor)
+  are not on the page yet.
 - **The first sentence to type is printed on the page**: "Find my best AI model." Tell them to
   click **Always allow** when the chat app asks permission for MySI's tools, or they'll get a
   permission pop-up on every step.
@@ -203,9 +204,12 @@ which ranks on whatever was rated.
 `get_results` returns:
 
 1. **The headline**, one sentence: "For your work, **GPT-x** came out on top: you picked it as
-   best on 2 of 3 tasks."
+   best on 2 of 3 tasks." There is always one winner: a tie goes to the cheaper, faster model,
+   and the headline says so (decision 009).
+   Then, if the winner doesn't run in the person's app, the best model that does
+   (`in_your_app`), because people won't switch apps per task.
 2. **The ranking table** (ported `report.md`, trimmed for chat): rank, model, your score, your
-   best-picks. No judge column.
+   best-picks, median time, cost per answer. No judge column.
 3. **By kind of work**, only if it differs: "For writing, Claude won. For planning, Gemini won."
 4. **The reveal**: for each task, which model wrote the answer they picked as best. This is the
    fun part; the host gives it its own moment.
@@ -258,7 +262,7 @@ so ChatGPT and Claude ask fewer permission questions.
 | `check_run` | After `run_models`, and when the person says "check" | `run_id` | per-task status (running, ready to rate, rated), what to do next | yes |
 | `get_answers` | A task is ready to rate | `run_id`, `test_id?` (omitted = next one ready to rate) | task, blind answers A–C (more if the lineup is larger), display rules, page link, widget ref | yes |
 | `submit_rating` | Person picked best and worst | `run_id`, `test_id`, `best`, `worst?`, `note?` | saved, next task ready or not | no |
-| `get_results` | All rated, or the person asks to stop | `run_id` | headline, table, by-category, reveal, trust lines, memory line, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
+| `get_results` | All rated, or the person asks to stop | `run_id`, `app` (the chat app the host runs in) | headline, table, by-category, reveal, trust lines, memory line, best model in your app, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
 | `which_model` | Later chats: "which AI for this?", "my results" | `task_description?` | best model for that kind of work, past benchmarks | yes |
 | `rerun_test` | "Test the new model on my stuff" | `run_id`, `model?` | Sprint 3: "coming soon", records interest | no |
 | `get_run_plan` | Claude Code plan mode only, after the person confirmed the test | `run_id` | one slot per test × model: `slot_id`, `model` (haiku, sonnet, opus), exact prompt to send | yes |
@@ -297,8 +301,8 @@ nothing critical lives only here):
 
 | Resource | Purpose |
 |---|---|
-| `ui://mysi/rate` | The inline rating widget (MCP Apps). Optional path A. |
-| `ui://mysi/results` | Inline results card with the reveal. Optional. |
+| `ui://mysi/rate` | The inline rating widget (MCP Apps). Version 2, not built. |
+| `ui://mysi/results` | Inline results card with the reveal. Version 2, not built. |
 | `mysi://guide/interview` | The interview guide, for apps that let people attach resources |
 | `mysi://runs/{run_id}/report` | The report as Markdown |
 

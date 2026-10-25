@@ -14,7 +14,10 @@ export async function startTarget({ vars = {}, persist = false } = {}) {
   if (process.env.MCP_URL) return process.env.MCP_URL.replace(/\/$/, "");
   const port = 8700 + Math.floor(Math.random() * 200);
   const base = `http://127.0.0.1:${port}`;
-  const varArgs = Object.entries({ MAX_RUNS_PER_DAY: "1000", ...vars }).flatMap(([k, v]) => ["--var", `${k}:${v}`]);
+  // Mock models and no owner's log unless a test asks, even when a local .env has the real
+  // OPENROUTER_API_KEY and ADMIN_TOKEN (wrangler dev loads it).
+  const defaults = { MAX_RUNS_PER_DAY: "1000", MOCK_MODELS: "1", ADMIN_TOKEN: "" };
+  const varArgs = Object.entries({ ...defaults, ...vars }).flatMap(([k, v]) => ["--var", `${k}:${v}`]);
   // A fresh state dir unless asked to persist, so counters like the daily run cap start at zero.
   const stateArgs = persist ? [] : ["--persist-to", mkdtempSync(path.join(tmpdir(), "mysi-test-"))];
   child = spawn("npx", ["wrangler", "dev", "--port", String(port), "--ip", "127.0.0.1", ...varArgs, ...stateArgs], {

@@ -1,6 +1,6 @@
 # Spec 001: MySI engine, reached through an MCP connector
 
-**Status:** In progress
+**Status:** Built (build order steps 1 to 7 done 2026-10-24); kept current with the engine
 **Date:** 2026-10-21 (first draft as `bench-mcp.md`), rewritten 2026-10-22
 
 What the person sees and hears, step by step, is in [spec 002](002-harness-ux.md). This spec
@@ -89,7 +89,7 @@ later chat: "which AI should I use for this email?"
 | `check_run` | `{run_id}` | Run status (`draft`, `running`, `ready`, `finished`, `failed`) and each test's status (`queued`, `running`, `ready_to_rate`, `rated`), plus what to do next. | yes |
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
-| `get_results` | `{run_id}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, report_url, cost_usd}`. Ranks on whatever is rated; if nothing is rated, says so and asks the person to rate at least one test. Reveals every label and marks the run `finished`, so no more ratings. | yes* |
+| `get_results` | `{run_id, app?}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, in_your_app, report_url, cost_usd}`. One winner: ties go to the cheaper, faster model (decision 009). `app` is the chat app the host runs in; `in_your_app` names the best model usable there. Ranks on whatever is rated; if nothing is rated, says so and asks the person to rate at least one test. Reveals every label and marks the run `finished`, so no more ratings. | yes* |
 | `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Called through a personal connector URL, it answers from all of that person's runs; through plain `/mcp`, it needs a `run_id` and answers from that run only. | yes |
 | `rerun_test` | `{run_id, model?}` | Sprint 3 stub: says it's coming soon and records the interest. | no |
 
@@ -210,7 +210,8 @@ second risk), but no tool result, page or report shown to the person includes th
 
 - Two judges from **vendors not in the lineup**, picked at run time from a configured pool and
   stored on the run. A judge from the same vendor as a contestant tends to favour it, and the
-  lineup already covers the big vendors, so the pool is open-weight and smaller-vendor models.
+  lineup already covers OpenAI, Google and Anthropic, so the pool is other vendors (DeepSeek,
+  Mistral, xAI, Moonshot).
   If the pool can't supply two outside judges for a custom lineup, use one and say so in the
   report.
 - One call per judge per test with the skill's judge prompt (blind labels, shuffled order, "ignore
@@ -365,15 +366,17 @@ In `product/evals/`:
 
 ## Build order
 
-1. ~~Hello-world connector, deployed.~~ Done: `ping` at
-   https://personal-bench.homeroom-app.workers.dev/mcp. Still to do: my wife adds it herself.
-   Decision 006 changes if she can't.
-2. **Port `bench.py` to TypeScript** with tests (eval 1).
-3. **Run storage** (Durable Object + SQLite) and the daily counter.
-4. **Tools, end to end**, with `run_models` as the background job, tests in order.
-5. **In-chat rating and the rating page** at `/r/<run_id>`.
-6. **Personal connector URLs, the per-person object, and `which_model`.**
-7. **Run it once myself, then my wife runs it hands-off.** Log every place she gets stuck.
+All seven steps are done, at https://personal-bench.homeroom-app.workers.dev.
+
+1. ~~Hello-world connector, deployed.~~ (`ping`, now `check_connection`.)
+2. ~~Port `bench.py` to TypeScript with tests (eval 1).~~ `src/bench.ts`, `test/golden.test.mjs`.
+3. ~~Run storage (Durable Object + SQLite) and the daily counter.~~
+4. ~~Tools, end to end, with `run_models` as the background job, tests in order.~~
+5. ~~In-chat rating and the rating page at `/r/<run_id>`.~~
+6. ~~Personal connector URLs, the per-person object, and `which_model`.~~
+7. ~~My wife runs it hands-off.~~ 2026-10-24, two small assists, logged in
+   [interview 06](../discovery/interviews/2026-10-24-interview-06.md). Its fixes are in
+   [decision 009](../decisions/009-one-winner-and-your-app.md).
 
 ## Out of scope
 
@@ -388,10 +391,11 @@ In `product/evals/`:
 
 ## Open questions
 
-- Does my wife get through adding the connector alone? (Build step 1's real test.)
-- Default lineup and judge pool: exact model IDs are in config but unverified, because OpenRouter
-  was blocked from the build environment. `npm run check-models` checks them; run it before the
-  first real run.
+- ~~Does my wife get through adding the connector alone?~~ Nearly: she needed help moving from a
+  cloud session to Claude Code on her computer, and to say "confirm" when it asked to add the
+  connector. The connect prompt now warns about cloud sessions.
+- Default lineup and judge pool: all seven ids found on OpenRouter by `npm run check-models` on
+  2026-10-24. Run it again before changing the lineup.
 - ChatGPT needs Developer mode (web only, paid plans) for a custom connector, a bigger hurdle than
   Claude's "Add custom connector". Claude is the first supported app; ChatGPT is tested but not
   promised for Sprint 3.

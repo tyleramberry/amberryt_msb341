@@ -22,8 +22,8 @@ history.
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
-| Personal Bench connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Use it in Claude" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
-| Personal Bench engine code | [`product/engine/`](product/engine/) | In-repo |
+| MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Use it in Claude" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
+| MySI engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
 | Benchmark runs | [`product/bench/runs/`](product/bench/runs/) | In-repo |
 | Homeroom v0 chat UI (retired) | https://homeroom.homeroom-app.workers.dev | Public. Placeholder agent replies; no longer developed |
@@ -41,7 +41,7 @@ Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its
 |---|---|---|
 | Live app with a link, code in this repo | Done: live engine with the benchmark tools, personal links, blind rating page, judges, and one winner per run (ties go to the cheaper, faster model, [decision 009](decisions/009-one-winner-and-your-app.md)). Next: re-run a person's tests when a new model ships | [spec](specs/001-benchmark-engine-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
 | One other person (my wife) builds her own tests through the product | Done 2026-10-24: 2 tests (client email, math help), 3 models rated blind, ~15 min, $0.07 | [interview 06](discovery/interviews/2026-10-24-interview-06.md) |
-| Tests 3 to 5 models and outputs her ranking table | Done: her run ranked GPT-5, Gemini 2.5 Pro and Claude Sonnet 4.5 (a 3-way tie, which led to decision 009). Lineup is now GPT-6.1 Sol, Gemini 4 Argon, Claude Sonnet 5.5 | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
+| Tests 3 to 5 models and outputs her ranking table | Done: her run ranked GPT-5, Gemini 2.5 Pro and Claude Sonnet 4.5 (a 3-way tie, which led to decision 009). Lineup is now GPT-6.1 Sol, Gemini 4 Argon, Claude Sonnet 5.5 | [interview 06](discovery/interviews/2026-10-24-interview-06.md) · [decision 009](decisions/009-one-winner-and-your-app.md) |
 | Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
 
 ## Sprint 2: Validate the problem (done; led to the pivot)
@@ -84,7 +84,7 @@ its "Done looks like":
   Models come out faster than anyone can follow, and public leaderboards don't say which one is
   good at *your* work ([decision 006](decisions/006-pivot-to-personal-benchmark.md)).
 - **Who it is for:** people who use AI for their own work and agents but can't keep up with
-  model releases. Not yet validated with interviews.
+  model releases. One MySI user interview so far ([06](discovery/interviews/2026-10-24-interview-06.md)).
 - **Who uses my work:** the first outside user is my wife (Sprint 3).
 
 ## What is in this repo
@@ -93,7 +93,7 @@ its "Done looks like":
 |---|---|
 | [`sprints/`](sprints/) | One plan and one review per sprint |
 | [`decisions/`](decisions/) | Numbered records of what I decided and why |
-| [`product/engine/`](product/engine/) | Personal Bench engine: MCP server on Cloudflare Workers |
+| [`product/engine/`](product/engine/) | MySI engine: MCP server on Cloudflare Workers |
 | [`product/bench/`](product/bench/) | Personal benchmark runs |
 | [`product/app/`](product/app/) | Homeroom v0 UI code (retired) |
 | [`discovery/`](discovery/) | Homeroom interviews, worksheet, ICP, JTBD, insights, research |
@@ -108,14 +108,18 @@ interviews you about your work, turns it into test tasks you approve, runs them 
 Sonnet and Opus, has a blind judge score the answers, asks you to blind-rate them, and writes a
 ranking to `product/bench/runs/<date>-<label>/report.md`. Takes about 20 to 30 minutes.
 
-**Personal Bench engine.** In `product/engine/`: a Cloudflare Worker serving a stateless MCP
-server at `/mcp` (Cloudflare `agents` + `@modelcontextprotocol/server`) and the setup page at `/`.
+**MySI engine.** In `product/engine/`: a Cloudflare Worker serving the MCP server at `/mcp` and
+`/mcp/u/<key>` (Cloudflare `agents` + `@modelcontextprotocol/server`), the setup page at `/`, rating
+pages at `/r/<run_id>` and the owner's log at `/admin`. Each run and each person is a Durable Object
+(decision 007). Models go through OpenRouter; with no key, a mock answers. Details:
+[`product/engine/README.md`](product/engine/README.md).
 
 ```bash
 cd product/engine
 npm install
 npm run dev       # local server on :8787, MCP at /mcp
 npm run typecheck
+npm run test:all  # unit, protocol and tool suites on mock models
 npm run deploy    # wrangler deploy (needs `npx wrangler login` once)
 ```
 

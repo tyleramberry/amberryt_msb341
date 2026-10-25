@@ -18,11 +18,13 @@ and why.
   Models come out faster than anyone can follow, and public leaderboards don't say which one is
   good at a given person's work.
 - **Who it is for:** People who use AI for their own work and agents but can't keep up with model
-  releases. The first outside user is my wife. Not yet validated with interviews.
+  releases. The first outside user is my wife (interview 06, 2026-10-24). One MySI interview so
+  far; not validated beyond her.
 - **Form factor:** A hosted engine reached through a remote MCP connector, plus one small page
   for blind rating (decision 006). The person's own chat app runs the interview; the engine saves
-  the tests, runs 3 to 5 models from different vendors through OpenRouter, has a judge score the
-  answers, and returns the ranking. Next scope after Sprint 3: re-run a person's tests when a new
+  the tests, runs 3 models from different vendors through OpenRouter by default (up to 5), has
+  judges score the answers internally, and returns a ranking built only from the person's own
+  blind picks, with one winner (decision 009). Next scope after Sprint 3: re-run a person's tests when a new
   model ships. After that: a router endpoint.
 
 ## Current state
@@ -30,15 +32,20 @@ and why.
 - **This sprint's goal (Sprint 3):** A working prototype of the personal benchmark: a live link,
   my wife builds her own tests through the product, and it ranks 3 to 5 models on them. See
   `sprints/sprint-3-plan.md`.
-- **Where to see it:** No live app yet. The prototype is the `/personal-bench` skill in
-  `.claude/skills/personal-bench/`; it runs inside Claude Code on Haiku, Sonnet and Opus only.
-  Two runs on my own work (one test task each) are in `product/bench/runs/`.
+- **Where to see it:** https://personal-bench.homeroom-app.workers.dev. Press "Use it in Claude"
+  for a personal connector link (decision 008). Engine code is `product/engine/`; lineup GPT-6.1
+  Sol, Gemini 4 Argon, Claude Sonnet 5.5, judges from other vendors. Owner's log at `/admin`.
+  My wife did the first outside run on 2026-10-24
+  (`discovery/interviews/2026-10-24-interview-06.md`). The older `/personal-bench` skill
+  (Claude models only) stays as the control group; its runs are in `product/bench/runs/`.
 - **Where the work lives:** `README.md` lists every repo and live link. Keep it current — it is what
   the graders use to find the work.
-- **Biggest open risk:** Whether a non-technical person can add an MCP connector on her own. If
-  she can't, the hosted page becomes the main way in. Second: whether blind ratings show real
-  differences between models on personal tasks at all. If not, the product idea needs
-  rethinking.
+- **Biggest open risk:** Whether people will switch apps to use the model that wins. My wife
+  won't ("I would rather just have 1"), so results now also name the best model in the app the
+  person already uses (decision 009), and the router matters more. Second: connector setup. She
+  got through it with two small assists (moving off a cloud session, saying "confirm"), and the
+  connect prompt now covers the first. Third: whether her blind picks differ from model to model.
+  On her run they did, by task, but they added up to a tie.
 - **Specs:** `specs/001-benchmark-engine-mcp.md` (the engine and its tools) and
   `specs/002-harness-ux.md` (what the person sees inside their chat app). Build to these.
 - **Homeroom (retired):** the v0 UI at https://homeroom.homeroom-app.workers.dev (code in
@@ -86,8 +93,11 @@ Background research (from the Homeroom sprints, still useful for agent and harne
   from other vendors go through OpenRouter. The prototype skill's `scripts/bench.py` does the shuffling and ranking math; port it, don't rewrite it.
 - **How work ships:** Commits to `main` on GitHub (tyleramberry/amberryt_msb341). Visual pages
   may also be published as Claude artifacts and linked from the matching `.md`.
-- **Testing and style:** Fill in once there's code. Any AI feature gets an eval set in
-  `product/evals/`.
+- **Testing and style:** In `product/engine/`: `npm run typecheck` and `npm run test:all`
+  (unit tests, then protocol and per-tool suites against a local `wrangler dev` on mock models)
+  before deploying. `npm run check-models` before changing the lineup. Any AI feature gets an
+  eval set in `product/evals/` (judge style rules: `judge-style-rules.json`, run by
+  `npm run eval:judges`).
 
 ## Working with me
 

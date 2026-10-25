@@ -1,7 +1,8 @@
 # MySI engine test plan
 
-Run: `npm test` (starts `wrangler dev` itself) or `MCP_URL=https://<worker-url> npm test` to hit a
-deployed Worker. No test dependencies: Node's built-in runner plus plain `fetch` JSON-RPC.
+Run: `npm run test:all` (each server suite starts its own `wrangler dev`, on mock models with the
+owner's log off even if a local `.env` has real keys) or `MCP_URL=https://<worker-url> npm run
+test:protocol` to hit a deployed Worker. Last full run 2026-10-24: 73 tests, all passing. No test dependencies: Node's built-in runner plus plain `fetch` JSON-RPC.
 
 ## Layers
 
@@ -9,10 +10,11 @@ deployed Worker. No test dependencies: Node's built-in runner plus plain `fetch`
 |---|---|---|
 | Protocol | initialize, stateless calls, notifications, parse errors, unknown method/tool, 406/405, CORS | `mcp.test.mjs` |
 | Generic tool contract | every tool in `tools/list` has snake_case name, real description, object schema; new tools are covered automatically | `mcp.test.mjs` |
-| Per-tool | `ping` today; one `describe` block per tool as the build lands | `mcp.test.mjs` |
-| Pure logic (next) | bench.py port: feed `product/bench/runs/2026-10-19-builder-2` judge/human/blind files, expect its `report.md` | add when the port lands |
-| Tool flow (next) | start_benchmark -> save_tests -> run_models -> check_run -> get_results, with OpenRouter and Supabase faked | add with the build PR |
-| Manual (Tyler / wife) | add connector in Claude.ai and ChatGPT unaided; log every snag | spec build step 6 |
+| Per-tool | every tool, refusals, blindness, limits, personal URLs, owner's log | `tools.test.mjs`, `limits.test.mjs`, `identity.test.mjs`, `admin.test.mjs` |
+| Pure logic | bench.py port against the builder runs' `report.md`; tie-break, judge style counts and chat-app detection (decision 009); coaching and scrubbing | `bench.test.ts`, `golden.test.mjs`, `feedback.test.ts`, `coach.test.ts` |
+| Tool flow | start_benchmark -> save_tests -> run_models -> check_run -> get_results, mock models | `flow.test.mjs` (`npm run test:flow`, needs a running dev server) |
+| Judge eval | do the judges enforce "avoid" rules like no em dashes | `product/evals/judge-style-rules.json`, `npm run eval:judges` (real OpenRouter calls) |
+| Manual (Tyler / wife) | add connector in Claude unaided; log every snag | done 2026-10-24, interview 06; ChatGPT not tried |
 
 ## Cases to add per upcoming tool
 
@@ -26,7 +28,7 @@ deployed Worker. No test dependencies: Node's built-in runner plus plain `fetch`
 
 ## Known observations (not bugs yet)
 
-- `POST /` returns 404. If a person pastes the bare Worker URL (no `/mcp`) into a connector dialog it will fail. Consider routing `/` POST to the MCP handler or making the setup page's URL copy button more prominent. Matters for the biggest open risk (non-technical connector setup).
+- ~~`POST /` returns 404.~~ Fixed: `POST /` serves MCP too (tested in `mcp.test.mjs`).
 
 ## From the UX spec (`ux/002-harness-ux.md`, draft)
 
@@ -37,7 +39,7 @@ deployed Worker. No test dependencies: Node's built-in runner plus plain `fetch`
 - `run_models` refuses without `person_confirmed: true`; refuses over the cap (10 tasks x 5 models); returns the lineup by company only, no model names.
 - Blindness, the core guarantee: `get_answers` never contains a model name or the label-to-model mapping; labels reshuffle per task; self-identification ("As ChatGPT", "I'm Claude", "Gemini here") is replaced with "[model name removed]"; judge scores are absent from every result until `get_results`; `submit_rating` and `check_run` leak neither.
 - `submit_rating`: same letter for best and worst is rejected; best-only is accepted; unknown task or run ID gives a plain error; re-rating a task overwrites or is rejected, one or the other, consistently.
-- `get_results` with zero ratings is labelled judge-only and says it is not the person's picks; stopping early ranks on what was rated.
+- `get_results` with zero ratings gives no ranking and asks the person to rate at least one test (spec 002: the person sees only their own picks); stopping early ranks on what was rated.
 - Identity: `/mcp/u/<key>` keys are long and random; a profile written under one key is invisible under another; `which_model` for an unknown key says "not tested yet".
 - Edge cases table: model call fails twice (min 2 answers still shown, results note it), add a task after running (only the new task runs), resume an unfinished run.
 
@@ -85,6 +87,6 @@ Spec 001 cases not yet written (need the tools):
 
 Covered in `tools.test.mjs`: read-only annotations, `next_step` on every result, plain-language errors, run-ID entropy, save_tests limits and scrubbing and coaching, run_models refusals and company-only lineup, blindness of every tool result and of the rating-page source, stable label order, rating rules, judge-only results, rating closed after the reveal, page 404 and escaping, rerun_test stub; `limits.test.mjs` covers the daily cap.
 
-Open bugs found: see the build thread (POST /r/<id>/rate with a non-form body returns 500).
+Open bugs: none known. (POST /r/<id>/rate with a non-form body returned 500; fixed in 7d574f7, now 400.)
 Identity (personal URLs, per-key isolation) is covered by `identity.test.mjs`.
 Not covered yet: per-IP rate limit (not built), self-identification scrub end to end (mock answers never name a model; unit tests in `coach.test.ts` cover the function), judge disagreement, the real OpenRouter path.
