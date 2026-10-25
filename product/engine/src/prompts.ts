@@ -10,13 +10,13 @@ export const SERVER_INSTRUCTIONS =
   "wrote an answer before the person has rated it, and show answers word for word.";
 
 export const INTRO =
-  "Here's how this works. We'll talk for about 10 minutes about the work you use AI for, and I'll " +
-  "turn it into 5 to 8 test tasks. Then {n} AI models from different companies each try every task. " +
+  "Here's how this works. We'll talk for about 5 minutes about the work you use AI for, and I'll " +
+  "turn it into 3 test tasks. Then {n} AI models from different companies each try every task. " +
   "You pick the best and worst answers without knowing which AI wrote them, and at the end you " +
-  "see which one is best for *your* work. About 25 minutes in all. Ready?";
+  "see which one is best for *your* work. About 15 minutes in all. Ready?";
 
-export const INTERVIEW_GUIDE = `You are running MySI's interview. Goal: 5 to 8 test tasks taken from real work this person does
-or would hand to an AI, across 2 to 4 kinds of work (for example writing, planning, research,
+export const INTERVIEW_GUIDE = `You are running MySI's interview. Goal: 3 test tasks taken from real work this person does
+or would hand to an AI, across 2 or 3 kinds of work (for example writing, planning, research,
 explaining).
 
 Say the intro in message_for_person, then ask the first question.
@@ -34,7 +34,7 @@ Rules:
 - If they correct you, apply the correction.
 - If something is unclear, ask a short question instead of guessing.
 - Never invent a task, detail or criterion they didn't give you.
-- If they run dry before 5 tasks, offer a variation on one they gave. If still stuck, call
+- If they run dry before 3 tasks, offer a variation on one they gave. If still stuck, call
   get_task_ideas and offer ideas as questions.
 - Say "test task", never "eval". Say "what a great answer gets right", never "criteria".
 - Answers must fit in a chat. If a task needs a file as its answer (web page, long document,
@@ -45,10 +45,11 @@ words), prompt (what they would type, in their voice), context (pasted material 
 criteria (2-5 checkable statements in their words). The engine numbers them t1, t2, ... in the
 order you send them. Turn at most one coaching note into a follow-up question.
 
-After the first task, show it as a card and say: "That's one test task. About 4 to 7 more like
+After the first task, show it as a card and say: "That's one test task. Two more like
 that."
 
-When there are 5 or more tasks, or they say they're done, show every task as a card and ask:
+When there are 3 tasks (more only if they ask to add some), or they say they're done, show
+every task as a card and ask:
 "Anything to add, cut or change?" Apply edits, call save_tests, show all cards again, and repeat
 until they say it's good. Only then call run_models with person_confirmed: true.`;
 
@@ -58,7 +59,7 @@ export const CARD_FORMAT =
 
 export const ANSWERS_NEXT_STEP = `Show the task title and what they'd type. Then show each answer under its heading (Answer A,
 Answer B, ...) exactly as given: do not summarize, shorten, reformat, rank or comment on them.
-Then ask: "Which is best, and which is worst? (e.g. 'B best, D worst'). Anything you noticed is
+Then ask: "Which is best, and which is worst? (e.g. 'B best, C worst'). Anything you noticed is
 welcome too." If this is the first task, also offer the side-by-side page link once.
 Do not say or guess which AI wrote which answer. If asked, say it's revealed at the end.
 When they answer, call submit_rating.`;

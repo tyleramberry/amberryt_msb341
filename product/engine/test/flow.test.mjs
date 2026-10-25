@@ -64,7 +64,7 @@ test("full flow with mock models", async () => {
   const run = await call("run_models", { run_id: runId, person_confirmed: true });
   assert.equal(run.isError, false, run.text);
   assert.ok(Date.now() - t0 < 5000, "run_models returns at once");
-  assert.deepEqual(run.data.lineup_companies, ["OpenAI", "Google", "Anthropic", "Meta"]);
+  assert.deepEqual(run.data.lineup_companies, ["OpenAI", "Google", "Anthropic"]);
   assert.doesNotMatch(run.text, MODEL_NAMES, "lineup is by company only");
   const again = await call("run_models", { run_id: runId, person_confirmed: true });
   assert.equal(again.data.already_started, true, "second call doesn't start a second job");
@@ -73,13 +73,13 @@ test("full flow with mock models", async () => {
   await waitFor(runId, (d) => d.next_test_to_rate === "t1");
   const ans = await call("get_answers", { run_id: runId });
   assert.equal(ans.data.test_id, "t1");
-  assert.deepEqual(ans.data.answers.map((a) => a.label), ["A", "B", "C", "D"]);
+  assert.deepEqual(ans.data.answers.map((a) => a.label), ["A", "B", "C"]);
   assert.doesNotMatch(ans.text, MODEL_NAMES, "answers are blind");
   assert.match(ans.data.next_step, /exactly as given/);
 
   assert.equal((await call("submit_rating", { run_id: runId, test_id: "t1", best: "B", worst: "B" })).isError, true);
   assert.equal((await call("submit_rating", { run_id: runId, test_id: "t1", best: "Z" })).isError, true);
-  const rated = await call("submit_rating", { run_id: runId, test_id: "t1", best: "b", worst: "D", note: "D too long" });
+  const rated = await call("submit_rating", { run_id: runId, test_id: "t1", best: "b", worst: "C", note: "C too long" });
   assert.equal(rated.isError, false, rated.text);
   assert.doesNotMatch(rated.text, MODEL_NAMES);
 
@@ -127,7 +127,7 @@ test("a model that fails is left out; the test is still ratable", async () => {
   await call("run_models", { run_id: runId, person_confirmed: true });
   await waitFor(runId, (d) => d.status === "ready");
   const ans = await call("get_answers", { run_id: runId, test_id: "t1" });
-  assert.deepEqual(ans.data.answers.map((a) => a.label), ["A", "B", "C"]);
+  assert.deepEqual(ans.data.answers.map((a) => a.label), ["A", "B"]);
   const res = await call("get_results", { run_id: runId });
   assert.match(res.data.headline, /second opinion only/);
 });

@@ -4,7 +4,7 @@
 
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { LIMITS } from "./coach.ts";
+import { DEFAULT_TESTS, LIMITS } from "./coach.ts";
 import { isMock, lineupFor, modelFromId, pickJudges, vendorOf, type Env } from "./models.ts";
 import {
   ANSWERS_NEXT_STEP,
@@ -180,13 +180,13 @@ export function createServer(env: Env, origin: string) {
       const saved = await run.saveTests(tests);
       if (!saved.ok) return refuse(saved.error);
       const n = saved.tests.length;
-      const ready = (n >= 5 && saved.notes.length === 0) || Boolean(person_done);
+      const ready = (n >= DEFAULT_TESTS && saved.notes.length === 0) || Boolean(person_done);
       const steps: string[] = [];
       if (saved.scrubbed.length) steps.push(`Personal details were removed (${saved.scrubbed.join("; ")}). Tell the person you removed them.`);
       if (saved.notes.length) steps.push("Turn at most one coaching note into a single follow-up question (use its `ask`), then save again.");
-      if (n === 1) steps.push(`Show the task as a card and say: "That's one test task. About 4 to 7 more like that." ${CARD_FORMAT}`);
+      if (n === 1) steps.push(`Show the task as a card and say: "That's one test task. Two more like that." ${CARD_FORMAT}`);
       if (ready) {
-        if (n < 5) steps.push("Say once that fewer than 5 tasks makes the ranking noisier, and that it's their call.");
+        if (n < DEFAULT_TESTS) steps.push(`Say once that fewer than ${DEFAULT_TESTS} tasks makes the ranking noisier, and that it's their call.`);
         steps.push(
           'Show every task as a card (use `cards`) and ask: "Anything to add, cut or change?" Apply edits and call ' +
             "save_tests again. When they say it's good, call run_models with person_confirmed: true.",
@@ -355,7 +355,7 @@ export function createServer(env: Env, origin: string) {
       title: "Save the person's rating",
       description:
         "Save which answer the person picked as best (and worst, if they said) for one MySI test task. Call right " +
-        'after they answer, e.g. "B best, D worst". Rating the same task again replaces the old rating.',
+        'after they answer, e.g. "B best, C worst". Rating the same task again replaces the old rating.',
       inputSchema: z.object({
         run_id: z.string(),
         test_id: z.string(),

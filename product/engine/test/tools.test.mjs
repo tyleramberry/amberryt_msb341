@@ -212,12 +212,12 @@ describe("blindness before get_results", () => {
     }
   });
 
-  test("answer labels are A..D, reshuffled per test, and fixed once written", async () => {
+  test("answer labels are A..C (3-model default), reshuffled per test, and fixed once written", async () => {
     const id = await runToReady();
     const first = await tool("get_answers", { run_id: id, test_id: "t1" });
     const again = await tool("get_answers", { run_id: id, test_id: "t1" });
     assert.deepEqual(first.data.answers, again.data.answers, "same task must show the same order each time");
-    assert.deepEqual(first.data.answers.map((a) => a.label), ["A", "B", "C", "D"]);
+    assert.deepEqual(first.data.answers.map((a) => a.label), ["A", "B", "C"]);
   });
 });
 
@@ -228,7 +228,7 @@ describe("submit_rating", () => {
     assert.equal((await tool("submit_rating", { run_id: id, test_id: "t1", best: "Q" })).isError, true);
     assert.equal((await tool("submit_rating", { run_id: id, test_id: "t99", best: "A" })).isError, true);
     assert.equal((await tool("submit_rating", { run_id: id, test_id: "t1", best: "A", worst: "B" })).isError, false);
-    assert.equal((await tool("submit_rating", { run_id: id, test_id: "t1", best: "C", worst: "D", note: "redo" })).isError, false);
+    assert.equal((await tool("submit_rating", { run_id: id, test_id: "t1", best: "C", worst: "A", note: "redo" })).isError, false);
     const c = await tool("check_run", { run_id: id });
     assert.equal(c.data.tests.filter((t) => t.status === "rated").length, 1);
   });

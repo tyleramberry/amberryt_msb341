@@ -601,7 +601,8 @@ export class RunObject extends DurableObject<Env> {
     });
 
     const trust = [
-      `${tests.length} test task${tests.length === 1 ? "" : "s"}, one answer per model each, so small gaps may be luck.`,
+      `${tests.length} test task${tests.length === 1 ? "" : "s"}, one answer per model each, so small gaps may be luck.` +
+        (tests.length <= 3 ? " Treat this as a rough first read; adding more tasks makes it steadier." : ""),
       rep.judgeAgreement
         ? `The second opinion's top pick matched yours on ${rep.judgeAgreement.matched} of ${rep.judgeAgreement.of}.`
         : "No ratings from you, so this rests on the second opinion only.",

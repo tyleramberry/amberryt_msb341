@@ -6,6 +6,9 @@ import type { Test } from "./bench.ts";
 export type CoachingNote = { test_id: string | null; kind: string; note: string; ask: string };
 
 // specs/001-benchmark-engine-mcp.md, "save_tests: validation and coaching" and "Limits and cost".
+// Default size, decided 2026-10-25: 3 test tasks on 3 models. LIMITS are the hard caps.
+export const DEFAULT_TESTS = 3;
+
 export const LIMITS = {
   maxTests: 10,
   minModels: 3,

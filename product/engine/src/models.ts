@@ -23,7 +23,6 @@ const DEFAULT_LINEUP: ModelInfo[] = [
   { id: "openai/gpt-5", name: "GPT-5", company: "OpenAI" },
   { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro", company: "Google" },
   { id: "anthropic/claude-sonnet-4.5", name: "Claude Sonnet 4.5", company: "Anthropic" },
-  { id: "meta-llama/llama-4-maverick", name: "Llama 4 Maverick", company: "Meta" },
 ];
 const DEFAULT_JUDGES: ModelInfo[] = [
   { id: "deepseek/deepseek-chat-v3.1", name: "DeepSeek V3.1", company: "DeepSeek" },
