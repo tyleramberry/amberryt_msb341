@@ -40,6 +40,8 @@ test("self-identification is scrubbed unless the person named the brand", () => 
   assert.equal(scrubSelfId("As ChatGPT, I think...", "Write a note"), "As [model name removed], I think...");
   assert.equal(scrubSelfId("I'm Claude, made by Anthropic.", "Write a note"), "I'm [model name removed], made by [model name removed].");
   assert.equal(scrubSelfId("Gemini 2.5 Pro here.", "x"), "[model name removed] here.");
+  assert.equal(scrubSelfId("As GPT-6.1 Sol, I think so.", "x"), "As [model name removed], I think so.");
+  assert.equal(scrubSelfId("Gemini 4 Argon here.", "x"), "[model name removed] here.");
   assert.equal(scrubSelfId("ChatGPT is better for this.", "Compare ChatGPT and Claude"), "ChatGPT is better for this.");
   assert.equal(scrubSelfId("I'm Llama 4 Maverick.", "x"), "I'm [model name removed].");
   assert.equal(scrubSelfId("Use a llama-shaped planter. Ask Kimi.", "x"), "Use a llama-shaped planter. Ask Kimi.");

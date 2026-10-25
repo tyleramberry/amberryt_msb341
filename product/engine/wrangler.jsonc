@@ -22,7 +22,7 @@
   "vars": {
     "MAX_RUNS_PER_DAY": "20",
     "MAX_RUN_COST_USD": "2",
-    "LINEUP": "[{\"id\":\"openai/gpt-5\",\"name\":\"GPT-5\",\"company\":\"OpenAI\"},{\"id\":\"google/gemini-2.5-pro\",\"name\":\"Gemini 2.5 Pro\",\"company\":\"Google\"},{\"id\":\"anthropic/claude-sonnet-4.5\",\"name\":\"Claude Sonnet 4.5\",\"company\":\"Anthropic\"}]",
-    "JUDGE_POOL": "[{\"id\":\"deepseek/deepseek-chat-v3.1\",\"name\":\"DeepSeek V3.1\",\"company\":\"DeepSeek\"},{\"id\":\"mistralai/mistral-medium-3.1\",\"name\":\"Mistral Medium 3.1\",\"company\":\"Mistral\"},{\"id\":\"x-ai/grok-4.7\",\"name\":\"Grok 4.7\",\"company\":\"xAI\"}]"
+    "LINEUP": "[{\"id\":\"openai/gpt-6.1-sol\",\"name\":\"GPT-6.1 Sol\",\"company\":\"OpenAI\"},{\"id\":\"google/gemini-4-argon\",\"name\":\"Gemini 4 Argon\",\"company\":\"Google\"},{\"id\":\"anthropic/claude-sonnet-5.5\",\"name\":\"Claude Sonnet 5.5\",\"company\":\"Anthropic\"}]",
+    "JUDGE_POOL": "[{\"id\":\"deepseek/deepseek-v4-pro-0813\",\"name\":\"DeepSeek V4 Pro\",\"company\":\"DeepSeek\"},{\"id\":\"mistralai/mistral-large-4-0\",\"name\":\"Mistral Large 4\",\"company\":\"Mistral\"},{\"id\":\"x-ai/grok-4.7\",\"name\":\"Grok 4.7\",\"company\":\"xAI\"},{\"id\":\"moonshotai/kimi-k3.1-pro\",\"name\":\"Kimi K3.1 Pro\",\"company\":\"Moonshot AI\"}]"
   }
 }

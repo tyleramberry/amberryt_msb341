@@ -80,11 +80,11 @@ export function scrubPersonalInfo(text: string): { text: string; found: string[]
 // named in their own task is kept, so "compare ChatGPT and Gemini" still reads right.
 const SELF_ID: [string, string][] = [
   ["chatgpt", "ChatGPT"],
-  ["gpt", "GPT-?\\d+(?:\\.\\d+)?(?:[- ]?(?:mini|nano|pro|turbo))?"],
+  ["gpt", "GPT-?\\d+(?:\\.\\d+)?(?:[- ]?(?:mini|nano|pro|turbo|sol|luna))*"],
   ["openai", "OpenAI"],
   ["claude", "Claude(?: (?:Opus|Sonnet|Haiku|Fable))?(?: \\d+(?:\\.\\d+)?)?"],
   ["anthropic", "Anthropic"],
-  ["gemini", "Gemini(?: \\d+(?:\\.\\d+)?)?(?: (?:Pro|Flash|Ultra))?"],
+  ["gemini", "Gemini(?: \\d+(?:\\.\\d+)?)?(?: (?:Pro|Flash|Ultra|Argon))?"],
   ["deepmind", "Google DeepMind"],
   ["llama", "Llama[- ]?\\d+(?:\\.\\d+)?(?: (?:Maverick|Scout|Behemoth))?"],
   ["meta ai", "Meta AI"],

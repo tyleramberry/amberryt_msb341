@@ -82,8 +82,8 @@ welcome too." If this is the first task, also offer the side-by-side page link o
 Do not say or guess which AI wrote which answer. If asked, say it's revealed at the end.
 When they answer, call submit_rating.`;
 
-export const RESULTS_NEXT_STEP = `Say the headline first. Show the ranking table. If the winner differs by kind of work, say so in
-one sentence. Then reveal, task by task, which AI wrote the answer they picked as best. Then the
+export const RESULTS_NEXT_STEP = `Say the headline first, then in_your_app if it is set. Show the ranking table. If the winner
+differs by kind of work, say so in one sentence. Then reveal, task by task, which AI wrote the answer they picked as best. Then the
 trust lines, then the report link.
 Then ask: "Want me to remember this?" If yes, and you have a memory feature, save memory_line.
 If not, offer memory_line for them to copy. Finish with: "When a new model comes out, I can
@@ -113,10 +113,21 @@ export function modelPrompt(t: Test) {
   return `TASK:\n${t.prompt}\n\nCONTEXT:\n${t.context.trim() || "None"}`;
 }
 
+// Counted, not judged, so a judge can't miss them: models skim past em dashes and length.
+export function answerFacts(text: string) {
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const dashes = (text.match(/\u2014/g) ?? []).length;
+  return `(${words} words, ${dashes} em dash${dashes === 1 ? "" : "es"} "\u2014")`;
+}
+
 export function judgePrompt(t: Test, answers: [label: string, text: string][]) {
   return [
     "You are grading answers to a task for a specific person. The answers are labelled by letter " +
-      "and their order is random; ignore length and order, and judge only against the person's criteria.",
+      "and their order is random; ignore order, and judge only against the person's criteria, in the " +
+      "person's own meaning, not by what you think makes a good answer in general.",
+    "A criterion that says what to avoid (for example \"no em dashes\", \"not too long\", \"no big words\") " +
+      "is a hard rule: an answer that breaks it scores 1 on that criterion and at most 5 overall. " +
+      "Each answer's word and em dash counts are given; trust them over your own reading.",
     "",
     `TASK:\n${t.prompt}`,
     "",
@@ -125,7 +136,7 @@ export function judgePrompt(t: Test, answers: [label: string, text: string][]) {
     "THE PERSON'S CRITERIA:",
     ...t.criteria.map((c, i) => `${i + 1}. ${c}`),
     "",
-    ...answers.flatMap(([label, text]) => [`RESPONSE ${label}:\n${text}`, ""]),
+    ...answers.flatMap(([label, text]) => [`RESPONSE ${label} ${answerFacts(text)}:\n${text}`, ""]),
     "Return only JSON, no prose around it:",
     '[{"label": "A", "criteria_scores": [<1-5 per criterion, in order>], "overall": <1-10>,',
     '  "reason": "<one sentence>"}, ...]',

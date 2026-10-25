@@ -214,7 +214,9 @@ second risk), but no tool result, page or report shown to the person includes th
   If the pool can't supply two outside judges for a custom lineup, use one and say so in the
   report.
 - One call per judge per test with the skill's judge prompt (blind labels, shuffled order, "ignore
-  length and order"), returning `[{label, criteria_scores[], overall, reason}]`. Ask for JSON with
+  order"; since 2026-10-25 a criterion about what to avoid, like "no em dashes", is a hard rule
+  that caps the answer at 5, and each answer comes with its counted words and em dashes, because
+  the judges missed her em-dash rule), returning `[{label, criteria_scores[], overall, reason}]`. Ask for JSON with
   a schema where the provider supports it; if it doesn't parse, retry once, then skip that judge
   for that test.
 - A model's judge score for a test is the mean of the judges' `overall`. Each judge's scores are
@@ -227,7 +229,13 @@ second risk), but no tool result, page or report shown to the person includes th
 A line-by-line port of `bench.py report`, so the same inputs give the same table:
 
 - Your score: best = 2, worst = 0, the rest = 1, averaged over rated tests. If only `best` was
-  given, best = 2 and the rest = 1. Ranked by your score; ties stay ties (shown as equal rank).
+  given, best = 2 and the rest = 1. Ranked by your score. Equal scores go to the cheaper, faster
+  model: cost per answer and median time, each as a multiple of the cheapest and fastest, summed,
+  lowest first. So there is always one winner, and the headline says why it won the tie (decision
+  009, after the first user's three-way tie).
+- `get_results` takes `app` (`claude`, `chatgpt`, `gemini`, `other`), which the host sets to the
+  app it is running in, falling back to the client's name. The result adds `in_your_app`: whether
+  the winner runs in that app and, if not, the best model that does and its rank (decision 009).
 - Columns: rank, model, your score, your picks for best, median time, and a new **cost per
   answer** (the skill couldn't measure cost; the API can). No judge column. The chat table and the
   rating page show the same columns.

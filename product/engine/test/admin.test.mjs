@@ -54,7 +54,7 @@ test("the log shows the person's task, their pick and note, and the model behind
   assert.match(page, /Write a text moving Thursday to Friday/);
   assert.match(page, /B was stiff/);
   assert.match(page, /their best/);
-  assert.match(page, /GPT-5|Gemini 2.5 Pro|Claude Sonnet 4.5/, "owner sees model names");
+  assert.match(page, /GPT-6.1 Sol|Gemini 4 Argon|Claude Sonnet 5.5/, "owner sees model names");
 
   const json = await (await fetch(base + "/admin/export.json", { headers: auth(TOKEN) })).json();
   const run = json.runs.find((r) => r.run_id === runId);

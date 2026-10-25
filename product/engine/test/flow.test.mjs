@@ -20,7 +20,7 @@ async function call(name, args = {}) {
   return { isError: Boolean(r.isError), data: JSON.parse(r.content[0].text), text: r.content[0].text };
 }
 
-const MODEL_NAMES = /GPT-5|Gemini|Claude|Llama|DeepSeek|Mistral|Grok|openai\/|google\/|anthropic\/|meta-llama\//;
+const MODEL_NAMES = /GPT-|Gemini|Claude|Llama|DeepSeek|Mistral|Grok|openai\/|google\/|anthropic\/|meta-llama\//;
 
 const TESTS = [
   { category: "writing", title: "Reschedule a client", prompt: "Write a quick text to a client moving Thursday's mowing to Friday because of rain.", context: "", criteria: ["Under 50 words", "Says Friday and a time window", "Sounds friendly, not corporate"] },
@@ -100,10 +100,12 @@ test("full flow with mock models", async () => {
   // Only best, no worst ("they're all fine").
   assert.equal((await call("submit_rating", { run_id: runId, test_id: "t3", best: "C" })).isError, false);
 
-  const res = await call("get_results", { run_id: runId });
+  const res = await call("get_results", { run_id: runId, app: "claude" });
   assert.equal(res.isError, false, res.text);
   assert.match(res.data.headline, /came out on top: you picked it as best on \d of 3 tasks/);
-  assert.match(res.data.ranking_table, /\| Rank \| AI model \|/);
+  assert.doesNotMatch(res.data.headline, /\(tied\)/, "always one winner (decision 009)");
+  assert.match(res.data.ranking_table, /\| Rank \| AI model \| Your score \(0–2\) \| Your picks for best \| Time \(s\) \| Cost per answer \|/);
+  assert.match(res.data.in_your_app, /Claude/, "says what the person can use in the app they're in");
   assert.equal(res.data.reveal.length, 3);
   assert.ok(res.data.memory_line.includes("MySI benchmark"));
   assert.match(res.text, MODEL_NAMES, "results reveal the models");
@@ -112,6 +114,7 @@ test("full flow with mock models", async () => {
   assert.equal((await call("submit_rating", { run_id: runId, test_id: "t1", best: "A" })).isError, true);
   const finalPage = await (await fetch(`${base}/r/${runId}`)).text();
   assert.match(finalPage, /Your MySI results/);
+  assert.match(finalPage, /made for Claude|run in Claude|use there/, "page shows the app line");
 
   const which = await call("which_model", { run_id: runId, task_description: "a client text" });
   assert.equal(which.data.found, true);
@@ -122,7 +125,7 @@ test("full flow with mock models", async () => {
 
 test("a model that fails is left out; the test is still ratable", async () => {
   const runId = (await call("start_benchmark", {})).data.run_id;
-  const t = { ...TESTS[0], prompt: "MOCK_FAIL:openai/gpt-5 write the text" };
+  const t = { ...TESTS[0], prompt: "MOCK_FAIL:openai/gpt-6.1-sol write the text" };
   await call("save_tests", { run_id: runId, tests: [t] });
   await call("run_models", { run_id: runId, person_confirmed: true });
   await waitFor(runId, (d) => d.status === "ready");
