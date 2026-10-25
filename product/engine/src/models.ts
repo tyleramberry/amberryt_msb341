@@ -29,7 +29,7 @@ const DEFAULT_LINEUP: ModelInfo[] = [
 const DEFAULT_JUDGES: ModelInfo[] = [
   { id: "deepseek/deepseek-chat-v3.1", name: "DeepSeek V3.1", company: "DeepSeek" },
   { id: "mistralai/mistral-medium-3.1", name: "Mistral Medium 3.1", company: "Mistral" },
-  { id: "x-ai/grok-4", name: "Grok 4", company: "xAI" },
+  { id: "x-ai/grok-4.7", name: "Grok 4.7", company: "xAI" },
 ];
 
 // Claude Code plan mode: the host's Agent tool model aliases. Ids are prefixed so they never
