@@ -7,7 +7,7 @@
 ## The one-line goal
 
 Someone who has never heard the word "eval" opens the chat app they already use, says "find my
-best AI model", and 20 to 30 minutes later knows which model to use for their kind of work,
+best AI model", and about 15 minutes later knows which model to use for their kind of work,
 because they picked the best answers themselves without knowing who wrote them.
 
 ## The design constraint that shapes everything
@@ -79,10 +79,10 @@ The person says something like "find my best AI model", "which AI should I use",
 
 The tool result gives the host the intro to say (three short lines, from the skill's step 1):
 
-> Here's how this works. We'll talk for about 10 minutes about the work you use AI for, and I'll
-> turn it into 5 to 8 test tasks. Then 4 AI models from different companies each try every task.
+> Here's how this works. We'll talk for about 5 minutes about the work you use AI for, and I'll
+> turn it into 3 test tasks. Then 3 AI models from different companies each try every task.
 > You pick the best and worst answers without knowing which AI wrote them, and at the end you
-> see which one is best for *your* work. About 25 minutes in all. Ready?
+> see which one is best for *your* work. About 15 minutes in all. Ready?
 
 If the person has an unfinished benchmark, `start_benchmark` says so and the host offers to
 pick up where they left off instead.
@@ -102,7 +102,7 @@ The interview rules are ported from the skill's step 2 and returned in full by `
 4. **Context.** Ask them to paste the email, list, or notes the task needs. The host strips
    names, emails and phone numbers and says it did.
 5. **Show the first task back early.** After the first task is written, show it as a card (below)
-   and say "That's one test task. About 4 to 7 more like that." This is the moment the person
+   and say "That's one test task. Two more like that." This is the moment the person
    learns what an eval is, by seeing their own.
 6. **Running dry.** Offer a variation on one they gave ("same kind of email, but a harder
    situation?"). If they still have nothing, call `get_task_ideas` with what we know about them
@@ -145,7 +145,7 @@ refuses to run without it.
 
 `run_models` starts the job and returns at once with:
 
-- the lineup by company ("one model each from OpenAI, Google, Anthropic and Meta"), so the person
+- the lineup by company ("one model each from OpenAI, Google and Anthropic"), so the person
   knows it's a fair fight. Model names stay hidden until the reveal.
 - an estimate ("about 3 minutes") and the cost cap.
 - `next_step`: tell the person what's happening, then call `check_run`.
@@ -153,7 +153,7 @@ refuses to run without it.
 **Rating starts before running ends.** The engine runs tasks in order, so task 1's answers are
 usually ready within 30 seconds. `check_run` lists which tasks are ready to rate. As soon as one
 is, the host starts step 5 on it. The person reads and picks while the rest finish, so there is
-no dead wait. If nothing is ready yet, the host says one line ("Task 1 of 6 is running") and the
+no dead wait. If nothing is ready yet, the host says one line ("Task 1 of 3 is running") and the
 person says "check" or "ok" to continue. The host never loops on `check_run` more than 3 times
 in one turn.
 
@@ -172,7 +172,7 @@ with strict display rules in `next_step`:
 
 - Show the task title and prompt, then each answer under **Answer A**, **Answer B**, ... exactly
   as returned. No summarizing, trimming, reformatting, or comments on quality.
-- Then ask: "Which is best, and which is worst? (e.g. *B best, D worst*). Anything you noticed
+- Then ask: "Which is best, and which is worst? (e.g. *B best, C worst*). Anything you noticed
   is welcome too."
 - Don't guess or hint which AI wrote which. If asked, say it's revealed at the end.
 
@@ -194,8 +194,8 @@ page." Best on phone, and for long answers. Ratings made there show up in the ch
 - The judge's scores are hidden until the reveal, so they can't sway the person.
 - Answers longer than ~400 words: the chat shows them in full, and the host suggests the page.
 
-**Fatigue.** 6 tasks × 4 answers is 24 answers to read. The host says how many are left ("Task 3
-of 6") and the person can stop any time: "That's enough, show me results" calls `get_results`,
+**Fatigue.** The default is 3 tasks × 3 answers, 9 answers to read. The host says how many are left ("Task 2
+of 3") and the person can stop any time: "That's enough, show me results" calls `get_results`,
 which ranks on whatever was rated.
 
 ### Step 6: Results, the reveal, and remembering the winner
@@ -203,7 +203,7 @@ which ranks on whatever was rated.
 `get_results` returns:
 
 1. **The headline**, one sentence: "For your work, **GPT-x** came out on top: you picked it as
-   best on 4 of 6 tasks."
+   best on 2 of 3 tasks."
 2. **The ranking table** (ported `report.md`, trimmed for chat): rank, model, your score, your
    best-picks, second opinion score.
 3. **By kind of work**, only if it differs: "For writing, Claude won. For planning, Gemini won."
@@ -256,7 +256,7 @@ so ChatGPT and Claude ask fewer permission questions.
 | `save_tests` | After each task drafted, and after each edit | `run_id`, `tests[]` (full set, replaces previous) | normalized cards, coaching notes per task, count, `ready_to_confirm` | no |
 | `run_models` | Person confirmed the test | `run_id`, `person_confirmed: true` | lineup by company, ETA, cost cap | no |
 | `check_run` | After `run_models`, and when the person says "check" | `run_id` | per-task status (running, ready to rate, rated), what to do next | yes |
-| `get_answers` | A task is ready to rate | `run_id`, `test_id?` (omitted = next one ready to rate) | task, blind answers A–D, display rules, page link, widget ref | yes |
+| `get_answers` | A task is ready to rate | `run_id`, `test_id?` (omitted = next one ready to rate) | task, blind answers A–C (more if the lineup is larger), display rules, page link, widget ref | yes |
 | `submit_rating` | Person picked best and worst | `run_id`, `test_id`, `best`, `worst?`, `note?` | saved, next task ready or not | no |
 | `get_results` | All rated, or the person asks to stop | `run_id` | headline, table, by-category, reveal, trust lines, memory line, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
 | `which_model` | Later chats: "which AI for this?", "my results" | `task_description?` | best model for that kind of work, past benchmarks | yes |
@@ -328,7 +328,7 @@ Sprint 3 has no accounts. Options:
 
 ## Lineup and judge (what the person experiences)
 
-- 4 models, one per company, picked by MySI for Sprint 3 (no choosing; that's a builder feature).
+- 3 models, one each from OpenAI, Google and Anthropic, picked by MySI for Sprint 3 (no choosing; that's a builder feature).
   The lineup is in config so the next scope (new model re-runs) is a config change.
 - The judge is called "a second opinion from another AI" and only appears at the end. Per
   spec 001 it comes from two judges at vendors outside the lineup, averaged. The person's picks rank
@@ -361,7 +361,8 @@ Log per tool call with timestamps. Then, by hand afterwards:
 ## Open questions for Tyler
 
 1. Identity: personal connector URL (recommended) or a spoken code? (Asked from the specs thread.)
-2. Default size: 5 to 8 tasks and 4 models? Fewer tasks is less noise-tolerant but less tiring.
+2. ~~Default size~~ Decided 2026-10-25: 3 test tasks and 3 models by default. A person can add more tasks (up to
+   the cap of 10) for a steadier ranking; the results say that 3 tasks is a rough first read.
 3. Should the "second opinion" show at all for the first version, or only the person's picks?
 
 ## Appendix: text the tools return
@@ -369,8 +370,8 @@ Log per tool call with timestamps. Then, by hand afterwards:
 ### `start_benchmark` → interview guide (`next_step`)
 
 ```
-You are running MySI's interview. Goal: 5 to 8 test tasks taken from real work this person does
-or would hand to an AI, across 2 to 4 kinds of work (for example writing, planning, research,
+You are running MySI's interview. Goal: 3 test tasks taken from real work this person does
+or would hand to an AI, across 2 or 3 kinds of work (for example writing, planning, research,
 explaining).
 
 Say the intro in message_for_person, then ask the first question.
@@ -388,7 +389,7 @@ Rules:
 - If they correct you, apply the correction.
 - If something is unclear, ask a short question instead of guessing.
 - Never invent a task, detail or criterion they didn't give you.
-- If they run dry before 5 tasks, offer a variation on one they gave. If still stuck, call
+- If they run dry before 3 tasks, offer a variation on one they gave. If still stuck, call
   get_task_ideas and offer ideas as questions.
 - Say "test task", never "eval". Say "what a great answer gets right", never "criteria".
 - Answers must fit in a chat. If a task needs a file as its answer (web page, long document,
@@ -399,10 +400,11 @@ category, title (3-6 words), prompt (what they would type, in their voice), cont
 material or ""), criteria (2-5 checkable statements in their words). Turn at most one coaching
 note into a follow-up question.
 
-After the first task, show it as a card and say: "That's one test task. About 4 to 7 more like
+After the first task, show it as a card and say: "That's one test task. Two more like
 that."
 
-When there are 5 or more tasks, or they say they're done, show every task as a card and ask:
+When there are 3 tasks (more only if they ask to add some), or they say they're done, show
+every task as a card and ask:
 "Anything to add, cut or change?" Apply edits, call save_tests, show all cards again, and repeat
 until they say it's good. Only then call run_models with person_confirmed: true.
 ```
@@ -412,7 +414,7 @@ until they say it's good. Only then call run_models with person_confirmed: true.
 ```
 Show the task title and what they'd type. Then show each answer under its heading (Answer A,
 Answer B, ...) exactly as given: do not summarize, shorten, reformat, rank or comment on them.
-Then ask: "Which is best, and which is worst? (e.g. 'B best, D worst'). Anything you noticed is
+Then ask: "Which is best, and which is worst? (e.g. 'B best, C worst'). Anything you noticed is
 welcome too." If this is the first task, also offer the side-by-side page link once.
 Do not say or guess which AI wrote which answer. If asked, say it's revealed at the end.
 When they answer, call submit_rating.
