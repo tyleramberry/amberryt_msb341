@@ -5,7 +5,7 @@
 > which model is best for *your* work.
 
 **Where to see it:** https://personal-bench.homeroom-app.workers.dev: setup steps for the MCP
-connector (step 1 of [the spec](specs/bench-mcp.md); it answers a `ping` tool so far). The working prototype is the
+connector (step 1 of [the spec](specs/001-benchmark-engine-mcp.md); it answers a `ping` tool so far). The working prototype is the
 `/personal-bench` Claude Code skill, which has run twice on my own work (one test task each, on
 Claude Haiku, Sonnet and Opus). The results are in [`product/bench/runs/`](product/bench/runs/).
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
@@ -37,7 +37,7 @@ Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its
 
 | Deliverable | Status | Where |
 |---|---|---|
-| Live app with a link, code in this repo | Step 1 of 6 shipped: the MCP connector is live with a `ping` tool. Next: port `bench.py`, then the real tools | [spec](specs/bench-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
+| Live app with a link, code in this repo | Step 1 of 6 shipped: the MCP connector is live with a `ping` tool. Next: port `bench.py`, then the real tools | [spec](specs/001-benchmark-engine-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
 | One other person (my wife) builds her own tests through the product | Not started | — |
 | Tests 3 to 5 models and outputs her ranking table | Prototype ranks 3 Claude models; no other vendors yet | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
 | Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
@@ -95,7 +95,7 @@ its "Done looks like":
 | [`product/bench/`](product/bench/) | Personal benchmark runs |
 | [`product/app/`](product/app/) | Homeroom v0 UI code (retired) |
 | [`discovery/`](discovery/) | Homeroom interviews, worksheet, ICP, JTBD, insights, research |
-| [`specs/`](specs/) | [Personal Bench spec](specs/bench-mcp.md); Homeroom PRD and MVP spec, written before the work |
+| [`specs/`](specs/) | [MySI engine spec](specs/001-benchmark-engine-mcp.md) and [chat UX spec](specs/002-harness-ux.md); Homeroom PRD and MVP spec, written before the work |
 | [`design/`](design/) | Homeroom UI mockups |
 | `.claude/skills/` | `/personal-bench` prototype, plus course skills (`/sprint-plan`, `/sprint-review`, `/sprint-coach`, `/learn`, `/eli5`) |
 

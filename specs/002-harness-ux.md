@@ -2,7 +2,7 @@
 
 **Status:** Draft for review
 **Date:** 2026-10-22
-**Goes with:** the engine spec ([bench-mcp.md](bench-mcp.md), being replaced by `001-benchmark-engine-mcp.md`), [decision 006](../decisions/006-pivot-to-personal-benchmark.md)
+**Goes with:** the engine spec ([001](001-benchmark-engine-mcp.md)), [decision 006](../decisions/006-pivot-to-personal-benchmark.md)
 
 ## The one-line goal
 
@@ -264,7 +264,7 @@ so ChatGPT and Claude ask fewer permission questions.
 | `get_run_plan` | Claude Code plan mode only, after the person confirmed the test | `run_id` | one slot per test × model: `slot_id`, `model` (haiku, sonnet, opus), exact prompt to send | yes |
 | `submit_answers` | Claude Code plan mode only, after each test's sub-agents finish | `run_id`, `answers[]` (`slot_id`, `text`, `duration_ms`) | saved, which tests are ready to rate | no |
 
-Changes from [bench-mcp.md](bench-mcp.md): adds `check_connection` (renamed `ping`),
+Changes from the first engine draft (`bench-mcp.md`): adds `check_connection` (renamed `ping`),
 `get_task_ideas`, `get_answers`, `submit_rating`, `which_model`, `rerun_test` (stub). `save_tests`
 now accepts drafts and returns coaching notes.
 
@@ -361,7 +361,8 @@ point of MySI. `which_model` stores its result like any other, tagged with the m
 
 ## Identity (needed to remember the winner)
 
-Sprint 3 has no accounts. Options:
+Decided 2026-10-25: option 1, the personal connector URL
+([decision 008](../decisions/008-identity-personal-connector-url.md)). Sprint 3 has no accounts. Options were:
 
 1. **Personal connector URL** (`/mcp/u/<key>`), made on the setup page. Recommended: nothing to
    type, works in every harness, and the key never appears in chat. Losing the URL means losing
