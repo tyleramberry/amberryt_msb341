@@ -184,7 +184,9 @@ holds subscription credentials (Anthropic's terms don't allow them in other apps
 runs the models itself as sub-agents, the way the `/personal-bench` skill does, and the engine
 does everything else.
 
-- Offered only when the MCP `clientInfo` name says the client is Claude Code. Elsewhere,
+- Offered only when the request's user agent says the client is Claude Code (the MCP `clientInfo`
+  name is only sent once, at connect, so the engine uses the user agent; not yet checked against a
+  real Claude Code connection). Elsewhere,
   `runner: "claude_code"` is refused.
 - Lineup: `haiku`, `sonnet`, `opus`, stored on the run with `runner: "claude_code"`.
 - `run_models` makes no calls; `get_run_plan` hands out slots; `submit_answers` stores each
