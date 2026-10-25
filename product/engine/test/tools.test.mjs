@@ -46,12 +46,12 @@ const COMPANIES = ["openai", "google", "anthropic", "meta"];
 describe("every tool", () => {
   test("read-only tools are annotated, writing tools are not", async () => {
     const { body } = await rpc(base, { jsonrpc: "2.0", id: 1, method: "tools/list" });
-    const ro = new Set(["check_connection", "get_task_ideas", "check_run", "get_answers", "get_results", "which_model"]);
+    const ro = new Set(["check_connection", "get_task_ideas", "check_run", "get_answers", "get_results", "which_model", "get_run_plan"]);
     for (const t of body.result.tools) {
       assert.equal(t.annotations?.readOnlyHint === true, ro.has(t.name), `${t.name} readOnlyHint`);
     }
     assert.deepEqual(body.result.tools.map((t) => t.name).sort(),
-      [...ro, "start_benchmark", "save_tests", "run_models", "submit_rating", "rerun_test"].sort());
+      [...ro, "start_benchmark", "save_tests", "run_models", "submit_rating", "rerun_test", "submit_answers"].sort());
   });
 
   test("every success result has next_step in the text block and structuredContent, in plain words", async () => {

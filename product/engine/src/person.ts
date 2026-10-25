@@ -11,6 +11,7 @@ export type ProfileEntry = {
   winner: string | null;
   by_category: { category: string; winner: string | null }[];
   memory_line: string;
+  mode: string; // "openrouter" or "claude_code"
 };
 
 export class PersonObject extends DurableObject<Env> {
@@ -23,7 +24,7 @@ export class PersonObject extends DurableObject<Env> {
       CREATE TABLE IF NOT EXISTS person (k TEXT PRIMARY KEY, v TEXT);
       CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, created_at TEXT);
       CREATE TABLE IF NOT EXISTS results (
-        run_id TEXT PRIMARY KEY, finished_at TEXT, winner TEXT, by_category TEXT, memory_line TEXT);
+        run_id TEXT PRIMARY KEY, finished_at TEXT, winner TEXT, by_category TEXT, memory_line TEXT, mode TEXT);
     `);
   }
 
@@ -50,20 +51,21 @@ export class PersonObject extends DurableObject<Env> {
 
   saveResult(entry: ProfileEntry) {
     this.sql.exec(
-      "INSERT OR REPLACE INTO results (run_id, finished_at, winner, by_category, memory_line) VALUES (?, ?, ?, ?, ?)",
+      "INSERT OR REPLACE INTO results (run_id, finished_at, winner, by_category, memory_line, mode) VALUES (?, ?, ?, ?, ?, ?)",
       entry.run_id,
       entry.finished_at,
       entry.winner,
       JSON.stringify(entry.by_category),
       entry.memory_line,
+      entry.mode,
     );
   }
 
   // Newest first.
   profile(): ProfileEntry[] {
     return this.sql
-      .exec<{ run_id: string; finished_at: string; winner: string | null; by_category: string; memory_line: string }>(
-        "SELECT run_id, finished_at, winner, by_category, memory_line FROM results ORDER BY finished_at DESC",
+      .exec<{ run_id: string; finished_at: string; winner: string | null; by_category: string; memory_line: string; mode: string }>(
+        "SELECT run_id, finished_at, winner, by_category, memory_line, mode FROM results ORDER BY finished_at DESC",
       )
       .toArray()
       .map((r) => ({ ...r, by_category: JSON.parse(r.by_category) }));

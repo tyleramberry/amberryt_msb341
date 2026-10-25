@@ -178,3 +178,47 @@ test("a personal link remembers results across chats and offers to resume", asyn
   assert.equal(which.data.past_benchmarks.length, 1);
   assert.notEqual((await pcall("start_benchmark", {})).data.resume, true, "finished runs aren't offered");
 });
+
+test("Claude Code plan mode: the host runs the models, the engine blinds and ranks", async () => {
+  const cc = async (name, args = {}, ua = "claude-code/2.1.0") => {
+    const res = await fetch(base + "/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream", "user-agent": ua },
+      body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method: "tools/call", params: { name, arguments: args } }),
+    });
+    const t = await res.text();
+    const msg = t.includes("data: ") ? JSON.parse(/^data: (.*)$/m.exec(t)[1]) : JSON.parse(t);
+    return { isError: Boolean(msg.result.isError), text: msg.result.content[0].text, data: JSON.parse(msg.result.content[0].text) };
+  };
+  const runId = (await cc("start_benchmark", {})).data.run_id;
+  await cc("save_tests", { run_id: runId, tests: TESTS.slice(0, 2) });
+  assert.equal((await cc("run_models", { run_id: runId, person_confirmed: true, runner: "claude_code" }, "node")).isError, true, "only for Claude Code");
+  const started = await cc("run_models", { run_id: runId, person_confirmed: true, runner: "claude_code" });
+  assert.equal(started.isError, false, started.text);
+
+  const plan = await cc("get_run_plan", { run_id: runId });
+  assert.equal(plan.data.remaining_slots, 6);
+  const [t1, t2] = plan.data.tests;
+  assert.deepEqual(t1.slots.map((s) => s.model).sort(), ["haiku", "opus", "sonnet"]);
+  assert.match(t1.slots[0].prompt, /Do not use any tools/);
+  assert.doesNotMatch(JSON.stringify(t1.slots.map((s) => s.slot_id)), /t1|haiku|sonnet|opus/, "slot ids are opaque");
+
+  assert.equal((await cc("submit_answers", { run_id: runId, answers: [{ slot_id: "s_nope", text: "x" }] })).isError, true);
+  const sub1 = await cc("submit_answers", {
+    run_id: runId,
+    answers: t1.slots.map((s) => ({ slot_id: s.slot_id, text: `I'm Claude ${s.model}. Here's the text.`, duration_ms: 1200 })),
+  });
+  assert.equal(sub1.isError, false, sub1.text);
+  assert.equal((await cc("submit_answers", { run_id: runId, answers: [{ slot_id: t1.slots[0].slot_id, text: "again" }] })).isError, true, "no repeated slots");
+
+  await waitFor(runId, (d) => d.next_test_to_rate === "t1");
+  const ans = await cc("get_answers", { run_id: runId, test_id: "t1" });
+  assert.doesNotMatch(JSON.stringify(ans.data.answers), /haiku|sonnet|opus|Claude/i, "scrubbed and blind");
+  assert.match(ans.data.next_step, /rating page first/);
+
+  await cc("submit_answers", { run_id: runId, answers: t2.slots.map((s, i) => (i === 0 ? { slot_id: s.slot_id, error: "failed twice" } : { slot_id: s.slot_id, text: "ok " + i, duration_ms: 900 })) });
+  await waitFor(runId, (d) => d.status === "ready");
+  await cc("submit_rating", { run_id: runId, test_id: "t1", best: "A", worst: "B" });
+  const res = await cc("get_results", { run_id: runId });
+  assert.match(res.text, /Claude Code plan mode: Claude models only/);
+});

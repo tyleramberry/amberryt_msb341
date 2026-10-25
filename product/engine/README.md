@@ -5,7 +5,7 @@ and `specs/002-harness-ux.md` (what the person sees).
 
 | Path | What |
 |---|---|
-| `/mcp` (and `POST /`) | Remote MCP server, no sign-in. 11 tools, 3 prompts, 2 resources. Remembers nothing. |
+| `/mcp` (and `POST /`) | Remote MCP server, no sign-in. 13 tools, 3 prompts, 2 resources. Remembers nothing. |
 | `/mcp/u/<key>` | A person's own connector URL (decision 008), minted by "Get my link" (`POST /link`). Remembers their runs and winners. |
 | `/` | Setup page: how to add the connector in Claude, ChatGPT and Claude Code. |
 | `/r/<run_id>` | Blind rating page; after the reveal, the full report. |
@@ -53,3 +53,11 @@ Limits: 10 tests × 5 models per run, 2 judges, `MAX_RUNS_PER_DAY` (20) across e
 The person sees only their own picks: judges still run and are stored, but no result, page or report
 shows their scores (decided 2026-10-25). Personal keys appear in request URLs, so Cloudflare's
 request logs can contain them; the engine itself never logs them.
+
+**Claude Code plan mode** (spec 002): inside Claude Code, the person can run Claude Haiku, Sonnet and
+Opus on their own plan. `run_models` with `runner: "claude_code"` makes no model calls;
+`get_run_plan` hands the host one opaque slot per test and model, and the host sends the sub-agents'
+answers back with `submit_answers`, one test at a time. Blinding, judging (on MySI's key) and
+results work as usual, and the results carry a caveat line. Claude Code is recognized by
+`clientInfo.name` at connect time and by a `claude-code` / `claude-cli` user agent on tool calls
+(`isClaudeCode` in `src/tools.ts`). Check that against a real Claude Code connection.

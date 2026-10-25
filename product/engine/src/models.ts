@@ -32,6 +32,14 @@ const DEFAULT_JUDGES: ModelInfo[] = [
   { id: "x-ai/grok-4", name: "Grok 4", company: "xAI" },
 ];
 
+// Claude Code plan mode: the host's Agent tool model aliases. Ids are prefixed so they never
+// collide with OpenRouter ids, and their vendor ("claude-code") is not a judge vendor.
+export const CLAUDE_CODE_LINEUP: ModelInfo[] = [
+  { id: "claude-code/haiku", name: "Claude Haiku", company: "Anthropic" },
+  { id: "claude-code/sonnet", name: "Claude Sonnet", company: "Anthropic" },
+  { id: "claude-code/opus", name: "Claude Opus", company: "Anthropic" },
+];
+
 function parseList(raw: string | undefined, fallback: ModelInfo[]): ModelInfo[] {
   if (!raw) return fallback;
   const list = JSON.parse(raw) as ModelInfo[];
