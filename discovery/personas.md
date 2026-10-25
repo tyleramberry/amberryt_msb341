@@ -3,6 +3,34 @@
 > One entry per customer type. Update as interviews sharpen the picture:
 > this file should get *more specific* over the semester, not longer.
 
+## MySI: the one-app AI user (current)
+
+- **Who:** Someone who uses AI every week for their own work, across very different jobs, inside
+  one chat app. The first one runs a small custom cake business and is a math
+  student<sup>[06]</sup>. She has Claude read her unread email and draft replies she checks and
+  sends herself, and has it walk her through homework step by step<sup>[06]</sup>. She is not
+  technical and does not follow model releases.
+- **The problem in their words:** "I'm not going to have 1 for doing 1 thing and 1 for doing 1
+  thing. ... I would rather just have 1."<sup>[06]</sup> and, on her current app, "ChatGPT gives it
+  to me a lot more simply for me to understand."<sup>[06]</sup>
+- **Current workaround:**
+  - Stays in the app where she has the most usage (Claude), even though she finds another app
+    explains things better<sup>[06]</sup>.
+  - Writes her style rules into every prompt by hand ("not a lot of text," no em
+    dashes)<sup>[06]</sup>, and still gets a "ton of text" or an unwanted PDF<sup>[06]</sup>.
+- **What they'd pay / have paid for:** Unknown for MySI. She has a Claude plan with more usage than her ChatGPT one<sup>[06]</sup>,
+  and would pay $20 to $30 a month for a dictation app<sup>[06]</sup>, which is a different
+  product.
+- **What the result has to do for her:** name one model, in the app she already uses, and break
+  ties on speed and cost ([decision 009](../decisions/009-one-winner-and-your-app.md)). A per-task
+  ranking that spans vendors leaves her "stuck"<sup>[06]</sup>.
+- **Evidence:** [06](interviews/2026-10-24-interview-06.md) (household, observed live run). One
+  person; synthesis in [`insights.md`](insights.md) (M1 to M7).
+
+---
+
+*The persona below is from Homeroom (retired in Sprint 3, [decision 006](../decisions/006-pivot-to-personal-benchmark.md)). Kept as history.*
+
 ## The rubric self-checker
 
 - **Who:** A college junior or senior in a business-adjacent major (finance, accounting, business
@@ -47,3 +75,4 @@ student. Kept as a possible second segment (insight 9), not a persona, on one in
 [03]: interviews/2026-10-08-interview-03.md
 [04]: interviews/2026-10-10-interview-04.md
 [05]: interviews/2026-10-12-interview-05.md
+[06]: interviews/2026-10-24-interview-06.md

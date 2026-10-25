@@ -3,6 +3,37 @@
 > Synthesis, not a diary. Keep it to the 5–10 things you currently believe about
 > your market, each with evidence. Revise beliefs in place; note the date of last change.
 
+## MySI (current, Sprint 3)
+
+One outside user so far ([06](interviews/2026-10-24-interview-06.md), my wife: a cake business
+owner and math student). Every belief below rests on that one run, so all of them are bets to test
+on the next users, not findings.
+
+| # | Belief | Confidence | Evidence | Last updated |
+|---|--------|------------|----------|--------------|
+| M1 | People won't switch apps or vendors per task, even when the benchmark says a different model wins each task. They want one harness: "I would rather just have 1." Switching models is fine only if it happens inside the app they already use. This is the biggest risk to a per-task ranking, and it makes the router (one harness that can call any model) more important than the ranking. | Low (n=1), high impact | 06 | 2026-10-24 |
+| M2 | The person's own rubric is personal, and model judges miss it. The judges scored GPT-5's ASCII graph 9 and 10 on math; she ranked it worst ("visual" means clean layout to her, not ASCII art). They also ignored her stated "no em dashes" rule on the email test. Her blind picks, not judge scores, have to drive the result ([decision 009](../decisions/009-one-winner-and-your-app.md)). | Med (direct run data, but one person) | 06 run detail | 2026-10-24 |
+| M3 | Picks differ by task, not by model overall. GPT-5 was her best on email and her worst on math; Gemini the reverse. Across two tests that summed to a three-way tie, so an "overall winner" is noisy on a small test set and needs a tiebreaker. | Low (2 tests) | 06 | 2026-10-24 |
+| M4 | When answers are close in quality, speed and cost should decide. Claude Sonnet 4.5 was second on both tests and the fastest and cheapest on both. This came from my suggestion, which she agreed with, so it is a prompted answer. | Low (prompted) | 06 | 2026-10-24 |
+| M5 | Which app someone uses depends on how much usage they get and how the app looks, not on which model is smartest. She uses Claude because she gets more usage there, though "ChatGPT gives it to me a lot more simply," and she said an answer "looks better in ChatGPT." The app's formatting is part of what she is judging. | Low | 06 | 2026-10-24 |
+| M6 | People would rather rate by talking than by clicking. Asked about checkboxes: "No, I like to say." | Low | 06 | 2026-10-24 |
+| M7 | Setting up a remote MCP connector is doable for a non-technical user, with light help. She needed two assists (leaving a cloud session, being told to say "confirm"); the connect prompt now covers the first. | Low | 06 | 2026-10-24 |
+
+**Notes on the evidence.**
+
+- **Household, not a stranger.** 06 is my wife and I was in the room, so her "this is sick, honey"
+  is a polite signal, not demand. The run data (her picks against judge scores, time, cost) is
+  stronger evidence than anything she said about the product.
+- **No willingness-to-pay evidence for MySI yet.** The only price in 06 is $20 to $30 a month for
+  Wispr Flow, a different product. Don't read it as a MySI price.
+- **Old lineup.** Her run used GPT-5, Gemini 2.5 Pro and Claude Sonnet 4.5, not the current
+  frontier lineup, so M3 and M4 may shift on the new models.
+
+## Homeroom (retired, Sprint 2)
+
+Kept as history. These beliefs were about the Homeroom study harness, which the pivot retired
+([decision 006](../decisions/006-pivot-to-personal-benchmark.md)). Not revised after 2026-10-12.
+
 | # | Belief | Confidence | Evidence | Last updated |
 |---|--------|------------|----------|--------------|
 | 1 | Students already hand-run the rubric check: paste the rubric plus their own draft into a chatbot and ask "am I missing anything?" The behavior Homeroom automates exists today, unprompted. One student has gone further and has Claude pull the assignment and rubric through the Canvas API to grade them, and says that pull "is not reliable." | Med | [01](interviews/2026-10-07-interview-01.md), [04](interviews/2026-10-10-interview-04.md), [05](interviews/2026-10-12-interview-05.md) | 2026-10-12 |
