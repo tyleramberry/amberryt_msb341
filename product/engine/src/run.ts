@@ -17,6 +17,10 @@ export type DraftTest = Omit<Test, "id">;
 type Fail = { ok: false; error: string };
 type Ok<T> = { ok: true } & T;
 
+// Chat apps whose own models are in a lineup, keyed by get_results' `app` input.
+export const APP_VENDOR: Record<string, string> = { claude: "anthropic", chatgpt: "openai", gemini: "google" };
+const APP_NAME: Record<string, string> = { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini" };
+
 const MAX_IN_FLIGHT = 4;
 const ANSWER_TOKENS = 2000;
 const JUDGE_TOKENS = 2000;
@@ -570,7 +574,9 @@ export class RunObject extends DurableObject<Env> {
 
   // ---- RPC: results --------------------------------------------------------------------------
 
-  results(finish: boolean): Fail | Ok<{ data: Results }> {
+  // `app` is the chat app the person is in (see APP_VENDOR), saved for the results page.
+  results(finish: boolean, app?: string): Fail | Ok<{ data: Results }> {
+    if (app && APP_VENDOR[app]) this.set("app", app);
     const status = this.status();
     if (status === "draft") return { ok: false, error: "This benchmark hasn't run yet. Confirm the test tasks, then call run_models." };
     if (status === "running") {
@@ -641,18 +647,17 @@ export class RunObject extends DurableObject<Env> {
       forPerson: true,
     });
 
-    // Equal scores are a tie; nothing breaks it.
-    const leaders = (rows: typeof rep.rows) => {
+    // Rows arrive best first, with equal scores already ordered by cost and speed (decision 009),
+    // so the winner is always one model. `tiedWith` names the models it beat only on the tiebreak.
+    const lead = (rows: typeof rep.rows) => {
       const best = rows[0]?.human;
-      if (best === null || best === undefined) return [];
-      return rows.filter((r) => r.human === best).map((r) => r.model);
+      if (best === null || best === undefined) return { winner: null, tiedWith: [] as typeof rows };
+      return { winner: rows[0], tiedWith: rows.slice(1).filter((r) => r.human === best) };
     };
-    const name = (models: string[]) =>
-      models.length === 0 ? null : models.length === 1 ? models[0] : `${models.slice(0, -1).join(", ")} and ${models[models.length - 1]} (tied)`;
 
     const rated = human.length;
-    const topModels = leaders(rep.rows);
-    const top = name(topModels);
+    const { winner, tiedWith } = lead(rep.rows);
+    const top = winner?.model ?? null;
     const categories = [...new Set(tests.map((t) => t.category))].sort();
     const byCategory = categories.map((c) => {
       const catTests = tests.filter((t) => t.category === c);
@@ -665,18 +670,39 @@ export class RunObject extends DurableObject<Env> {
         forPerson: true,
       });
       const catHuman = human.some((h) => catTests.some((t) => t.id === h.eval_id));
-      return { category: c, winner: catHuman ? name(leaders(sub.rows)) : null, tests: catTests.length };
+      return { category: c, winner: catHuman ? (lead(sub.rows).winner?.model ?? null) : null, tests: catTests.length };
     });
     const rated_categories = byCategory.filter((c) => c.winner !== null);
     const differs = rated_categories.some((c) => c.winner !== top);
 
     const wins = (m: string) => rep.rows.find((r) => r.model === m)?.wins ?? 0;
     const tasks = `${rated} task${rated === 1 ? "" : "s"}`;
+    const why = (() => {
+      if (!winner || !tiedWith.length) return "";
+      const group = [winner, ...tiedWith];
+      const cheapest = group.every((r) => winner.cost === null || r.cost === null || winner.cost <= r.cost);
+      const fastest = group.every((r) => winner.median_s === null || r.median_s === null || winner.median_s <= r.median_s);
+      const how = cheapest && fastest ? "the cheapest and fastest" : cheapest ? "the cheapest" : fastest ? "the fastest" : "the best mix of cost and speed";
+      return ` It tied with ${tiedWith.map((r) => r.model).join(" and ")} on your picks and wins because it was ${how} of them.`;
+    })();
     const headline = !top
       ? "There were no answers to compare."
-      : topModels.length === 1
-        ? `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.`
-        : `For your work, ${topModels.map((m) => `**${m}**`).join(" and ")} tied for the top on the ${tasks} you rated.`;
+      : `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.${why}`;
+
+    const inYourApp = (() => {
+      const app = this.get("app");
+      const vendor = app ? APP_VENDOR[app] : undefined;
+      if (!app || !vendor || !top || this.runner() === "claude_code") return null;
+      const appName = APP_NAME[app];
+      const idOf = (model: string) => lineup.find((m) => m.name === model)?.id ?? model;
+      const i = rep.rows.findIndex((r) => idOf(r.model).startsWith(vendor + "/"));
+      if (i === 0) return `${top} is made for ${appName}, the app you already use, so you can switch to it there without changing apps.`;
+      if (i < 0) return `None of these models run in ${appName}. To use ${top}, you'd need an app that can use it.`;
+      return (
+        `${top} doesn't run in ${appName}. The best one you can use there is ${rep.rows[i].model} (ranked ${i + 1}). ` +
+        `To use ${top} you'd need to switch apps, or use an app that can run models from any company.`
+      );
+    })();
 
     const month = new Date(this.get("created_at") ?? Date.now()).toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
     const memoryLine = !top
@@ -709,6 +735,7 @@ export class RunObject extends DurableObject<Env> {
     return {
       headline,
       winner: top,
+      in_your_app: inYourApp,
       mode: this.runner(),
       markdown: rep.markdown,
       rows: rep.rows,
@@ -775,7 +802,8 @@ export type RunDump = ReturnType<RunObject["dump"]>;
 
 export type Results = {
   headline: string;
-  winner: string | null; // "A and B (tied)" on a tie
+  winner: string | null; // one model: ties break on cost and speed (decision 009)
+  in_your_app: string | null; // the best model the person can use in the chat app they're in
   mode: Runner;
   markdown: string;
   rows: ReturnType<typeof report>["rows"];

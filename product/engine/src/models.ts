@@ -20,17 +20,19 @@ export type Env = {
   ADMIN_TOKEN?: string; // secret; turns on the owner's log at /admin
 };
 
-// Defaults if wrangler.jsonc doesn't set LINEUP / JUDGE_POOL. Check the ids against
+// Defaults if wrangler.jsonc doesn't set LINEUP / JUDGE_POOL. Frontier models as of 2026-10-25,
+// all $2 / $10 per million tokens, so cost differences come from answer length. Check the ids against
 // https://openrouter.ai/models with `npm run check-models` before a real run.
 const DEFAULT_LINEUP: ModelInfo[] = [
-  { id: "openai/gpt-5", name: "GPT-5", company: "OpenAI" },
-  { id: "google/gemini-2.5-pro", name: "Gemini 2.5 Pro", company: "Google" },
-  { id: "anthropic/claude-sonnet-4.5", name: "Claude Sonnet 4.5", company: "Anthropic" },
+  { id: "openai/gpt-6.1-sol", name: "GPT-6.1 Sol", company: "OpenAI" },
+  { id: "google/gemini-4-argon", name: "Gemini 4 Argon", company: "Google" },
+  { id: "anthropic/claude-sonnet-5.5", name: "Claude Sonnet 5.5", company: "Anthropic" },
 ];
 const DEFAULT_JUDGES: ModelInfo[] = [
-  { id: "deepseek/deepseek-chat-v3.1", name: "DeepSeek V3.1", company: "DeepSeek" },
-  { id: "mistralai/mistral-medium-3.1", name: "Mistral Medium 3.1", company: "Mistral" },
+  { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek" },
+  { id: "mistralai/mistral-large-4-0", name: "Mistral Large 4", company: "Mistral" },
   { id: "x-ai/grok-4.7", name: "Grok 4.7", company: "xAI" },
+  { id: "moonshotai/kimi-k3.1-pro", name: "Kimi K3.1 Pro", company: "Moonshot AI" },
 ];
 
 // Claude Code plan mode: the host's Agent tool model aliases. Ids are prefixed so they never
@@ -127,7 +129,7 @@ async function mockComplete(model: string, prompt: string, started: number): Pro
   let h = 0;
   for (const ch of model + prompt) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   if (prompt.startsWith("You are grading")) {
-    const labels = [...prompt.matchAll(/^RESPONSE ([A-Z]):/gm)].map((m) => m[1]);
+    const labels = [...prompt.matchAll(/^RESPONSE ([A-Z])\b/gm)].map((m) => m[1]);
     const nCriteria = [...prompt.matchAll(/^\d+\. /gm)].length;
     return {
       text: JSON.stringify(

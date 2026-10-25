@@ -1,0 +1,33 @@
+{
+  "about": "Judge eval from the first outside user's run (interview 06). Each case has the person's criteria and two or three answers; `expect` says which label must score lower overall. Run: cd product/engine && npm run eval:judges (needs OPENROUTER_API_KEY in .env).",
+  "cases": [
+    {
+      "id": "em-dash-rule",
+      "test": {
+        "id": "t1", "category": "writing", "title": "Follow-up after tasting pickup",
+        "prompt": "Write a short, excited follow-up to a wedding planner who picked up a tasting box. Keep the referral program as I first told her: $25 to $100 per booked couple.",
+        "context": "",
+        "criteria": ["Gets the details right", "Respectful and excited tone", "Not way too long", "No AI grammar like em dashes"]
+      },
+      "answers": {
+        "A": "Hi Jess! Thank you so much for picking up the tasting box — I hope you loved it! As promised, you'll still get $25 to $100 for every couple you send our way — just have them mention your name. Can't wait to work together!",
+        "B": "Hi Jess! Thank you so much for picking up the tasting box. I hope you loved it! As promised, you'll still get $25 to $100 for every couple you send our way. Just have them mention your name. Can't wait to work together!"
+      },
+      "expect": { "lower": "A", "than": "B", "max_overall": { "A": 5 } }
+    },
+    {
+      "id": "too-long",
+      "test": {
+        "id": "t1", "category": "writing", "title": "Quick thank-you text",
+        "prompt": "Write a quick thank-you text to a customer who left a review.",
+        "context": "",
+        "criteria": ["Warm", "Not way too long, a text not an email"]
+      },
+      "answers": {
+        "A": "Thank you so much for the sweet review! It made my day. Hope to bake for you again soon!",
+        "B": "Dear valued customer,\n\nI wanted to take a moment to personally thank you for taking the time to leave such a thoughtful and generous review of our bakery. Reviews like yours mean the world to a small business like ours, and they help other customers discover what we do. We put a great deal of care into every order, from selecting the finest ingredients to the final decoration, and it is incredibly rewarding to hear that this care came through for you. Please don't hesitate to reach out for your next celebration; we would be honored to be part of it.\n\nWith heartfelt gratitude,\nThe team"
+      },
+      "expect": { "lower": "B", "than": "A" }
+    }
+  ]
+}

@@ -120,7 +120,7 @@ export function connectPrompt(url: string) {
 
 ${url}
 
-If you can add connectors yourself (in Claude Code: claude mcp add --transport http --scope user mysi <the link>), do it, then call MySI's check_connection tool to make sure it works.
+If you can add connectors yourself (in Claude Code: claude mcp add --transport http --scope user mysi <the link>), do it, then call MySI's check_connection tool to make sure it works. If you're running in a cloud session rather than on my own computer, don't add it there: tell me to open Claude on my computer and paste this again.
 
 If you can't, tell me how in a few short steps for the app I'm using. In claude.ai or the Claude app that's: Settings, then Connectors, then Add custom connector, name it MySI, and paste the link from this message. Then tell me to start a new chat and say "Find my best AI model."`;
 }
@@ -257,6 +257,7 @@ export function resultsPage(view: RunView, r: Results) {
     `<main class="narrow">
   <h1>Your MySI results</h1>
   <p class="lead">${inline(r.headline)}</p>
+  ${r.in_your_app ? `<p>${esc(r.in_your_app)}</p>` : ""}
   <h2>Which AI wrote what</h2><ol>${reveal}</ol>
   ${markdown(r.markdown.replace(/^# Personal benchmark\n/, ""))}
   <p class="muted">Cost of this benchmark: US$${r.cost_usd.toFixed(4)}.</p>

@@ -95,6 +95,15 @@ export function isClaudeCode(caller: Caller) {
   return /claude[- ]?code|claude-cli/i.test(`${caller.clientName ?? ""} ${caller.userAgent ?? ""}`);
 }
 
+// A guess at the chat app from the client's name or user agent, used when the host doesn't say.
+export function appOf(caller: Caller): string | undefined {
+  const who = `${caller.clientName ?? ""} ${caller.userAgent ?? ""}`;
+  if (/claude/i.test(who)) return "claude";
+  if (/openai|chatgpt/i.test(who)) return "chatgpt";
+  if (/gemini/i.test(who)) return "gemini";
+  return undefined;
+}
+
 // person is set when the call came through a personal connector URL (/mcp/u/<key>, decision 008).
 export function createServer(
   env: Env,
@@ -543,13 +552,19 @@ export function createServer(
         "Show the MySI results: which AI model did best on the person's own test tasks, and which AI wrote each " +
         "answer. Call when every task is rated, or when the person says to stop rating and show results. This " +
         "reveals the models and closes rating.",
-      inputSchema: z.object({ run_id: z.string() }),
+      inputSchema: z.object({
+        run_id: z.string(),
+        app: z
+          .enum(["claude", "chatgpt", "gemini", "other"])
+          .optional()
+          .describe("The chat app you are running in, so the results can say which model the person can use there."),
+      }),
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async ({ run_id }) => {
+    async ({ run_id, app }) => {
       const run = await openRun(env, run_id);
       if (!run) return refuse(NO_RUN);
-      const r = await run.results(true);
+      const r = await run.results(true, app ?? appOf(caller));
       if (!r.ok) return refuse(r.error);
       const d = r.data;
       if (person && (await person.runIds()).includes(run_id)) {
@@ -563,16 +578,17 @@ export function createServer(
         });
       }
       // The chat table is trimmed and in the person's words; the page keeps bench.py's full report.
-      // Only the person's own picks show (decided 2026-10-25): no judge column, and ties share a rank.
+      // Only the person's own picks show (decided 2026-10-25): no judge column. Equal scores are
+      // ordered by cost and speed (decision 009), so both columns are shown.
       const num = (x: number | null, digits: number) => (x === null ? "–" : x.toFixed(digits));
-      const rank = (i: number) => d.rows.findIndex((r) => r.human === d.rows[i].human) + 1;
       const table = [
-        "| Rank | AI model | Your score (0–2) | Your picks for best |",
-        "|---|---|---|---|",
-        ...d.rows.map((r, i) => `| ${rank(i)} | ${r.model} | ${num(r.human, 2)} | ${r.wins} |`),
+        "| Rank | AI model | Your score (0–2) | Your picks for best | Time (s) | Cost per answer |",
+        "|---|---|---|---|---|---|",
+        ...d.rows.map((r, i) => `| ${i + 1} | ${r.model} | ${num(r.human, 2)} | ${r.wins} | ${num(r.median_s, 1)} | ${r.cost === null ? "–" : "$" + r.cost.toFixed(3)} |`),
       ].join("\n");
       return reply({
         headline: d.headline,
+        in_your_app: d.in_your_app,
         ranking_table: table,
         by_category: d.by_category,
         reveal: d.reveal,

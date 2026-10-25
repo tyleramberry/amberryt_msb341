@@ -191,9 +191,17 @@ export function report(input: ReportInput): Report {
   });
   const forPerson = input.forPerson ?? false;
   const task = forPerson ? "test task" : "eval";
+  // For the person, equal scores are ordered by cost and speed (decision 009): each model's cost
+  // and median time as a multiple of the cheapest and fastest, summed. Lower is better.
+  const minOf = (xs: (number | null)[]) => Math.min(...xs.filter((x): x is number => x !== null && x > 0));
+  const minCost = minOf(rows.map((r) => r.cost));
+  const minTime = minOf(rows.map((r) => r.median_s));
+  const thrift = (r: Row) =>
+    (r.cost !== null && r.cost > 0 && Number.isFinite(minCost) ? r.cost / minCost : 0) +
+    (r.median_s !== null && r.median_s > 0 && Number.isFinite(minTime) ? r.median_s / minTime : 0);
   rows.sort((a, b) =>
     forPerson
-      ? (b.human ?? 0) - (a.human ?? 0)
+      ? (b.human ?? 0) - (a.human ?? 0) || thrift(a) - thrift(b)
       : (b.human ?? 0) - (a.human ?? 0) || (b.judge ?? 0) - (a.judge ?? 0),
   );
 
@@ -227,8 +235,7 @@ export function report(input: ReportInput): Report {
       (showCost ? " Cost per answer (US$) |" : ""),
     "|---|---|---|---|---|" + (forPerson ? "" : "---|") + (showCost ? "---|" : ""),
   );
-  // For the person, equal scores share a rank: there is no judge to break the tie.
-  const rankOf = (i: number) => (forPerson ? rows.findIndex((r) => r.human === rows[i].human) + 1 : i + 1);
+  const rankOf = (i: number) => i + 1;
   rows.forEach((r, i) => {
     out.push(
       `| ${rankOf(i)} | ${r.model} | ${fmt(r.human, 2)} | ${human.length ? r.wins : "–"} ` +
@@ -240,7 +247,7 @@ export function report(input: ReportInput): Report {
   out.push(
     "",
     `Your score: best answer = 2, worst = 0, the rest = 1, averaged over ${task}s. ` +
-      (forPerson ? "Ranked by your score." : "Ranked by your score, judge breaks ties."),
+      (forPerson ? "Ranked by your score; equal scores go to the cheaper, faster model." : "Ranked by your score, judge breaks ties."),
     "",
   );
 
