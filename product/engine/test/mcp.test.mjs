@@ -57,6 +57,7 @@ describe("setup page", () => {
 
   test("unknown paths return 404", async () => {
     assert.equal((await fetch(base + "/nope")).status, 404);
+    assert.equal((await fetch(base + "/admin")).status, 404, "the owner's log is off without ADMIN_TOKEN");
   });
 });
 

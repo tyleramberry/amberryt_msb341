@@ -3,6 +3,7 @@
 // setup page at /, and the rating page at /r/<run_id>.
 
 import { createMcpHandler } from "agents/mcp/server";
+import { adminRoutes } from "./admin.ts";
 import type { Env } from "./models.ts";
 import { connectPrompt, notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
 import { createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
@@ -88,7 +89,7 @@ export default {
       return mcp(new Request(new URL("/mcp", url), request), env, ctx);
     }
 
-    const page = await ratingRoutes(request, env, url);
+    const page = (await ratingRoutes(request, env, url)) ?? (await adminRoutes(request, env, url));
     if (page) return page;
 
     // A fresh MCP server per request: the handler is stateless; run state lives in Durable Objects.

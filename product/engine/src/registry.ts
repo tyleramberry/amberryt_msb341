@@ -31,6 +31,13 @@ export class RegistryObject extends DurableObject<Env> {
     return true;
   }
 
+  // Newest first, for the owner's log (/admin).
+  list(): { run_id: string; created_at: string; started_at: string | null }[] {
+    return this.sql
+      .exec<{ run_id: string; created_at: string; started_at: string | null }>("SELECT run_id, created_at, started_at FROM runs ORDER BY created_at DESC")
+      .toArray();
+  }
+
   recordInterest(runId: string, model: string) {
     this.sql.exec("INSERT INTO interest (run_id, model, at) VALUES (?, ?, ?)", runId, model, new Date().toISOString());
   }

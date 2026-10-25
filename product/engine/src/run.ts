@@ -726,7 +726,52 @@ export class RunObject extends DurableObject<Env> {
   events() {
     return this.sql.exec<{ at: string; action: string; outcome: string }>("SELECT at, action, outcome FROM events ORDER BY at").toArray();
   }
+
+  // The owner's log (/admin only): the whole run, including which model wrote each answer and
+  // the judges' scores. Never returned by a tool or the person's pages.
+  dump() {
+    const view = this.view();
+    const responses = this.sql
+      .exec<{ test_id: string; model: string; display_text: string | null; latency_ms: number | null; cost_usd: number | null; error: string | null }>(
+        "SELECT test_id, model, display_text, latency_ms, cost_usd, error FROM responses",
+      )
+      .toArray();
+    const judgments = this.sql
+      .exec<{ test_id: string; judge: string; label: string; overall: number; reason: string }>(
+        "SELECT test_id, judge, label, overall, reason FROM judgments",
+      )
+      .toArray();
+    const finished = view.status === "finished" ? this.buildResults() : null;
+    return {
+      ...view,
+      finished_at: this.get("finished_at"),
+      winner: finished?.winner ?? null,
+      tests: view.tests.map((t) => {
+        const labels = this.labelsFor(t.id);
+        const rating = this.rating(t.id);
+        return {
+          ...t,
+          rating: rating && { ...rating, best_model: labels[rating.best] ?? null, worst_model: rating.worst ? (labels[rating.worst] ?? null) : null },
+          answers: Object.entries(labels).map(([label, model]) => {
+            const r = responses.find((x) => x.test_id === t.id && x.model === model);
+            return {
+              label,
+              model,
+              text: r?.display_text ?? null,
+              latency_ms: r?.latency_ms ?? null,
+              cost_usd: r?.cost_usd ?? null,
+              judge_scores: judgments.filter((j) => j.test_id === t.id && j.label === label).map(({ judge, overall, reason }) => ({ judge, overall, reason })),
+            };
+          }),
+          errors: responses.filter((x) => x.test_id === t.id && x.error).map(({ model, error }) => ({ model, error })),
+        };
+      }),
+      events: this.events(),
+    };
+  }
 }
+
+export type RunDump = ReturnType<RunObject["dump"]>;
 
 export type Results = {
   headline: string;
