@@ -5,10 +5,12 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { DEFAULT_TESTS, LIMITS } from "./coach.ts";
-import { isMock, lineupFor, modelFromId, pickJudges, vendorOf, type Env } from "./models.ts";
+import { CLAUDE_CODE_LINEUP, isMock, lineupFor, modelFromId, pickJudges, vendorOf, type Env } from "./models.ts";
 import {
   ANSWERS_NEXT_STEP,
   CARD_FORMAT,
+  CLAUDE_CODE_INSTRUCTIONS,
+  RUN_PLAN_NEXT_STEP,
   INTERVIEW_GUIDE,
   INTRO,
   RESULTS_NEXT_STEP,
@@ -83,9 +85,28 @@ export function personStub(env: Env, key: string) {
   return env.PERSON.get(env.PERSON.idFromName(key));
 }
 
+// Who is calling: clientName comes from an initialize request's clientInfo, userAgent from the
+// HTTP header. The handler is stateless, so later tool calls carry only the user agent.
+export type Caller = { clientName?: string; userAgent?: string };
+
+// Claude Code plan mode is only for Claude Code (spec 002). Kept in one place so the check can
+// change once we've seen what a real Claude Code connection sends.
+export function isClaudeCode(caller: Caller) {
+  return /claude[- ]?code|claude-cli/i.test(`${caller.clientName ?? ""} ${caller.userAgent ?? ""}`);
+}
+
 // person is set when the call came through a personal connector URL (/mcp/u/<key>, decision 008).
-export function createServer(env: Env, origin: string, person: DurableObjectStub<PersonObject> | null = null) {
-  const server = new McpServer({ name: "mysi", title: "MySI", version: "0.2.0" }, { instructions: SERVER_INSTRUCTIONS });
+export function createServer(
+  env: Env,
+  origin: string,
+  person: DurableObjectStub<PersonObject> | null = null,
+  caller: Caller = {},
+) {
+  const claudeCode = isClaudeCode(caller);
+  const server = new McpServer(
+    { name: "mysi", title: "MySI", version: "0.3.0" },
+    { instructions: SERVER_INSTRUCTIONS + (claudeCode ? CLAUDE_CODE_INSTRUCTIONS : "") },
+  );
   const ratingUrl = (runId: string) => `${origin}/r/${runId}`;
   const readOnly = { readOnlyHint: true, openWorldHint: false };
 
@@ -254,9 +275,13 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
           .array(z.string())
           .optional()
           .describe(`Builders only: ${LIMITS.minModels} to ${LIMITS.maxModels} OpenRouter model ids. Leave out for the standard lineup.`),
+        runner: z
+          .enum(["mysi", "claude_code"])
+          .optional()
+          .describe('Claude Code only: "claude_code" if the person chose to run on their own Claude plan. Leave out otherwise.'),
       }),
     },
-    async ({ run_id, person_confirmed, models }) => {
+    async ({ run_id, person_confirmed, models, runner }) => {
       if (!person_confirmed) {
         return refuse(
           "The person hasn't confirmed the test tasks.",
@@ -265,6 +290,24 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
       }
       const run = await openRun(env, run_id);
       if (!run) return refuse(NO_RUN);
+      if (runner === "claude_code") {
+        if (!claudeCode) return refuse("Running on your own Claude plan only works inside Claude Code. Leave runner out to use MySI's lineup.");
+        // No daily or spend cap: the answers come from the person's plan; only judging uses our key.
+        const started = await run.start(CLAUDE_CODE_LINEUP, pickJudges(env, CLAUDE_CODE_LINEUP), "claude_code");
+        if (!started.ok) return refuse(started.error);
+        return reply({
+          status: started.view.status,
+          already_started: started.already,
+          mode: "claude_code",
+          models: ["haiku", "sonnet", "opus"],
+          tests: started.view.tests.length,
+          rating_url: ratingUrl(run_id),
+          message_for_person:
+            `I'll run Claude Haiku, Sonnet and Opus on your ${started.view.tests.length} test tasks here, on your own plan. ` +
+            "You can start rating as soon as the first task is done; you won't see which answer is which model until the end.",
+          next_step: "Pass message_for_person on, then call get_run_plan.",
+        });
+      }
       let lineup = lineupFor(env);
       if (models?.length) {
         const ids = [...new Set(models)];
@@ -309,6 +352,72 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
   );
 
   server.registerTool(
+    "get_run_plan",
+    {
+      title: "Get the sub-agent plan",
+      description:
+        "Claude Code only, after run_models with runner \"claude_code\": the sub-agents to run on the person's own " +
+        "Claude plan, one slot per test task and model, each with the exact prompt to use.",
+      inputSchema: z.object({ run_id: z.string() }),
+      annotations: readOnly,
+    },
+    async ({ run_id }) => {
+      const run = await openRun(env, run_id);
+      if (!run) return refuse(NO_RUN);
+      const plan = await run.plan();
+      if (!plan.ok) return refuse(plan.error);
+      const byTest = new Map<string, typeof plan.slots>();
+      for (const s of plan.slots) byTest.set(s.test_id, [...(byTest.get(s.test_id) ?? []), s]);
+      return reply({
+        tests: [...byTest].map(([test_id, slots]) => ({
+          test_id,
+          slots: slots.map(({ slot_id, model, prompt }) => ({ slot_id, model, prompt })),
+        })),
+        remaining_slots: plan.slots.length,
+        rating_url: ratingUrl(run_id),
+        next_step: plan.slots.length ? RUN_PLAN_NEXT_STEP : "Every answer is in. Call check_run.",
+      });
+    },
+  );
+
+  server.registerTool(
+    "submit_answers",
+    {
+      title: "Send sub-agent answers",
+      description:
+        "Claude Code only: send the answers your sub-agents wrote for one test task, by the slot ids from " +
+        "get_run_plan. Call once per test task, right after its sub-agents finish.",
+      inputSchema: z.object({
+        run_id: z.string(),
+        answers: z.array(
+          z.object({
+            slot_id: z.string(),
+            text: z.string().optional().describe("The answer exactly as the sub-agent returned it."),
+            duration_ms: z.number().optional().describe("From the sub-agent's usage block."),
+            error: z.string().optional().describe("Only if the sub-agent failed twice: what went wrong."),
+          }),
+        ),
+      }),
+    },
+    async ({ run_id, answers }) => {
+      const run = await openRun(env, run_id);
+      if (!run) return refuse(NO_RUN);
+      const r = await run.submitAnswers(answers);
+      if (!r.ok) return refuse(r.error);
+      const p = progress(r.view);
+      const remaining = r.view.tests.filter((t) => t.status === "queued" || t.status === "running").length;
+      return reply({
+        saved: r.saved,
+        progress: p,
+        next_step: remaining
+          ? "Run the next test task's slots from get_run_plan. If this was the first task, tell the person they can start " +
+            "rating now (offer the rating page) while the rest run."
+          : "All answers are in. Call check_run, then rate with get_answers.",
+      });
+    },
+  );
+
+  server.registerTool(
     "check_run",
     {
       title: "Check benchmark progress",
@@ -329,6 +438,8 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
       if (view.status === "draft") next_step = "The models haven't started. Finish the interview, get the person's yes, then call run_models.";
       else if (view.status === "failed" && !p.answered) next_step = `Tell the person: ${view.error} Offer to start again with start_benchmark.`;
       else if (view.status === "finished") next_step = "Results are already revealed. Call get_results to show them again.";
+      else if (view.runner === "claude_code" && view.status === "running" && view.tests.some((t) => t.status === "queued" || t.status === "running") && !next)
+        next_step = "Answers are still needed. Call get_run_plan and run the next test's sub-agents.";
       else if (next) next_step = `Call get_answers for ${next.id}.`;
       else if (view.status === "running")
         next_step =
@@ -352,7 +463,7 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
     {
       title: "Get answers to rate",
       description:
-        "Get one MySI test task and the AI models' answers to it, labelled A, B, C, D with the authors hidden, for " +
+        "Get one MySI test task and the AI models' answers to it, labelled A, B, C (more if the lineup is larger) with the authors hidden, for " +
         "the person to rate. Leave out test_id to get the next task that's ready. Show the answers word for word.",
       inputSchema: z.object({
         run_id: z.string(),
@@ -365,6 +476,7 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
       if (!run) return refuse(NO_RUN);
       const a = await run.answers(test_id);
       if (!a.ok) return refuse(a.error);
+      const runner = await run.runner();
       return reply({
         test_id: a.test.id,
         position: `Task ${a.position} of ${a.total}`,
@@ -377,7 +489,12 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
         already_rated: a.test.status === "rated",
         first_task: a.position === 1,
         rating_url: ratingUrl(run_id),
-        next_step: ANSWERS_NEXT_STEP,
+        next_step:
+          ANSWERS_NEXT_STEP +
+          (runner === "claude_code"
+            ? "\nYou ran these models yourself, so: offer the rating page first (it keeps the order out of the chat), and " +
+              "don't refer to any earlier tool output or sub-agent result when showing these answers."
+            : ""),
       });
     },
   );
@@ -442,6 +559,7 @@ export function createServer(env: Env, origin: string, person: DurableObjectStub
           winner: d.winner,
           by_category: d.all_categories.map(({ category, winner }) => ({ category, winner })),
           memory_line: d.memory_line,
+          mode: d.mode,
         });
       }
       // The chat table is trimmed and in the person's words; the page keeps bench.py's full report.

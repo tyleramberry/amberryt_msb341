@@ -9,6 +9,24 @@ export const SERVER_INSTRUCTIONS =
   'next_step. Talk in plain words: "test task", not "eval". Never reveal or guess which model ' +
   "wrote an answer before the person has rated it, and show answers word for word.";
 
+// Added to the server instructions only when the client says it's Claude Code (spec 002,
+// "Optional mode: use my Claude Code plan").
+export const CLAUDE_CODE_INSTRUCTIONS =
+  " You are Claude Code, so MySI can also run on the person's own Claude plan. After the person " +
+  'confirms the test tasks, ask once: "Want to run this on your own Claude plan? It\'s free for MySI ' +
+  "and uses your usage limits, but it can only test Claude models (Haiku, Sonnet, Opus). Or I can use " +
+  'MySI\'s lineup, one model each from OpenAI, Google and Anthropic." If they pick their plan, call ' +
+  'run_models with runner: "claude_code", then follow get_run_plan.';
+
+export const RUN_PLAN_NEXT_STEP = `Run the slots one test at a time, in order. For each test, launch that test's sub-agents together in
+one message with the Agent tool (subagent_type "general-purpose", model = the slot's model,
+run_in_background false), each with its slot's prompt exactly. When they finish, call submit_answers
+with each slot_id, the answer text exactly as returned (strip only indentation the harness added),
+and duration_ms from the usage block. If a sub-agent errors or uses a tool, retry it once; if it
+fails again, send that slot with error instead of text. After the first test's answers are in, the
+person can start rating: tell them, offer the rating page, and keep running the rest.
+Don't comment on the answers or say which model wrote which.`;
+
 export const INTRO =
   "Here's how this works. We'll talk for about 5 minutes about the work you use AI for, and I'll " +
   "turn it into 3 test tasks. Then {n} AI models from different companies each try every task. " +
@@ -75,6 +93,21 @@ re-run your test on it. Just ask."`;
 export const MODEL_SYSTEM =
   "You are being tested as a plain assistant. Answer the task below directly, with nothing " +
   "before or after the answer. If something is unclear, make a reasonable assumption rather than asking.";
+
+// Claude Code plan mode (spec 002): the host runs each model as a sub-agent, with the skill's
+// step 4 prompt exactly.
+export function subagentPrompt(t: Test) {
+  return (
+    "You are being tested as a plain assistant. Do not use any tools. Answer the task below directly\n" +
+    "as your final message, with nothing before or after the answer. If something is unclear, make a\n" +
+    "reasonable assumption rather than asking.\n\n" +
+    modelPrompt(t)
+  );
+}
+
+export const CLAUDE_CODE_CAVEAT =
+  "Claude Code plan mode: Claude models only. Each answer also carried Claude Code's own setup " +
+  "instructions, so this tests the models inside Claude Code, not on their own.";
 
 export function modelPrompt(t: Test) {
   return `TASK:\n${t.prompt}\n\nCONTEXT:\n${t.context.trim() || "None"}`;

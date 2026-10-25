@@ -6,8 +6,9 @@ import { DurableObject } from "cloudflare:workers";
 import { blind, report, type Judgment, type Rating, type Response, type Test } from "./bench.ts";
 import { coach, LIMITS, scrubPersonalInfo, scrubSelfId, type CoachingNote } from "./coach.ts";
 import { complete, isMock, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
-import { judgePrompt, MODEL_SYSTEM, modelPrompt } from "./prompts.ts";
+import { CLAUDE_CODE_CAVEAT, judgePrompt, MODEL_SYSTEM, modelPrompt, subagentPrompt } from "./prompts.ts";
 
+export type Runner = "openrouter" | "claude_code";
 export type RunStatus = "draft" | "running" | "ready" | "finished" | "failed";
 export type TestStatus = "queued" | "running" | "ready_to_rate" | "rated" | "failed";
 
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS judge_calls (
 CREATE TABLE IF NOT EXISTS ratings (
   test_id TEXT PRIMARY KEY, best TEXT, worst TEXT, note TEXT, source TEXT, rated_at TEXT);
 CREATE TABLE IF NOT EXISTS events (at TEXT, action TEXT, outcome TEXT);
+CREATE TABLE IF NOT EXISTS slots (slot_id TEXT PRIMARY KEY, test_id TEXT, model TEXT, used INTEGER DEFAULT 0);
 `;
 
 export type TestView = {
@@ -60,6 +62,7 @@ export type RunView = {
   judges: ModelInfo[];
   tests: TestView[];
   cost_usd: number;
+  runner: Runner;
 };
 
 export class RunObject extends DurableObject<Env> {
@@ -176,6 +179,7 @@ export class RunObject extends DurableObject<Env> {
       judges: this.json<ModelInfo[]>("judges", []),
       tests: this.tests().map((t) => ({ ...t, status: this.testStatus(t, current) })),
       cost_usd: this.totalCost(),
+      runner: this.runner(),
     };
   }
 
@@ -236,10 +240,17 @@ export class RunObject extends DurableObject<Env> {
     return { ok: true, tests, notes: coach(tests), scrubbed };
   }
 
-  async start(lineup: ModelInfo[], judges: ModelInfo[]): Promise<Fail | Ok<{ already: boolean; view: RunView }>> {
+  // runner "claude_code": the host runs the models as sub-agents on the person's own plan and
+  // sends the answers with submitAnswers; the engine still blinds, judges and ranks.
+  async start(
+    lineup: ModelInfo[],
+    judges: ModelInfo[],
+    runner: Runner = "openrouter",
+  ): Promise<Fail | Ok<{ already: boolean; view: RunView }>> {
     const status = this.status();
     if (status !== "draft") return { ok: true, already: true, view: this.view() };
     if (!this.tests().length) return { ok: false, error: "There are no test tasks yet. Call save_tests first." };
+    this.set("runner", runner);
     this.set("lineup", JSON.stringify(lineup));
     this.set("judges", JSON.stringify(judges));
     this.set("status", "running");
@@ -276,6 +287,7 @@ export class RunObject extends DurableObject<Env> {
       const missing = lineup.filter((m) => !answers.some((a) => a.model === m.id));
       if (missing.length) {
         this.set("current_test", t.id);
+        if (this.runner() === "claude_code") return false; // wait for submitAnswers
         for (let i = 0; i < missing.length; i += MAX_IN_FLIGHT) {
           await Promise.all(missing.slice(i, i + MAX_IN_FLIGHT).map((m) => this.answer(t, m)));
         }
@@ -424,6 +436,74 @@ export class RunObject extends DurableObject<Env> {
       );
       this.log("judge_call", `${t.id} failed`);
     }
+  }
+
+  runner(): Runner {
+    return (this.get("runner") as Runner) ?? "openrouter";
+  }
+
+  // Claude Code plan mode: one slot per test x model still to answer, in test order. Slot ids are
+  // opaque so the answers sent back can't be mislabelled by test or model name.
+  plan(): Fail | Ok<{ slots: { slot_id: string; test_id: string; model: string; prompt: string }[] }> {
+    if (this.runner() !== "claude_code") return { ok: false, error: "This benchmark runs on MySI's models; there's no plan to run. Call check_run." };
+    if (this.status() !== "running") return { ok: false, error: "No answers are needed now. Call check_run." };
+    const lineup = this.json<ModelInfo[]>("lineup", []);
+    const slots: { slot_id: string; test_id: string; model: string; prompt: string }[] = [];
+    for (const t of this.tests()) {
+      const answered = this.answered(t.id).map((a) => a.model);
+      for (const m of lineup.filter((m) => !answered.includes(m.id))) {
+        let slot = this.sql
+          .exec<{ slot_id: string }>("SELECT slot_id FROM slots WHERE test_id = ? AND model = ? AND used = 0", t.id, m.id)
+          .toArray()[0]?.slot_id;
+        if (!slot) {
+          const bytes = crypto.getRandomValues(new Uint8Array(9));
+          slot = "s_" + [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+          this.sql.exec("INSERT INTO slots (slot_id, test_id, model) VALUES (?, ?, ?)", slot, t.id, m.id);
+        }
+        slots.push({ slot_id: slot, test_id: t.id, model: m.id.replace("claude-code/", ""), prompt: subagentPrompt(t) });
+      }
+    }
+    return { ok: true, slots };
+  }
+
+  async submitAnswers(
+    answers: { slot_id: string; text?: string; duration_ms?: number; error?: string }[],
+  ): Promise<Fail | Ok<{ saved: number; view: RunView }>> {
+    if (this.runner() !== "claude_code") return { ok: false, error: "This benchmark runs on MySI's models; it doesn't take answers." };
+    if (this.status() !== "running") return { ok: false, error: "This benchmark isn't waiting for answers. Call check_run." };
+    const seen = new Set<string>();
+    const rows: { test_id: string; model: string; a: (typeof answers)[number] }[] = [];
+    for (const a of answers) {
+      const slot = this.sql
+        .exec<{ test_id: string; model: string; used: number }>("SELECT test_id, model, used FROM slots WHERE slot_id = ?", a.slot_id)
+        .toArray()[0];
+      if (!slot) return { ok: false, error: `Unknown slot_id ${a.slot_id}. Use the slot ids from get_run_plan.` };
+      if (slot.used || seen.has(a.slot_id)) return { ok: false, error: `Slot ${a.slot_id} already has an answer.` };
+      if (!a.error && !a.text?.trim()) return { ok: false, error: `Slot ${a.slot_id} has no answer text. Send the answer exactly as returned, or error if the sub-agent failed twice.` };
+      seen.add(a.slot_id);
+      rows.push({ test_id: slot.test_id, model: slot.model, a });
+    }
+    const tests = new Map(this.tests().map((t) => [t.id, t]));
+    for (const { test_id, model, a } of rows) {
+      const t = tests.get(test_id)!;
+      if (a.error) {
+        this.sql.exec("INSERT OR REPLACE INTO responses (test_id, model, error) VALUES (?, ?, ?)", test_id, model, a.error.slice(0, 300));
+      } else {
+        const text = a.text!.trim();
+        this.sql.exec(
+          `INSERT OR REPLACE INTO responses (test_id, model, raw_text, display_text, latency_ms, error) VALUES (?, ?, ?, ?, ?, NULL)`,
+          test_id,
+          model,
+          text,
+          scrubSelfId(text, `${t.prompt}\n${t.context}`),
+          Math.max(0, Math.round(a.duration_ms ?? 0)),
+        );
+      }
+      this.sql.exec("UPDATE slots SET used = 1 WHERE slot_id = ?", a.slot_id);
+    }
+    this.log("submit_answers", `${rows.length} answers`);
+    await this.ctx.storage.setAlarm(Date.now()); // blind labels, then judging
+    return { ok: true, saved: rows.length, view: this.view() };
   }
 
   setMaxCost(usd: number) {
@@ -621,6 +701,7 @@ export class RunObject extends DurableObject<Env> {
       `${tests.length} test task${tests.length === 1 ? "" : "s"}, one answer per model each, so small gaps may be luck.` +
         (tests.length <= 3 ? " Treat this as a rough first read; adding more tasks makes it steadier." : ""),
     ];
+    if (this.runner() === "claude_code") trust.push(CLAUDE_CODE_CAVEAT);
     if (rated < tests.length) trust.push(`You rated ${rated} of ${tests.length} tasks; the ranking uses only those.`);
     const failed = this.tests().length - tests.length;
     if (failed) trust.push(`${failed} test task${failed === 1 ? "" : "s"} had fewer than 2 answers and ${failed === 1 ? "was" : "were"} left out.`);
@@ -628,6 +709,7 @@ export class RunObject extends DurableObject<Env> {
     return {
       headline,
       winner: top,
+      mode: this.runner(),
       markdown: rep.markdown,
       rows: rep.rows,
       by_category: differs ? rated_categories : [],
@@ -649,6 +731,7 @@ export class RunObject extends DurableObject<Env> {
 export type Results = {
   headline: string;
   winner: string | null; // "A and B (tied)" on a tie
+  mode: Runner;
   markdown: string;
   rows: ReturnType<typeof report>["rows"];
   by_category: { category: string; winner: string | null; tests: number }[];

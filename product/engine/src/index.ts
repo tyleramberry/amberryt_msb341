@@ -5,7 +5,7 @@
 import { createMcpHandler } from "agents/mcp/server";
 import type { Env } from "./models.ts";
 import { notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
-import { createServer, newRunId, PERSON_KEY, personStub, runStub } from "./tools.ts";
+import { createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
 
 export { RunObject } from "./run.ts";
 export { RegistryObject } from "./registry.ts";
@@ -49,6 +49,17 @@ async function ratingRoutes(request: Request, env: Env, url: URL): Promise<Respo
   return html(ratingPage(view, a?.ok ? { test: a.test, answers: a.answers, rating: a.rating } : null));
 }
 
+// The client's name is only in the initialize request; every request has a user agent.
+async function callerOf(request: Request): Promise<Caller> {
+  const caller: Caller = { userAgent: request.headers.get("user-agent") ?? undefined };
+  if (request.method === "POST") {
+    const body = (await request.clone().json().catch(() => null)) as any;
+    const init = (Array.isArray(body) ? body : [body]).find((m) => m?.method === "initialize");
+    if (typeof init?.params?.clientInfo?.name === "string") caller.clientName = init.params.clientInfo.name;
+  }
+  return caller;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -68,7 +79,8 @@ export default {
       if (!person || !(await person.exists())) {
         return new Response("This MySI link isn't valid. Get a new one at " + url.origin, { status: 404 });
       }
-      const mcp = createMcpHandler(() => createServer(env, url.origin, person));
+      const caller = await callerOf(request);
+      const mcp = createMcpHandler(() => createServer(env, url.origin, person, caller));
       return mcp(new Request(new URL("/mcp", url), request), env, ctx);
     }
 
@@ -77,7 +89,8 @@ export default {
 
     // A fresh MCP server per request: the handler is stateless; run state lives in Durable Objects.
     if (url.pathname === "/mcp" || url.pathname === "/") {
-      const mcp = createMcpHandler(() => createServer(env, url.origin));
+      const caller = await callerOf(request);
+      const mcp = createMcpHandler(() => createServer(env, url.origin, null, caller));
       const req = url.pathname === "/" ? new Request(new URL("/mcp", url), request) : request;
       return mcp(req, env, ctx);
     }
