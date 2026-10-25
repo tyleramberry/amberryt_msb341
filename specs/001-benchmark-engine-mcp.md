@@ -39,7 +39,7 @@ One Cloudflare Worker in `product/engine/` that serves, from one URL:
 | `evals.json` | The input to `save_tests`. Same fields, text mode only. |
 | Step 4: subagents | The engine calls 3 models from different vendors through OpenRouter, with the same "plain assistant" prompt. |
 | `bench.py blind` / `report` | Ported to TypeScript, same math, tested against the existing run folders. |
-| Step 5: judge | Server-side calls, two judges, same judge prompt. Called "a second opinion" to the person. |
+| Step 5: judge | Server-side calls, two judges, same judge prompt. Stored for Tyler only; never shown to the person. |
 | Step 6: blind rating | In chat (`get_answers` + `submit_rating`) or on the rating page. Same best/worst question. |
 | Step 7: report | `get_results` returns the headline, table and reveal to the chat; the page keeps the full report. |
 
@@ -50,7 +50,6 @@ One Cloudflare Worker in `product/engine/` that serves, from one URL:
 | test (the skill's "eval") | test task |
 | criteria | what a great answer gets right |
 | run | a benchmark |
-| judge | a second opinion from another AI |
 | lineup | 4 AI models from different companies |
 
 - A **run** is one pass of a lineup over a person's tests, with its judging and ratings. Its ID
@@ -88,7 +87,7 @@ later chat: "which AI should I use for this email?"
 | `check_run` | `{run_id}` | Run status (`draft`, `running`, `ready`, `finished`, `failed`) and each test's status (`queued`, `running`, `ready_to_rate`, `rated`), plus what to do next. | yes |
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
-| `get_results` | `{run_id}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, report_url, cost_usd}`. Ranks on whatever is rated (the second opinion only, labelled as such, if nothing is). Reveals every label and marks the run `finished`, so no more ratings. | yes* |
+| `get_results` | `{run_id}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, report_url, cost_usd}`. Ranks on whatever is rated; if nothing is rated, says so and asks the person to rate at least one test. Reveals every label and marks the run `finished`, so no more ratings. | yes* |
 | `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Called through a personal connector URL, it answers from all of that person's runs; through plain `/mcp`, it needs a `run_id` and answers from that run only. | yes |
 | `rerun_test` | `{run_id, model?}` | Sprint 3 stub: says it's coming soon and records the interest. | no |
 
@@ -175,7 +174,12 @@ Coaching notes are deterministic rules, not a model call, so they're fast, free 
   answer is marked failed and the run carries on. A test is ratable with answers from at least 2
   models. A run fails, with a plain reason, if fewer than 2 models answered most tests.
 
-### Judging (the "second opinion")
+### Judging (internal only)
+
+Decided 2026-10-25 (spec 002): **the person sees only their own picks.** The judge still runs
+and its scores are stored, so Tyler can check whether a judge agrees with people (decision 006's
+second risk), but no tool result, page or report shown to the person includes them.
+
 
 - Two judges from **vendors not in the lineup**, picked at run time from a configured pool and
   stored on the run. A judge from the same vendor as a contestant tends to favour it, and the
@@ -188,19 +192,23 @@ Coaching notes are deterministic rules, not a model call, so they're fast, free 
   for that test.
 - A model's judge score for a test is the mean of the judges' `overall`. Each judge's scores are
   stored separately so disagreement can be shown.
-- Judge scores never appear before `get_results`, so they can't sway the person.
+- Judge scores never appear in anything the person sees, before or after the reveal. They are read
+  only by Tyler, from the run's storage (a builder-only export, not a tool).
 
 ### Ranking
 
 A line-by-line port of `bench.py report`, so the same inputs give the same table:
 
 - Your score: best = 2, worst = 0, the rest = 1, averaged over rated tests. If only `best` was
-  given, best = 2 and the rest = 1. Ranked by your score; judge score breaks ties.
-- Columns: rank, model, your score, your picks for best, judge score (1–10), median time, and a
-  new **cost per answer** (the skill couldn't measure cost; the API can). This full report is what
-  the rating page shows; the chat table labels the judge column "Second opinion".
-- Sections: ranking, by category, each test, how much to trust this (agreement between the person
-  and the second opinion, number of tests, the note that small gaps may be luck).
+  given, best = 2 and the rest = 1. Ranked by your score; ties stay ties (shown as equal rank).
+- Columns: rank, model, your score, your picks for best, median time, and a new **cost per
+  answer** (the skill couldn't measure cost; the API can). No judge column. The chat table and the
+  rating page show the same columns.
+- Sections: ranking, by category, each test, how much to trust this (number of tests, the note
+  that small gaps may be luck).
+- This departs from `bench.py report`, which shows the judge. The port keeps the judge math so
+  eval 1 can still match the builder runs' `report.md`, but the person-facing report drops those
+  columns and the agreement line.
 - `get_results` also builds the chat version from the same numbers: a one-sentence headline
   ("For your work, X came out on top: you picked it as best on 4 of 6 tasks"), a trimmed table,
   by-category only when the winner differs, the reveal per test, and a `memory_line` the host can
@@ -293,12 +301,13 @@ In `product/evals/`:
 3. **Display rules:** in Claude and ChatGPT, does the host show answers word for word, without
    commenting or guessing the model? Checked on the persona runs.
 4. **Coaching notes:** a table of example tests with the notes each should and shouldn't trigger.
-5. **Second opinion:** on the builder runs plus my wife's, how often the judges' top pick matches
+5. **Judge agreement (internal):** on the builder runs plus my wife's, how often the judges' top pick matches
    the person's best, and the rate of unparseable judge JSON (target 0 after retry).
 
 ## Decisions inside this spec
 
-- **Judges:** two, from vendors outside the lineup; the person's own ratings rank first.
+- **Judges:** two, from vendors outside the lineup, stored for analysis only; the ranking is the
+  person's own picks.
 - **Rating in chat first, with the page always offered.** Keeping the person in their chat app is
   the point of decision 006; the page is there for long answers and phones.
 - **Rating starts before running ends.** Tests run in order so the person rates while the rest

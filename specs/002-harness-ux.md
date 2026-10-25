@@ -37,7 +37,7 @@ ChatGPT, Claude Code, Cursor). That means:
 | criteria | what a great answer gets right |
 | eval set | your test |
 | run | a benchmark |
-| judge | a second opinion from another AI |
+| judge | (not shown to the person in v1) |
 | model | AI model (by brand name only at the reveal) |
 
 The person never sees "eval", "judge model", "OpenRouter", "run ID" or JSON.
@@ -191,7 +191,7 @@ page." Best on phone, and for long answers. Ratings made there show up in the ch
   label-to-model mapping before that task is rated.
 - The engine scrubs self-identification from answers before showing them ("As ChatGPT...", "I'm
   Claude", "Gemini here") and replaces it with "[model name removed]".
-- The judge's scores are hidden until the reveal, so they can't sway the person.
+- The person never sees judge scores (v1 shows only their own picks), so nothing can sway them.
 - Answers longer than ~400 words: the chat shows them in full, and the host suggests the page.
 
 **Fatigue.** The default is 3 tasks × 3 answers, 9 answers to read. The host says how many are left ("Task 2
@@ -205,12 +205,12 @@ which ranks on whatever was rated.
 1. **The headline**, one sentence: "For your work, **GPT-x** came out on top: you picked it as
    best on 2 of 3 tasks."
 2. **The ranking table** (ported `report.md`, trimmed for chat): rank, model, your score, your
-   best-picks, second opinion score.
+   best-picks. No judge column.
 3. **By kind of work**, only if it differs: "For writing, Claude won. For planning, Gemini won."
 4. **The reveal**: for each task, which model wrote the answer they picked as best. This is the
    fun part; the host gives it its own moment.
-5. **How much to trust it**, one or two lines, not the full caveat list: number of tasks, whether
-   the second opinion agreed with them, and "small gaps may be luck".
+5. **How much to trust it**, one or two lines, not the full caveat list: number of tasks, and
+   "small gaps may be luck".
 6. **The report link** (`/r/<runId>`), which keeps the full table.
 
 Then **remembering**, in three layers:
@@ -331,9 +331,10 @@ Decided 2026-10-25: option 1, the personal connector URL
 
 - 3 models, one each from OpenAI, Google and Anthropic, picked by MySI for Sprint 3 (no choosing; that's a builder feature).
   The lineup is in config so the next scope (new model re-runs) is a config change.
-- The judge is called "a second opinion from another AI" and only appears at the end. Per
-  spec 001 it comes from two judges at vendors outside the lineup, averaged. The person's picks rank
-  first.
+- **Decided 2026-10-25: the person sees only their own picks.** The ranking is theirs alone. The
+  engine may still run the judge in the background and store its scores, so Tyler can check
+  whether the judge agrees with people (the decision 006 risk), but no tool result, page or report
+  shown to the person includes them.
 
 ## Edge cases
 
@@ -345,7 +346,7 @@ Decided 2026-10-25: option 1, the personal connector URL
 | Person pastes something private | Host strips names/emails/phones; engine flags any it still finds. |
 | Person asks "which one is Claude?" during rating | "That's revealed at the end so it doesn't sway you." |
 | Host summarizes answers instead of showing them | Engine can't stop it; the page link is the safety net. Watch for it in testing. |
-| Person rates nothing and asks for results | Results from the second opinion only, clearly labelled as not theirs. |
+| Person rates nothing and asks for results | No ranking yet: "Rate at least one task and I'll show you how the models did." |
 | Cost cap hit | `run_models` refuses with a plain message; max 10 tasks × 5 models per run. |
 
 ## What to measure in the wife test
@@ -364,7 +365,7 @@ Log per tool call with timestamps. Then, by hand afterwards:
 1. ~~Identity~~ Decided 2026-10-25: personal connector URL (decision 008).
 2. ~~Default size~~ Decided 2026-10-25: 3 test tasks and 3 models by default. A person can add more tasks (up to
    the cap of 10) for a steadier ranking; the results say that 3 tasks is a rough first read.
-3. Should the "second opinion" show at all for the first version, or only the person's picks?
+3. ~~Second opinion~~ Decided 2026-10-25: only the person's picks show. See "Lineup and judge".
 
 ## Appendix: text the tools return
 
