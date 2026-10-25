@@ -38,7 +38,7 @@ Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its
 | Deliverable | Status | Where |
 |---|---|---|
 | Live app with a link, code in this repo | Step 1 of 6 shipped: the MCP connector is live with a `ping` tool. Next: port `bench.py`, then the real tools | [spec](specs/001-benchmark-engine-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
-| One other person (my wife) builds her own tests through the product | Not started | — |
+| One other person (my wife) builds her own tests through the product | Done 2026-10-24: 2 tests (client email, math help), 3 models rated blind, ~15 min, $0.07 | [interview 06](discovery/interviews/2026-10-24-interview-06.md) |
 | Tests 3 to 5 models and outputs her ranking table | Prototype ranks 3 Claude models; no other vendors yet | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
 | Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
 
