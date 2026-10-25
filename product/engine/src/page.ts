@@ -102,6 +102,8 @@ const STYLE = `
   .url code { flex:1; overflow-wrap:anywhere; font-size:15px; }
   ol { padding-left:20px; } li { margin:4px 0; }
   .error { color:#b3261e; }
+  button.big { font-size:18px; padding:14px 28px; margin:20px 0 8px; }
+  .done { background:var(--pick); border-radius:10px; padding:12px 14px; }
 `;
 
 function shell(title: string, body: string, extraHead = "") {
@@ -111,44 +113,50 @@ function shell(title: string, body: string, extraHead = "") {
 <body>${body}</body></html>`;
 }
 
-// personalUrl is set right after "Get my link": the page shows that link once (decision 008).
+// The text the "Use it in Claude" button copies. Claude Code can add the connector itself; a
+// chat app can't change its own settings, so there Claude walks the person through it.
+export function connectPrompt(url: string) {
+  return `Please add MySI to my Claude as a connector. MySI is a remote MCP server at this link, which is my personal key, so don't repeat it back or share it:
+
+${url}
+
+If you can add connectors yourself (in Claude Code: claude mcp add --transport http --scope user mysi <the link>), do it, then call MySI's check_connection tool to make sure it works.
+
+If you can't, tell me how in a few short steps for the app I'm using. In claude.ai or the Claude app that's: Settings, then Connectors, then Add custom connector, name it MySI, and paste the link from this message. Then tell me to start a new chat and say "Find my best AI model."`;
+}
+
+// One button: mint a personal link (decision 008) and copy the connect prompt. Without
+// JavaScript the form posts to /link and the page shows the prompt once (personalUrl set).
 export function setupPage(origin: string, personalUrl?: string) {
-  const url = personalUrl ?? `${origin}/mcp`;
-  const link = personalUrl
-    ? `<p><strong>Here is your own MySI link.</strong> Copy it now and keep it private: it's how MySI remembers your
-  results, and anyone with it can see them. This page won't show it again.</p>
-  <div class="url"><code id="u">${esc(url)}</code><button onclick="navigator.clipboard.writeText(document.getElementById('u').textContent);this.textContent='Copied'">Copy</button></div>`
-    : `<form method="post" action="/link"><button>Get my link</button></form>
-  <p class="muted">Your own link lets MySI remember your results, so later you can ask "which AI should I use for this?"
-  Or use the shared link, which works the same but remembers nothing: <code>${esc(url)}</code></p>`;
+  const prompt = personalUrl ? connectPrompt(personalUrl) : "";
+  const body = personalUrl
+    ? `<p><strong>Copy this and paste it into Claude.</strong> It holds your own MySI link, so keep it private.
+  This page won't show it again.</p>
+  <textarea id="p" readonly rows="9">${esc(prompt)}</textarea>
+  <p><button onclick="navigator.clipboard.writeText(document.getElementById('p').value);this.textContent='Copied'">Copy</button></p>`
+    : `<form method="post" action="/link" id="go"><button class="big">Use it in Claude</button></form>
+  <p id="done" class="done" hidden><strong>Copied.</strong> Paste it into Claude and send it. Claude will add MySI for you, or walk you through it in about 30 seconds.</p>
+  <script>
+  document.getElementById("go").addEventListener("submit", (e) => {
+    if (!navigator.clipboard || !window.ClipboardItem) return; // the form posts and shows the prompt instead
+    e.preventDefault();
+    const text = fetch("/link", { method: "POST", headers: { accept: "application/json" } })
+      .then((r) => r.json())
+      .then((j) => new Blob([j.prompt], { type: "text/plain" }));
+    // A promise inside ClipboardItem keeps the click's permission while the link is made (Safari).
+    navigator.clipboard.write([new ClipboardItem({ "text/plain": text })]).then(
+      () => { e.target.hidden = true; document.getElementById("done").hidden = false; },
+      () => e.target.submit(),
+    );
+  });
+  </script>`;
   return shell(
     "MySI",
     `<main class="narrow">
   <h1>MySI</h1>
-  <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside the chat app you already use.</p>
-  ${link}
-
-  <h2>Add it to Claude</h2>
-  <ol>
-    <li>Open <strong>claude.ai</strong> → <strong>Settings</strong> → <strong>Connectors</strong>.</li>
-    <li>Click <strong>Add custom connector</strong>.</li>
-    <li>Name: <strong>MySI</strong>. URL: paste your link. Click <strong>Add</strong>.</li>
-    <li>In a new chat, type: <em>"Find my best AI model."</em></li>
-    <li>When Claude asks to use MySI's tools, choose <strong>Always allow</strong>, or it will ask at every step.</li>
-  </ol>
-
-  <h2>Add it to ChatGPT</h2>
-  <ol>
-    <li>Open <strong>Settings</strong> → <strong>Apps &amp; Connectors</strong> → <strong>Advanced</strong>, and turn on <strong>Developer mode</strong>.</li>
-    <li>Back in <strong>Apps &amp; Connectors</strong>, click <strong>Create</strong>.</li>
-    <li>Name: <strong>MySI</strong>. URL: paste your link. Authentication: <strong>No authentication</strong>. Create it.</li>
-    <li>In a new chat, turn on MySI and type: <em>"Find my best AI model."</em></li>
-  </ol>
-
-  <h2>Claude Code</h2>
-  <p><code>claude mcp add --transport http mysi ${personalUrl ? esc(url) : "&lt;your link&gt;"}</code></p>
-
-  <p class="muted">Already added it before? Refresh or reconnect it after an update, since chat apps remember the old tool list.</p>
+  <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside Claude, in the chat you already use.</p>
+  ${body}
+  <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"</p>
 </main>`,
   );
 }

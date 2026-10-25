@@ -4,7 +4,7 @@
 
 import { createMcpHandler } from "agents/mcp/server";
 import type { Env } from "./models.ts";
-import { notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
+import { connectPrompt, notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
 import { createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
 
 export { RunObject } from "./run.ts";
@@ -69,7 +69,11 @@ export default {
     if (url.pathname === "/link" && request.method === "POST") {
       const key = newRunId();
       await personStub(env, key).create();
-      return html(setupPage(url.origin, `${url.origin}/mcp/u/${key}`));
+      const personalUrl = `${url.origin}/mcp/u/${key}`;
+      if (request.headers.get("accept")?.includes("application/json")) {
+        return Response.json({ url: personalUrl, prompt: connectPrompt(personalUrl) }, { headers: { "cache-control": "no-store" } });
+      }
+      return html(setupPage(url.origin, personalUrl));
     }
 
     const personal = /^\/mcp\/u\/([^/]+)$/.exec(url.pathname);

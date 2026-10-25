@@ -16,14 +16,29 @@ const init = {
 const text = (r) => r.body.result.content.map((c) => c.text).join("");
 
 describe("setup page", () => {
-  test("GET / serves HTML that shows this Worker's own /mcp URL", async () => {
+  test("GET / serves one 'Use it in Claude' button", async () => {
     const res = await fetch(base + "/");
     assert.equal(res.status, 200);
     assert.match(res.headers.get("content-type"), /text\/html/);
     const html = await res.text();
-    assert.ok(html.includes(`${base}/mcp`), "page should show the exact connector URL to paste");
-    assert.match(html, /Add custom connector/);
-    assert.match(html, /No authentication/);
+    assert.match(html, /<button[^>]*>Use it in Claude<\/button>/);
+    assert.ok(!/\/mcp\/u\//.test(html), "no personal link before the click");
+  });
+
+  test("the button's JSON call returns a working personal link inside the paste-in prompt", async () => {
+    const res = await fetch(base + "/link", { method: "POST", headers: { accept: "application/json" } });
+    assert.equal(res.status, 200);
+    const { url, prompt } = await res.json();
+    assert.match(url, new RegExp(`^${base}/mcp/u/[A-Za-z0-9_-]{22}$`));
+    assert.ok(prompt.includes(url), "prompt carries the link");
+    assert.match(prompt, /claude mcp add --transport http --scope user mysi/);
+    assert.match(prompt, /Add custom connector/);
+    const list = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+    assert.equal(list.status, 200);
   });
 
   test("Get my link mints a personal connector URL that works; made-up keys don't", async () => {
