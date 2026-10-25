@@ -86,4 +86,5 @@ Spec 001 cases not yet written (need the tools):
 Covered in `tools.test.mjs`: read-only annotations, `next_step` on every result, plain-language errors, run-ID entropy, save_tests limits and scrubbing and coaching, run_models refusals and company-only lineup, blindness of every tool result and of the rating-page source, stable label order, rating rules, judge-only results, rating closed after the reveal, page 404 and escaping, rerun_test stub; `limits.test.mjs` covers the daily cap.
 
 Open bugs found: see the build thread (POST /r/<id>/rate with a non-form body returns 500).
+Identity (personal URLs, per-key isolation) is covered by `identity.test.mjs`.
 Not covered yet: per-IP rate limit (not built), self-identification scrub end to end (mock answers never name a model; unit tests in `coach.test.ts` cover the function), judge disagreement, the real OpenRouter path.
