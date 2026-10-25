@@ -83,7 +83,9 @@ later chat: "which AI should I use for this email?"
 | `start_benchmark` | `{label?, from_run?}` | `{run_id, rating_url}`, the intro and the interview guide; or, if this person has an unfinished run, its state so the host can resume. `from_run` copies an old run's tests. | no |
 | `get_task_ideas` | `{about_person}`: role and tasks named so far | 3–5 ideas for the host to *ask about* and adapt, never to save as tasks. Fixed idea questions, no model call. | yes |
 | `save_tests` | `{run_id, tests: [{category, title, prompt, context, criteria[]}], person_done?}` | The saved tests as Markdown cards, `coaching_notes` per test, `ready_to_confirm`, anything scrubbed. Replaces the whole set; allowed only while the run is `draft`. | no |
-| `run_models` | `{run_id, person_confirmed: true, models?}` | The lineup **by company only**, an estimate in minutes, the cost cap. Starts the background job. Refuses without `person_confirmed`. A second call returns the same status, never a second job. | no |
+| `run_models` | `{run_id, person_confirmed: true, models?, runner?}` | The lineup **by company only**, an estimate in minutes, the cost cap. Starts the background job. Refuses without `person_confirmed`. A second call returns the same status, never a second job. `runner: "claude_code"` makes no model calls and points the host to `get_run_plan` (see Claude Code plan mode). | no |
+| `get_run_plan` | `{run_id}` | Claude Code plan mode only: one slot per test × model, each with an opaque `slot_id`, the Agent tool's `model` alias (`haiku`, `sonnet`, `opus`), and the exact plain-assistant prompt. | yes |
+| `submit_answers` | `{run_id, answers: [{slot_id, text, duration_ms}]}` | Claude Code plan mode only, one call per test: saved, which tests are ready to rate. Unknown or repeated slots are refused. | no |
 | `check_run` | `{run_id}` | Run status (`draft`, `running`, `ready`, `finished`, `failed`) and each test's status (`queued`, `running`, `ready_to_rate`, `rated`), plus what to do next. | yes |
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
@@ -173,6 +175,29 @@ Coaching notes are deterministic rules, not a model call, so they're fast, free 
 - Each call times out at 120 s and is retried twice with backoff. If a model still fails, its
   answer is marked failed and the run carries on. A test is ratable with answers from at least 2
   models. A run fails, with a plain reason, if fewer than 2 models answered most tests.
+
+### Claude Code plan mode
+
+Decided 2026-10-25 (spec 002 has the flow and wording). A builder using MySI inside Claude Code can
+run the test on their own Claude subscription instead of MySI's OpenRouter key. The server never
+holds subscription credentials (Anthropic's terms don't allow them in other apps), so Claude Code
+runs the models itself as sub-agents, the way the `/personal-bench` skill does, and the engine
+does everything else.
+
+- Offered only when the MCP `clientInfo` name says the client is Claude Code. Elsewhere,
+  `runner: "claude_code"` is refused.
+- Lineup: `haiku`, `sonnet`, `opus`, stored on the run with `runner: "claude_code"`.
+- `run_models` makes no calls; `get_run_plan` hands out slots; `submit_answers` stores each
+  answer (raw and scrubbed, as with API answers) with `duration_ms` and no cost. Labels are still
+  shuffled on the server when a test's answers are complete.
+- Judging still runs on the engine's key (internal only, as below); it costs cents.
+- These runs don't count toward the daily run cap or the per-run spend cap, since MySI pays for
+  nothing but judging.
+- The host saw which model wrote each answer, so blinding is weaker. `get_answers`'s `next_step`
+  says not to refer to earlier tool output, the rating page is offered first, and the results say
+  "Claude Code plan mode: Claude models only, tested inside Claude Code, not on their own".
+- `which_model` stores the result like any other, tagged with the mode.
+- This mode is what eventually replaces the `/personal-bench` skill.
 
 ### Judging (internal only)
 
