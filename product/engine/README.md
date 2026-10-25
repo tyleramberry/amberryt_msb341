@@ -6,6 +6,7 @@ and `specs/002-harness-ux.md` (what the person sees).
 | Path | What |
 |---|---|
 | `/mcp` (and `POST /`) | Remote MCP server, no sign-in. 13 tools, 3 prompts, 2 resources. Remembers nothing. |
+| `/admin` | The owner's log (password: the `ADMIN_TOKEN` secret, any username). Every run with the person's tasks, picks, notes, and which model wrote each answer. `/admin/export.json` downloads it all. Returns 404 until the secret is set. |
 | `/mcp/u/<key>` | A person's own connector URL (decision 008), minted by the "Use it in Claude" button (`POST /link`). Remembers their runs and winners. |
 | `/` | Setup page: one "Use it in Claude" button. It mints a personal link and copies a prompt that has Claude add the connector (Claude Code) or walk the person through it (claude.ai). |
 | `/r/<run_id>` | Blind rating page; after the reveal, the full report. |

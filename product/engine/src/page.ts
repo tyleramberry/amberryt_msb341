@@ -106,7 +106,7 @@ const STYLE = `
   .done { background:var(--pick); border-radius:10px; padding:12px 14px; }
 `;
 
-function shell(title: string, body: string, extraHead = "") {
+export function shell(title: string, body: string, extraHead = "") {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>${extraHead}<style>${STYLE}</style></head>
@@ -156,7 +156,8 @@ export function setupPage(origin: string, personalUrl?: string) {
   <h1>MySI</h1>
   <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside Claude, in the chat you already use.</p>
   ${body}
-  <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"</p>
+  <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"
+  MySI is an early prototype: its maker can read your test tasks and picks to improve it.</p>
 </main>`,
   );
 }

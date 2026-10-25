@@ -17,6 +17,7 @@ export type Env = {
   JUDGE_POOL?: string; // JSON ModelInfo[]
   MAX_RUNS_PER_DAY?: string;
   MAX_RUN_COST_USD?: string;
+  ADMIN_TOKEN?: string; // secret; turns on the owner's log at /admin
 };
 
 // Defaults if wrangler.jsonc doesn't set LINEUP / JUDGE_POOL. Check the ids against

@@ -296,6 +296,15 @@ The setup page shows it once, with a copy button and a note to keep the link pri
   the page source.
 - Works on a phone at 360 px wide, light and dark.
 
+### Owner's log: `/admin`
+
+Added 2026-10-25 so Tyler can study early users' runs (first: his wife). Protected with HTTP Basic auth: any username, and the password is the `ADMIN_TOKEN` secret. It returns 404 until that secret is set.
+- `/admin` lists every run in the registry, newest first, with its status, how many tasks are rated, the person's winner, and the cost.
+- `/admin/runs/<run_id>` shows each task (prompt, context, criteria), the person's best and worst picks with the model behind each, their note, every answer with its model, latency, cost and the judges' scores, plus the run's event timeline.
+- `/admin/export.json` downloads all of it for analysis.
+
+Nothing a person can reach links to it. The setup page tells people the maker can read their tasks and picks. Rejected: emailing results to the owner (needs an email service and sends private tasks out of the system), and a reports table in Supabase (a second store to keep in sync, see decision 007).
+
 ### Limits and cost
 
 The connector is public and has no sign-in, so anyone with the URL can spend my OpenRouter money.
