@@ -361,7 +361,7 @@ Log per tool call with timestamps. Then, by hand afterwards:
 
 ## Open questions for Tyler
 
-1. Identity: personal connector URL (recommended) or a spoken code? (Asked from the specs thread.)
+1. ~~Identity~~ Decided 2026-10-25: personal connector URL (decision 008).
 2. ~~Default size~~ Decided 2026-10-25: 3 test tasks and 3 models by default. A person can add more tasks (up to
    the cap of 10) for a steadier ranking; the results say that 3 tasks is a rough first read.
 3. ~~Second opinion~~ Decided 2026-10-25: only the person's picks show. See "Lineup and judge".
