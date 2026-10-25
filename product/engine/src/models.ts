@@ -3,12 +3,14 @@
 
 export type ModelInfo = { id: string; name: string; company: string };
 
+import type { PersonObject } from "./person.ts";
 import type { RegistryObject } from "./registry.ts";
 import type { RunObject } from "./run.ts";
 
 export type Env = {
   RUN: DurableObjectNamespace<RunObject>;
   REGISTRY: DurableObjectNamespace<RegistryObject>;
+  PERSON: DurableObjectNamespace<PersonObject>;
   OPENROUTER_API_KEY?: string;
   MOCK_MODELS?: string;
   LINEUP?: string; // JSON ModelInfo[]

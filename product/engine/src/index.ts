@@ -1,13 +1,15 @@
 // MySI engine (specs/001-benchmark-engine-mcp.md): the MCP connector at /mcp (and POST /, for
-// people who paste the bare URL), the setup page at /, and the rating page at /r/<run_id>.
+// people who paste the bare URL), personal connector URLs at /mcp/u/<key> (decision 008), the
+// setup page at /, and the rating page at /r/<run_id>.
 
 import { createMcpHandler } from "agents/mcp/server";
 import type { Env } from "./models.ts";
 import { notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
-import { createServer, runStub } from "./tools.ts";
+import { createServer, newRunId, PERSON_KEY, personStub, runStub } from "./tools.ts";
 
 export { RunObject } from "./run.ts";
 export { RegistryObject } from "./registry.ts";
+export { PersonObject } from "./person.ts";
 
 const html = (body: string, status = 200) =>
   new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
@@ -51,6 +53,24 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/" && request.method === "GET") return html(setupPage(url.origin));
+
+    // "Get my link" on the setup page: mint a personal key. Same 128-bit format as run ids.
+    if (url.pathname === "/link" && request.method === "POST") {
+      const key = newRunId();
+      await personStub(env, key).create();
+      return html(setupPage(url.origin, `${url.origin}/mcp/u/${key}`));
+    }
+
+    const personal = /^\/mcp\/u\/([^/]+)$/.exec(url.pathname);
+    if (personal) {
+      const key = personal[1];
+      const person = PERSON_KEY.test(key) ? personStub(env, key) : null;
+      if (!person || !(await person.exists())) {
+        return new Response("This MySI link isn't valid. Get a new one at " + url.origin, { status: 404 });
+      }
+      const mcp = createMcpHandler(() => createServer(env, url.origin, person));
+      return mcp(new Request(new URL("/mcp", url), request), env, ctx);
+    }
 
     const page = await ratingRoutes(request, env, url);
     if (page) return page;

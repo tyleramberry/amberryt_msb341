@@ -9,10 +9,14 @@
   "durable_objects": {
     "bindings": [
       { "name": "RUN", "class_name": "RunObject" },
-      { "name": "REGISTRY", "class_name": "RegistryObject" }
+      { "name": "REGISTRY", "class_name": "RegistryObject" },
+      { "name": "PERSON", "class_name": "PersonObject" }
     ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RunObject", "RegistryObject"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RunObject", "RegistryObject"] },
+    { "tag": "v2", "new_sqlite_classes": ["PersonObject"] }
+  ],
   // OPENROUTER_API_KEY is a secret (`wrangler secret put OPENROUTER_API_KEY`). Without it every
   // model call is answered by the mock in src/models.ts. Lineup ids: check with `npm run check-models`.
   "vars": {

@@ -235,11 +235,21 @@ describe("submit_rating", () => {
 });
 
 describe("get_results", () => {
-  test("with no ratings it is labelled as the second opinion only, not the person's picks", async () => {
+  test("with no ratings there is no ranking, only a request to rate one task (decided 2026-10-25)", async () => {
     const id = await runToReady();
     const r = await tool("get_results", { run_id: id });
-    assert.equal(r.isError, false, r.text);
-    assert.match(r.data.headline, /second opinion only/i);
+    assert.equal(r.isError, true, r.text);
+    assert.match(r.text, /Rate at least one task/);
+    assert.equal((await tool("submit_rating", { run_id: id, test_id: "t1", best: "A" })).isError, false, "rating stays open");
+  });
+
+  test("results show only the person's picks: no judge column or score", async () => {
+    const id = await runToReady();
+    await tool("submit_rating", { run_id: id, test_id: "t1", best: "A", worst: "B" });
+    const r = await tool("get_results", { run_id: id });
+    assert.doesNotMatch(r.text, /judge|second opinion/i);
+    const page = await (await fetch(`${base}/r/${id}`)).text();
+    assert.doesNotMatch(page, /judge|second opinion/i);
   });
 
   test("after the reveal, rating is closed and the page shows the report", async () => {

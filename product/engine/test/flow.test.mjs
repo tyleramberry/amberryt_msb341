@@ -128,8 +128,12 @@ test("a model that fails is left out; the test is still ratable", async () => {
   await waitFor(runId, (d) => d.status === "ready");
   const ans = await call("get_answers", { run_id: runId, test_id: "t1" });
   assert.deepEqual(ans.data.answers.map((a) => a.label), ["A", "B"]);
+  const none = await call("get_results", { run_id: runId });
+  assert.equal(none.isError, true, "no ranking before anything is rated");
+  assert.match(none.text, /Rate at least one task/);
+  await call("submit_rating", { run_id: runId, test_id: "t1", best: "A" });
   const res = await call("get_results", { run_id: runId });
-  assert.match(res.data.headline, /second opinion only/);
+  assert.doesNotMatch(res.text, /judge|second opinion/i, "only the person's picks show");
 });
 
 test("POST / works like /mcp for people who paste the bare URL", async () => {
@@ -143,4 +147,34 @@ test("POST / works like /mcp for people who paste the bare URL", async () => {
   for (const name of ["check_connection", "start_benchmark", "save_tests", "run_models", "check_run", "get_answers", "submit_rating", "get_results", "which_model", "rerun_test", "get_task_ideas"]) {
     assert.ok(text.includes(`"${name}"`), name);
   }
+});
+
+test("a personal link remembers results across chats and offers to resume", async () => {
+  const html = await (await fetch(base + "/link", { method: "POST" })).text();
+  const url = html.match(/http:\/\/[^"<\s]+\/mcp\/u\/[A-Za-z0-9_-]{22}/)[0];
+  const pcall = async (name, args = {}) => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method: "tools/call", params: { name, arguments: args } }),
+    });
+    const t = await res.text();
+    const msg = t.includes("data: ") ? JSON.parse(/^data: (.*)$/m.exec(t)[1]) : JSON.parse(t);
+    return { isError: Boolean(msg.result.isError), data: JSON.parse(msg.result.content[0].text) };
+  };
+  assert.equal((await pcall("which_model", {})).data.found, false);
+  const runId = (await pcall("start_benchmark", {})).data.run_id;
+  await pcall("save_tests", { run_id: runId, tests: TESTS });
+  const again = await pcall("start_benchmark", {});
+  assert.equal(again.data.resume, true, "unfinished benchmark is offered");
+  assert.equal(again.data.run_id, runId);
+  await pcall("run_models", { run_id: runId, person_confirmed: true });
+  await waitFor(runId, (d) => d.status === "ready");
+  await pcall("submit_rating", { run_id: runId, test_id: "t1", best: "A", worst: "B" });
+  await pcall("get_results", { run_id: runId });
+  const which = await pcall("which_model", { task_description: "a client text" });
+  assert.equal(which.data.found, true);
+  assert.ok(which.data.overall_winner);
+  assert.equal(which.data.past_benchmarks.length, 1);
+  assert.notEqual((await pcall("start_benchmark", {})).data.resume, true, "finished runs aren't offered");
 });

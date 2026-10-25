@@ -111,20 +111,28 @@ function shell(title: string, body: string, extraHead = "") {
 <body>${body}</body></html>`;
 }
 
-export function setupPage(origin: string) {
-  const url = `${origin}/mcp`;
+// personalUrl is set right after "Get my link": the page shows that link once (decision 008).
+export function setupPage(origin: string, personalUrl?: string) {
+  const url = personalUrl ?? `${origin}/mcp`;
+  const link = personalUrl
+    ? `<p><strong>Here is your own MySI link.</strong> Copy it now and keep it private: it's how MySI remembers your
+  results, and anyone with it can see them. This page won't show it again.</p>
+  <div class="url"><code id="u">${esc(url)}</code><button onclick="navigator.clipboard.writeText(document.getElementById('u').textContent);this.textContent='Copied'">Copy</button></div>`
+    : `<form method="post" action="/link"><button>Get my link</button></form>
+  <p class="muted">Your own link lets MySI remember your results, so later you can ask "which AI should I use for this?"
+  Or use the shared link, which works the same but remembers nothing: <code>${esc(url)}</code></p>`;
   return shell(
     "MySI",
     `<main class="narrow">
   <h1>MySI</h1>
   <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside the chat app you already use.</p>
-  <div class="url"><code id="u">${url}</code><button onclick="navigator.clipboard.writeText(document.getElementById('u').textContent);this.textContent='Copied'">Copy</button></div>
+  ${link}
 
   <h2>Add it to Claude</h2>
   <ol>
     <li>Open <strong>claude.ai</strong> → <strong>Settings</strong> → <strong>Connectors</strong>.</li>
     <li>Click <strong>Add custom connector</strong>.</li>
-    <li>Name: <strong>MySI</strong>. URL: paste the link above. Click <strong>Add</strong>.</li>
+    <li>Name: <strong>MySI</strong>. URL: paste your link. Click <strong>Add</strong>.</li>
     <li>In a new chat, type: <em>"Find my best AI model."</em></li>
     <li>When Claude asks to use MySI's tools, choose <strong>Always allow</strong>, or it will ask at every step.</li>
   </ol>
@@ -133,12 +141,12 @@ export function setupPage(origin: string) {
   <ol>
     <li>Open <strong>Settings</strong> → <strong>Apps &amp; Connectors</strong> → <strong>Advanced</strong>, and turn on <strong>Developer mode</strong>.</li>
     <li>Back in <strong>Apps &amp; Connectors</strong>, click <strong>Create</strong>.</li>
-    <li>Name: <strong>MySI</strong>. URL: paste the link above. Authentication: <strong>No authentication</strong>. Create it.</li>
+    <li>Name: <strong>MySI</strong>. URL: paste your link. Authentication: <strong>No authentication</strong>. Create it.</li>
     <li>In a new chat, turn on MySI and type: <em>"Find my best AI model."</em></li>
   </ol>
 
   <h2>Claude Code</h2>
-  <p><code>claude mcp add --transport http mysi ${url}</code></p>
+  <p><code>claude mcp add --transport http mysi ${personalUrl ? esc(url) : "&lt;your link&gt;"}</code></p>
 
   <p class="muted">Already added it before? Refresh or reconnect it after an update, since chat apps remember the old tool list.</p>
 </main>`,

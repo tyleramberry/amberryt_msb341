@@ -503,6 +503,10 @@ export class RunObject extends DurableObject<Env> {
     if (status === "failed" && !this.sql.exec("SELECT 1 FROM labels LIMIT 1").toArray().length) {
       return { ok: false, error: this.get("error") ?? "This benchmark failed." };
     }
+    // The ranking is the person's own (decided 2026-10-25), so with nothing rated there is none.
+    if (!this.sql.exec("SELECT 1 FROM ratings LIMIT 1").toArray().length) {
+      return { ok: false, error: "Nothing is rated yet. Rate at least one task and I'll show you how the models did." };
+    }
     if (finish && status !== "finished") {
       this.set("status", "finished");
       this.set("finished_at", new Date().toISOString());
@@ -544,7 +548,8 @@ export class RunObject extends DurableObject<Env> {
       .filter((r) => blindMap[r.test_id])
       .map((r) => ({ eval_id: r.test_id, best: r.best, worst: r.worst, note: r.note }));
 
-    const judgeNames = judges.map((j) => j.name).join(" and ");
+    // Judges still run and are stored for Tyler's analysis, but nothing here shows their scores.
+    void judges;
     const rep = report({
       tests,
       responses,
@@ -552,15 +557,22 @@ export class RunObject extends DurableObject<Env> {
       judge,
       human,
       meta: { who: this.get("label") ?? "–", date: (this.get("created_at") ?? "").slice(0, 10) },
-      notes: [
-        `The second opinion is ${judgeNames || "no judge"}, from companies not in the test, grading blind and in shuffled order. ` +
-          "Your picks count more than theirs.",
-        "Time is the full round trip for each answer through OpenRouter, so compare models to each other.",
-      ],
+      notes: ["Time is the full round trip for each answer through OpenRouter, so compare models to each other."],
+      forPerson: true,
     });
 
+    // Equal scores are a tie; nothing breaks it.
+    const leaders = (rows: typeof rep.rows) => {
+      const best = rows[0]?.human;
+      if (best === null || best === undefined) return [];
+      return rows.filter((r) => r.human === best).map((r) => r.model);
+    };
+    const name = (models: string[]) =>
+      models.length === 0 ? null : models.length === 1 ? models[0] : `${models.slice(0, -1).join(", ")} and ${models[models.length - 1]} (tied)`;
+
     const rated = human.length;
-    const top = rep.rows[0];
+    const topModels = leaders(rep.rows);
+    const top = name(topModels);
     const categories = [...new Set(tests.map((t) => t.category))].sort();
     const byCategory = categories.map((c) => {
       const catTests = tests.filter((t) => t.category === c);
@@ -570,24 +582,29 @@ export class RunObject extends DurableObject<Env> {
         blind: Object.fromEntries(catTests.map((t) => [t.id, blindMap[t.id]])),
         judge: judge.filter((j) => catTests.some((t) => t.id === j.eval_id)),
         human: human.filter((h) => catTests.some((t) => t.id === h.eval_id)),
+        forPerson: true,
       });
-      return { category: c, winner: sub.rows[0]?.model ?? null, tests: catTests.length };
+      const catHuman = human.some((h) => catTests.some((t) => t.id === h.eval_id));
+      return { category: c, winner: catHuman ? name(leaders(sub.rows)) : null, tests: catTests.length };
     });
-    const differs = byCategory.some((c) => c.winner !== top?.model);
+    const rated_categories = byCategory.filter((c) => c.winner !== null);
+    const differs = rated_categories.some((c) => c.winner !== top);
 
+    const wins = (m: string) => rep.rows.find((r) => r.model === m)?.wins ?? 0;
+    const tasks = `${rated} task${rated === 1 ? "" : "s"}`;
     const headline = !top
       ? "There were no answers to compare."
-      : rated
-        ? `For your work, **${top.model}** came out on top: you picked it as best on ${top.wins} of ${rated} task${rated === 1 ? "" : "s"}.`
-        : `You didn't rate any answers, so this is the second opinion only: **${top.model}** scored highest.`;
+      : topModels.length === 1
+        ? `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.`
+        : `For your work, ${topModels.map((m) => `**${m}**`).join(" and ")} tied for the top on the ${tasks} you rated.`;
 
     const month = new Date(this.get("created_at") ?? Date.now()).toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
     const memoryLine = !top
       ? ""
       : differs
-        ? byCategory.map((c, i) => (i === 0 ? `For ${c.category} tasks I do best with ${c.winner}` : `for ${c.category}, ${c.winner}`)).join("; ") +
+        ? rated_categories.map((c, i) => (i === 0 ? `For ${c.category} tasks I do best with ${c.winner}` : `for ${c.category}, ${c.winner}`)).join("; ") +
           ` (MySI benchmark, ${month}).`
-        : `For my kind of work (${categories.join(", ")}), ${top.model} did best in my own blind test (MySI benchmark, ${month}).`;
+        : `For my kind of work (${rated_categories.map((c) => c.category).join(", ")}), ${top} did best in my own blind test (MySI benchmark, ${month}).`;
 
     const reveal = tests.map((t) => {
       const r = human.find((h) => h.eval_id === t.id);
@@ -603,18 +620,18 @@ export class RunObject extends DurableObject<Env> {
     const trust = [
       `${tests.length} test task${tests.length === 1 ? "" : "s"}, one answer per model each, so small gaps may be luck.` +
         (tests.length <= 3 ? " Treat this as a rough first read; adding more tasks makes it steadier." : ""),
-      rep.judgeAgreement
-        ? `The second opinion's top pick matched yours on ${rep.judgeAgreement.matched} of ${rep.judgeAgreement.of}.`
-        : "No ratings from you, so this rests on the second opinion only.",
     ];
+    if (rated < tests.length) trust.push(`You rated ${rated} of ${tests.length} tasks; the ranking uses only those.`);
     const failed = this.tests().length - tests.length;
     if (failed) trust.push(`${failed} test task${failed === 1 ? "" : "s"} had fewer than 2 answers and ${failed === 1 ? "was" : "were"} left out.`);
 
     return {
       headline,
+      winner: top,
       markdown: rep.markdown,
       rows: rep.rows,
-      by_category: differs ? byCategory : [],
+      by_category: differs ? rated_categories : [],
+      all_categories: rated_categories,
       reveal,
       trust,
       memory_line: memoryLine,
@@ -631,9 +648,11 @@ export class RunObject extends DurableObject<Env> {
 
 export type Results = {
   headline: string;
+  winner: string | null; // "A and B (tied)" on a tie
   markdown: string;
   rows: ReturnType<typeof report>["rows"];
   by_category: { category: string; winner: string | null; tests: number }[];
+  all_categories: { category: string; winner: string | null; tests: number }[];
   reveal: { test_id: string; title: string; labels: Record<string, string>; your_best: string | null; your_worst: string | null }[];
   trust: string[];
   memory_line: string;

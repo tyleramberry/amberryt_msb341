@@ -15,6 +15,7 @@ import {
   SERVER_INSTRUCTIONS,
   TASK_IDEAS,
 } from "./prompts.ts";
+import type { PersonObject } from "./person.ts";
 import type { DraftTest, RunView } from "./run.ts";
 
 type Data = Record<string, unknown>;
@@ -76,7 +77,14 @@ const testInput = z.object({
   criteria: z.array(z.string()).describe("2 to 5 checkable statements, in the person's words."),
 });
 
-export function createServer(env: Env, origin: string) {
+export const PERSON_KEY = /^[A-Za-z0-9_-]{22}$/;
+
+export function personStub(env: Env, key: string) {
+  return env.PERSON.get(env.PERSON.idFromName(key));
+}
+
+// person is set when the call came through a personal connector URL (/mcp/u/<key>, decision 008).
+export function createServer(env: Env, origin: string, person: DurableObjectStub<PersonObject> | null = null) {
   const server = new McpServer({ name: "mysi", title: "MySI", version: "0.2.0" }, { instructions: SERVER_INSTRUCTIONS });
   const ratingUrl = (runId: string) => `${origin}/r/${runId}`;
   const readOnly = { readOnlyHint: true, openWorldHint: false };
@@ -113,9 +121,33 @@ export function createServer(env: Env, origin: string) {
       inputSchema: z.object({
         label: z.string().optional().describe('An anonymous label for this person, e.g. "tester-1". Never a real name.'),
         from_run: z.string().optional().describe("A previous run_id whose test tasks should be copied into this one."),
+        fresh: z.boolean().optional().describe("True to start a new benchmark even though an unfinished one exists."),
       }),
     },
-    async ({ label, from_run }) => {
+    async ({ label, from_run, fresh }) => {
+      // Through a personal link, offer to pick up an unfinished benchmark instead of starting over.
+      if (person && !from_run && !fresh) {
+        for (const id of await person.runIds()) {
+          const v = await runStub(env, id).view();
+          if (v.status === "finished" || v.status === "failed") continue;
+          const p = progress(v);
+          return reply({
+            resume: true,
+            run_id: id,
+            status: v.status,
+            tests: v.tests.map((t) => ({ id: t.id, title: t.title, status: t.status })),
+            progress: p,
+            rating_url: ratingUrl(id),
+            next_step:
+              `The person has an unfinished benchmark (${v.status === "draft" ? `${v.tests.length} test tasks drafted` : `${p.rated} of ${p.total} tasks rated`}). ` +
+              "Ask whether to pick up where they left off. If yes: " +
+              (v.status === "draft"
+                ? "show the saved tasks as cards (call save_tests with them to get the cards if needed) and continue the interview guide from there. "
+                : "call check_run and carry on rating. ") +
+              "If they want to start over, call start_benchmark again with fresh: true.",
+          });
+        }
+      }
       let copied: DraftTest[] = [];
       if (from_run) {
         const old = await openRun(env, from_run);
@@ -125,6 +157,7 @@ export function createServer(env: Env, origin: string) {
       const runId = newRunId();
       const view = await runStub(env, runId).init(runId, (label ?? "tester").slice(0, 40), copied);
       await env.REGISTRY.get(env.REGISTRY.idFromName("global")).addRun(runId);
+      if (person) await person.addRun(runId);
       return reply({
         run_id: runId,
         rating_url: ratingUrl(runId),
@@ -402,12 +435,23 @@ export function createServer(env: Env, origin: string) {
       const r = await run.results(true);
       if (!r.ok) return refuse(r.error);
       const d = r.data;
+      if (person && (await person.runIds()).includes(run_id)) {
+        await person.saveResult({
+          run_id,
+          finished_at: new Date().toISOString(),
+          winner: d.winner,
+          by_category: d.all_categories.map(({ category, winner }) => ({ category, winner })),
+          memory_line: d.memory_line,
+        });
+      }
       // The chat table is trimmed and in the person's words; the page keeps bench.py's full report.
+      // Only the person's own picks show (decided 2026-10-25): no judge column, and ties share a rank.
       const num = (x: number | null, digits: number) => (x === null ? "–" : x.toFixed(digits));
+      const rank = (i: number) => d.rows.findIndex((r) => r.human === d.rows[i].human) + 1;
       const table = [
-        "| Rank | AI model | Your score (0–2) | Your picks for best | Second opinion (1–10) |",
-        "|---|---|---|---|---|",
-        ...d.rows.map((r, i) => `| ${i + 1} | ${r.model} | ${num(r.human, 2)} | ${d.rated ? r.wins : "–"} | ${num(r.judge, 1)} |`),
+        "| Rank | AI model | Your score (0–2) | Your picks for best |",
+        "|---|---|---|---|",
+        ...d.rows.map((r, i) => `| ${rank(i)} | ${r.model} | ${num(r.human, 2)} | ${r.wins} |`),
       ].join("\n");
       return reply({
         headline: d.headline,
@@ -419,7 +463,7 @@ export function createServer(env: Env, origin: string) {
         report_url: ratingUrl(run_id),
         rated: `${d.rated} of ${d.total} tasks rated`,
         cost_usd: d.cost_usd,
-        rows: d.rows,
+        rows: d.rows.map(({ model, human, wins, median_s, cost }) => ({ model, your_score: human, your_picks_for_best: wins, median_s, cost })),
         next_step: RESULTS_NEXT_STEP,
       });
     },
@@ -439,30 +483,52 @@ export function createServer(env: Env, origin: string) {
       annotations: readOnly,
     },
     async ({ run_id }) => {
-      // Identity (a personal connector URL) is waiting on a decision, so for now this only works
-      // when the host still has the run_id.
+      const MATCH =
+        "Match the task to the closest tested category and name that winner. If no category fits, say they haven't " +
+        "tested this kind of work yet and offer to add a test task (start_benchmark with from_run).";
+      if (person) {
+        const profile = await person.profile();
+        if (!profile.length) {
+          return reply({
+            found: false,
+            next_step: 'Say they haven\'t finished a MySI benchmark yet, and offer to run one ("find my best AI model").',
+          });
+        }
+        // Newest result wins for each kind of work.
+        const byCategory = new Map<string, { winner: string | null; finished_at: string }>();
+        for (const p of profile) {
+          for (const c of p.by_category) if (!byCategory.has(c.category)) byCategory.set(c.category, { winner: c.winner, finished_at: p.finished_at });
+        }
+        return reply({
+          found: true,
+          overall_winner: profile[0].winner,
+          by_category: [...byCategory].map(([category, v]) => ({ category, winner: v.winner, tested: v.finished_at.slice(0, 10) })),
+          memory_line: profile[0].memory_line,
+          past_benchmarks: profile.map((p) => ({ finished: p.finished_at.slice(0, 10), winner: p.winner, report_url: ratingUrl(p.run_id), run_id: p.run_id })),
+          next_step: MATCH + " If they asked for their results, list past_benchmarks with their report links.",
+        });
+      }
       const run = run_id ? await openRun(env, run_id) : null;
       const view = run ? await run.view() : null;
       if (!run || view?.status !== "finished") {
         return reply({
           found: false,
           next_step:
-            "Say MySI can't look up past results in a new chat yet. If the person saved a MySI line in memory or " +
-            'custom instructions, use that. Otherwise offer to run a benchmark ("find my best AI model").',
+            "Say this MySI connector link doesn't remember past results; the personal link from MySI's setup page " +
+            "does. If the person saved a MySI line in memory or custom instructions, use that. Otherwise offer to run " +
+            'a benchmark ("find my best AI model").',
         });
       }
       const r = await run.results(false);
       if (!r.ok) return refuse(r.error);
       return reply({
         found: true,
-        overall_winner: r.data.rows[0]?.model ?? null,
-        by_category: r.data.by_category,
+        overall_winner: r.data.winner,
+        by_category: r.data.all_categories,
         tested_categories: [...new Set(view.tests.map((t) => t.category))],
         memory_line: r.data.memory_line,
         report_url: ratingUrl(run_id!),
-        next_step:
-          "Match the task to the closest tested category and name that winner. If no category fits, say they haven't " +
-          "tested this kind of work yet and offer to add a test task (start_benchmark with from_run).",
+        next_step: MATCH,
       });
     },
   );

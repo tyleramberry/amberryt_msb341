@@ -111,6 +111,10 @@ export type ReportInput = {
   meta?: Meta;
   // Replaces the last two "How much to trust this" bullets (judge and timing caveats).
   notes?: string[];
+  // The engine's report for the person: no judge scores anywhere (decided 2026-10-25), ranked on
+  // their picks alone, and "test task" instead of "eval". Off by default so the port still
+  // matches bench.py.
+  forPerson?: boolean;
 };
 
 export type Report = {
@@ -185,7 +189,13 @@ export function report(input: ReportInput): Report {
       cost: mean(costs),
     };
   });
-  rows.sort((a, b) => (b.human ?? 0) - (a.human ?? 0) || (b.judge ?? 0) - (a.judge ?? 0));
+  const forPerson = input.forPerson ?? false;
+  const task = forPerson ? "test task" : "eval";
+  rows.sort((a, b) =>
+    forPerson
+      ? (b.human ?? 0) - (a.human ?? 0)
+      : (b.human ?? 0) - (a.human ?? 0) || (b.judge ?? 0) - (a.judge ?? 0),
+  );
 
   // Did the judge's top pick match the human's best? Ties at the top count as a miss.
   const agree: boolean[] = [];
@@ -202,7 +212,7 @@ export function report(input: ReportInput): Report {
     out.push(
       `**Who:** ${meta.who ?? "–"}  `,
       `**Date:** ${meta.date ?? "–"}  `,
-      `**Evals:** ${tests.length} · **Models:** ${models.join(", ")}`,
+      `**${forPerson ? "Test tasks" : "Evals"}:** ${tests.length} · **Models:** ${models.join(", ")}`,
       "",
     );
   }
@@ -211,21 +221,26 @@ export function report(input: ReportInput): Report {
   out.push(
     "## Ranking",
     "",
-    "| Rank | Model | Your score (0–2) | Your picks for best | Judge score (1–10) | Median time (s) |" +
+    "| Rank | Model | Your score (0–2) | Your picks for best |" +
+      (forPerson ? "" : " Judge score (1–10) |") +
+      " Median time (s) |" +
       (showCost ? " Cost per answer (US$) |" : ""),
-    "|---|---|---|---|---|---|" + (showCost ? "---|" : ""),
+    "|---|---|---|---|---|" + (forPerson ? "" : "---|") + (showCost ? "---|" : ""),
   );
+  // For the person, equal scores share a rank: there is no judge to break the tie.
+  const rankOf = (i: number) => (forPerson ? rows.findIndex((r) => r.human === rows[i].human) + 1 : i + 1);
   rows.forEach((r, i) => {
     out.push(
-      `| ${i + 1} | ${r.model} | ${fmt(r.human, 2)} | ${human.length ? r.wins : "–"} ` +
-        `| ${fmt(r.judge)} | ${fmt(r.median_s)} |` +
+      `| ${rankOf(i)} | ${r.model} | ${fmt(r.human, 2)} | ${human.length ? r.wins : "–"} ` +
+        (forPerson ? "|" : `| ${fmt(r.judge)} |`) +
+        ` ${fmt(r.median_s)} |` +
         (showCost ? ` ${fmt(r.cost, 4)} |` : ""),
     );
   });
   out.push(
     "",
-    "Your score: best answer = 2, worst = 0, the rest = 1, averaged over evals. " +
-      "Ranked by your score, judge breaks ties.",
+    `Your score: best answer = 2, worst = 0, the rest = 1, averaged over ${task}s. ` +
+      (forPerson ? "Ranked by your score." : "Ranked by your score, judge breaks ties."),
     "",
   );
 
@@ -233,27 +248,28 @@ export function report(input: ReportInput): Report {
   for (const r of rows) {
     const cells = categories.map((c) => {
       const h = human.length ? agg(hpoints, r.model, c) : null;
-      return `${fmt(h, 2)} you · ${fmt(agg(jscore, r.model, c))} judge`;
+      return forPerson ? fmt(h, 2) : `${fmt(h, 2)} you · ${fmt(agg(jscore, r.model, c))} judge`;
     });
     out.push(`| ${r.model} | ` + cells.join(" | ") + " |");
   }
   out.push("");
 
+  const judgeCols = forPerson ? [] : models;
   out.push(
-    "## Each eval",
+    forPerson ? "## Each test task" : "## Each eval",
     "",
-    "| Eval | Category | Your best | " + models.map((m) => `Judge: ${m}`).join(" | ") + " |",
-    "|---|---|---|" + "---|".repeat(models.length),
+    "| " + [forPerson ? "Test task" : "Eval", "Category", "Your best", ...judgeCols.map((m) => `Judge: ${m}`)].join(" | ") + " |",
+    "|---|---|---|" + "---|".repeat(judgeCols.length),
   );
   for (const t of tests) {
-    const cells = models.map((m) => fmt(jscore.get(key(t.id, m)), 0));
-    out.push(`| ${t.id}: ${titleOf.get(t.id)} | ${t.category} | ${hbest.get(t.id) ?? "–"} | ` + cells.join(" | ") + " |");
+    const cells = [`${t.id}: ${titleOf.get(t.id)}`, t.category, hbest.get(t.id) ?? "–", ...judgeCols.map((m) => fmt(jscore.get(key(t.id, m)), 0))];
+    out.push("| " + cells.join(" | ") + " |");
   }
   out.push("");
 
   out.push("## How much to trust this", "");
   const matched = agree.filter(Boolean).length;
-  if (agree.length) {
+  if (agree.length && !forPerson) {
     out.push(
       `- The judge's top pick matched yours on ${matched} of ${agree.length} evals ` +
         `(${pyFixed((100 * matched) / agree.length, 0)}%).`,
@@ -261,7 +277,7 @@ export function report(input: ReportInput): Report {
   }
   const n = tests.length;
   out.push(
-    `- ${n} eval${n !== 1 ? "s" : ""}, one answer per model each. Models vary run to run, so a small gap ` +
+    `- ${n} ${task}${n !== 1 ? "s" : ""}, one answer per model each. Models vary run to run, so a small gap ` +
       "between two models may be luck.",
     ...(input.notes ?? DEFAULT_NOTES).map((s) => `- ${s}`),
     "",

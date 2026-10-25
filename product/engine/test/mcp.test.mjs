@@ -26,6 +26,20 @@ describe("setup page", () => {
     assert.match(html, /No authentication/);
   });
 
+  test("Get my link mints a personal connector URL that works; made-up keys don't", async () => {
+    const res = await fetch(base + "/link", { method: "POST" });
+    const html = await res.text();
+    const m = html.match(new RegExp(`${base}/mcp/u/([A-Za-z0-9_-]{22})`));
+    assert.ok(m, "page shows the personal link");
+    const list = await fetch(`${base}/mcp/u/${m[1]}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+    assert.equal(list.status, 200);
+    assert.equal((await fetch(`${base}/mcp/u/AAAAAAAAAAAAAAAAAAAAAA`, { method: "POST" })).status, 404);
+  });
+
   test("unknown paths return 404", async () => {
     assert.equal((await fetch(base + "/nope")).status, 404);
   });
