@@ -316,7 +316,8 @@ on it.
 
 ## Identity (needed to remember the winner)
 
-Sprint 3 has no accounts. Options:
+Decided 2026-10-25: option 1, the personal connector URL
+([decision 008](../decisions/008-identity-personal-connector-url.md)). Sprint 3 has no accounts. Options were:
 
 1. **Personal connector URL** (`/mcp/u/<key>`), made on the setup page. Recommended: nothing to
    type, works in every harness, and the key never appears in chat. Losing the URL means losing
@@ -360,7 +361,7 @@ Log per tool call with timestamps. Then, by hand afterwards:
 
 ## Open questions for Tyler
 
-1. Identity: personal connector URL (recommended) or a spoken code? (Asked from the specs thread.)
+1. ~~Identity~~ Decided 2026-10-25: personal connector URL (decision 008).
 2. ~~Default size~~ Decided 2026-10-25: 3 test tasks and 3 models by default. A person can add more tasks (up to
    the cap of 10) for a steadier ranking; the results say that 3 tasks is a rough first read.
 3. Should the "second opinion" show at all for the first version, or only the person's picks?

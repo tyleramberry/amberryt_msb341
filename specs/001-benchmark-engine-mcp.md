@@ -37,7 +37,7 @@ One Cloudflare Worker in `product/engine/` that serves, from one URL:
 |---|---|
 | Steps 1–3: set up, interview, confirm | Stays in the chat app. `start_benchmark` returns the interview guide (ported from SKILL.md, text in spec 002's appendix). `save_tests` coaches along the way. |
 | `evals.json` | The input to `save_tests`. Same fields, text mode only. |
-| Step 4: subagents | The engine calls 4 models from different vendors through OpenRouter, with the same "plain assistant" prompt. |
+| Step 4: subagents | The engine calls 3 models from different vendors through OpenRouter, with the same "plain assistant" prompt. |
 | `bench.py blind` / `report` | Ported to TypeScript, same math, tested against the existing run folders. |
 | Step 5: judge | Server-side calls, two judges, same judge prompt. Called "a second opinion" to the person. |
 | Step 6: blind rating | In chat (`get_answers` + `submit_rating`) or on the rating page. Same best/worst question. |
@@ -89,7 +89,7 @@ later chat: "which AI should I use for this email?"
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
 | `get_results` | `{run_id}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, report_url, cost_usd}`. Ranks on whatever is rated (the second opinion only, labelled as such, if nothing is). Reveals every label and marks the run `finished`, so no more ratings. | yes* |
-| `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Until identity (below) is decided it takes a `run_id` and answers from that run only. | yes |
+| `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Called through a personal connector URL, it answers from all of that person's runs; through plain `/mcp`, it needs a `run_id` and answers from that run only. | yes |
 | `rerun_test` | `{run_id, model?}` | Sprint 3 stub: says it's coming soon and records the interest. | no |
 
 \* `get_results` changes the run's state, but only to close rating. It is marked read-only so hosts
@@ -129,8 +129,9 @@ alone):
 
 Validation:
 
-- 1 to 10 tests; 5 to 8 is the target the guide asks for. Fewer than 5 is allowed, and the result
-  says once that fewer tests means a noisier ranking.
+- 1 to 10 tests; the default the guide asks for is 3 (Tyler's call, 2026-10-25: short enough that
+  a first-timer finishes). More is allowed up to the cap, and the results say once that 3 tests
+  give a rough ranking, not a firm one.
 - Each test: `category`, `title` (≤ 80 chars), `prompt` (≤ 4,000 chars), `context` (≤ 8,000
   chars, may be empty), `criteria` (1 to 7 items, each ≤ 200 chars). Over a limit returns an error
   that says which test and field.
@@ -149,14 +150,14 @@ Coaching notes are deterministic rules, not a model call, so they're fast, free 
 | 3 or more tests, all in one category | ask about a different kind of work |
 | The prompt asks for a file (web page, spreadsheet, slides, code, a long document) | say it isn't supported yet; ask for a chat-sized version |
 
-`ready_to_confirm` is true once there are 5 or more tests with no open notes, or the host passes
+`ready_to_confirm` is true once there are 3 or more tests with no open notes, or the host passes
 `person_done: true`.
 
 ### Model calls
 
 - All through OpenRouter's chat completions API, one key held as a Worker secret.
-- **Default lineup:** 4 models, one each from OpenAI, Anthropic, Google, and one open-weight
-  model, each the vendor's current general model at a mid price. The person doesn't choose; the
+- **Default lineup:** 3 models, one each from OpenAI, Anthropic and Google, each the vendor's
+  current general model at a mid price. The person doesn't choose; the
   optional `models` input (3–5 OpenRouter IDs) is for builders. Exact IDs live in config and are
   copied onto each run, so a run always records what it tested.
 - **Same prompt as the skill**, as the system message: "You are being tested as a plain
@@ -207,7 +208,8 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
 
 ### Background job
 
-`run_models` returns at once. 8 tests × 4 models plus judging takes minutes, longer than hosts wait
+`run_models` returns at once. Even 3 tests × 3 models plus judging takes a few minutes, and up to
+10 × 5 takes much longer, longer than hosts wait
 on a tool call (Claude allows 240 s; ChatGPT's limit is undocumented), and a Worker's `waitUntil`
 dies 30 s after the response. So the job runs in **one Durable Object per run**: the object holds
 the run's state and storage and uses alarms to work through the calls in small batches. Each
@@ -231,19 +233,20 @@ Each run's Durable Object has its own SQLite database
 | `ratings` | test_id, best, worst, note, source (`chat` or `page`), rated_at |
 | `events` | tool or page action, timestamp, outcome (for the stall log) |
 
-Two small shared objects: one global counter for the daily run cap, and, if identity is approved,
-one object per person (below).
+Two kinds of shared object: one global counter for the daily run cap, and one object per person
+(below).
 
-### Identity (waiting on Tyler)
+### Identity: a personal connector URL
 
+Decided 2026-10-25 ([decision 008](../decisions/008-identity-personal-connector-url.md)).
 `which_model`, resuming an unfinished run in a new chat, and next scope's re-runs all need to know
-who is calling. Sprint 3 has no accounts. Proposed (spec 002's recommendation): the setup page
+who is calling, and Sprint 3 has no accounts. So the setup page
 gives each person their own connector URL, `/mcp/u/<key>`, with a long random key. Requests to
 that URL are tied to a per-person Durable Object holding their run IDs and their profile (winner
 overall and per category, from each finished run). The key never appears in chat. Plain `/mcp`
 keeps working, without memory. Anyone holding a person's URL can see their results, the same
-trade-off the run link makes. If this isn't approved, `which_model` and cross-chat resume are cut
-and each run stands alone.
+trade-off the run link makes. The key is at least 128 bits, URL-safe, and is never written to logs.
+The setup page shows it once, with a copy button and a note to keep the link private.
 
 ### Rating page: `/r/<run_id>`
 
@@ -274,7 +277,7 @@ The connector is public and has no sign-in, so anyone with the URL can spend my 
   work on long answers.
 - If abuse shows up anyway: a shared secret in the URL path (the personal URL already is one),
   then OAuth.
-- Estimated cost per default run (8 tests × 4 models + 2 judges): well under US$1. Measured from
+- Estimated cost per default run (3 tests × 3 models + 2 judges): a few cents. Measured from
   my wife's run and written into the sprint review.
 
 ### Evals (AGENTS.md: every AI feature gets one)
@@ -316,7 +319,7 @@ In `product/evals/`:
 3. **Run storage** (Durable Object + SQLite) and the daily counter.
 4. **Tools, end to end**, with `run_models` as the background job, tests in order.
 5. **In-chat rating and the rating page** at `/r/<run_id>`.
-6. **Identity and `which_model`**, if approved.
+6. **Personal connector URLs, the per-person object, and `which_model`.**
 7. **Run it once myself, then my wife runs it hands-off.** Log every place she gets stuck.
 
 ## Out of scope
@@ -332,7 +335,6 @@ In `product/evals/`:
 
 ## Open questions
 
-- Identity: personal connector URL, a spoken code, or no memory for Sprint 3 (asked 2026-10-22).
 - Does my wife get through adding the connector alone? (Build step 1's real test.)
 - Default lineup and judge pool: exact model IDs are in config but unverified, because OpenRouter
   was blocked from the build environment. `npm run check-models` checks them; run it before the
