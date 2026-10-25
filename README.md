@@ -4,10 +4,12 @@
 > the work you actually use AI for into test tasks, runs them on several models, and tells you
 > which model is best for *your* work.
 
-**Where to see it:** https://personal-bench.homeroom-app.workers.dev: setup steps for the MCP
-connector (step 1 of [the spec](specs/001-benchmark-engine-mcp.md); it answers a `ping` tool so far). The working prototype is the
-`/personal-bench` Claude Code skill, which has run twice on my own work (one test task each, on
-Claude Haiku, Sonnet and Opus). The results are in [`product/bench/runs/`](product/bench/runs/).
+**Where to see it:** https://personal-bench.homeroom-app.workers.dev: press "Use it in Claude"
+to get your own connector link, then MySI interviews you, runs your tests on GPT-6.1 Sol,
+Gemini 4 Argon and Claude Sonnet 5.5, and ranks them from your blind picks
+([spec](specs/001-benchmark-engine-mcp.md)). The first outside user ran it on 2026-10-24
+([interview 06](discovery/interviews/2026-10-24-interview-06.md)). The earlier prototype, the
+`/personal-bench` Claude Code skill, is in [`product/bench/runs/`](product/bench/runs/).
 **Built by:** Tyler Amberry, MSB 341 Product Management, BYU
 
 This repo started as **Homeroom**, a study harness for college students. Sprint 2's validation
@@ -20,7 +22,7 @@ history.
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
-| Personal Bench connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. Step 1: a `ping` tool only |
+| Personal Bench connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Use it in Claude" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
 | Personal Bench engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
 | Benchmark runs | [`product/bench/runs/`](product/bench/runs/) | In-repo |
@@ -37,9 +39,9 @@ Plan: [`sprints/sprint-3-plan.md`](sprints/sprint-3-plan.md). Status against its
 
 | Deliverable | Status | Where |
 |---|---|---|
-| Live app with a link, code in this repo | Step 1 of 6 shipped: the MCP connector is live with a `ping` tool. Next: port `bench.py`, then the real tools | [spec](specs/001-benchmark-engine-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
+| Live app with a link, code in this repo | Done: live engine with the benchmark tools, personal links, blind rating page, judges, and one winner per run (ties go to the cheaper, faster model, [decision 009](decisions/009-one-winner-and-your-app.md)). Next: re-run a person's tests when a new model ships | [spec](specs/001-benchmark-engine-mcp.md) · [live](https://personal-bench.homeroom-app.workers.dev) · [`product/engine/`](product/engine/) |
 | One other person (my wife) builds her own tests through the product | Done 2026-10-24: 2 tests (client email, math help), 3 models rated blind, ~15 min, $0.07 | [interview 06](discovery/interviews/2026-10-24-interview-06.md) |
-| Tests 3 to 5 models and outputs her ranking table | Prototype ranks 3 Claude models; no other vendors yet | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
+| Tests 3 to 5 models and outputs her ranking table | Done: her run ranked GPT-5, Gemini 2.5 Pro and Claude Sonnet 4.5 (a 3-way tie, which led to decision 009). Lineup is now GPT-6.1 Sol, Gemini 4 Argon, Claude Sonnet 5.5 | [skill](.claude/skills/personal-bench/) · [runs](product/bench/runs/) |
 | Pivot recorded: decision, README, AGENTS.md | Done | [decision 006](decisions/006-pivot-to-personal-benchmark.md) · this file · [`AGENTS.md`](AGENTS.md) |
 
 ## Sprint 2: Validate the problem (done; led to the pivot)
