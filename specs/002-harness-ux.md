@@ -261,6 +261,8 @@ so ChatGPT and Claude ask fewer permission questions.
 | `get_results` | All rated, or the person asks to stop | `run_id` | headline, table, by-category, reveal, trust lines, memory line, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
 | `which_model` | Later chats: "which AI for this?", "my results" | `task_description?` | best model for that kind of work, past benchmarks | yes |
 | `rerun_test` | "Test the new model on my stuff" | `run_id`, `model?` | Sprint 3: "coming soon", records interest | no |
+| `get_run_plan` | Claude Code plan mode only, after the person confirmed the test | `run_id` | one slot per test × model: `slot_id`, `model` (haiku, sonnet, opus), exact prompt to send | yes |
+| `submit_answers` | Claude Code plan mode only, after each test's sub-agents finish | `run_id`, `answers[]` (`slot_id`, `text`, `duration_ms`) | saved, which tests are ready to rate | no |
 
 Changes from [bench-mcp.md](bench-mcp.md): adds `check_connection` (renamed `ping`),
 `get_task_ideas`, `get_answers`, `submit_rating`, `which_model`, `rerun_test` (stub). `save_tests`
@@ -309,10 +311,53 @@ nothing critical lives only here):
 | Prompts | yes ("+" menu) | treat as no | yes (`/mcp__mysi__...`) | yes |
 | Inline widget | check (MCP Apps) | check (Apps SDK / MCP Apps) | no, use chat or page | no |
 | Memory for the winner | Claude memory, if on | ChatGPT memory, if on | offer a line for `CLAUDE.md` | offer a Cursor rule |
+| Run on own subscription | no | no | yes, Claude models only (see "Optional mode") | no |
 | Target user? | **yes, primary** | yes | builders | builders |
 
 "check" means the build thread should confirm support at build time; the flow doesn't depend
 on it.
+
+## Optional mode: use my Claude Code plan
+
+**Decided 2026-10-25.** For builders who open MySI inside Claude Code and want to test on their
+own Claude subscription instead of MySI's API key. MySI's hosted server can't spend the chat
+app's usage, and a subscription login must never be put into the server (Anthropic's terms don't
+allow subscription credentials in other apps). So in this mode **Claude Code runs the models
+itself** with sub-agents, the way the `/personal-bench` skill does today, and MySI does
+everything else: saving the test, shuffling, rating, results and remembering.
+
+**When it's offered.** Only when the client identifies itself as Claude Code (the `clientInfo`
+name sent when it connects). After the test is confirmed, the host asks once:
+
+> Want to run this on your own Claude plan? It's free for MySI and uses your usage limits, but it
+> can only test Claude models (Haiku, Sonnet, Opus). Or I can use MySI's lineup, one model each
+> from OpenAI, Google and Anthropic.
+
+Everywhere else, the mode doesn't exist and the person never hears about it.
+
+**How it runs.**
+1. The host calls `run_models` with `runner: "claude_code"` (and `person_confirmed: true`). The
+   engine makes no model calls and returns `next_step` pointing to `get_run_plan`.
+2. `get_run_plan` returns one slot per test × model: an opaque `slot_id`, the `model` alias for
+   the Agent tool, and the exact "plain assistant" prompt from the skill's step 4.
+3. For each test, the host launches that test's three sub-agents together, in parallel, then calls
+   `submit_answers` with each answer's text, exactly as returned, and its `duration_ms`. One call
+   per test, so a failure partway through loses nothing and rating can start after test 1.
+4. From here it is the normal flow: `check_run`, `get_answers`, `submit_rating`, `get_results`.
+
+**Keeping it as blind as possible.** The host launched the sub-agents, so it has seen which model
+wrote what. That can't be fixed in this mode, only reduced:
+- `get_answers` still shuffles labels on the server, and the `next_step` says not to refer to
+  any earlier tool output when showing them.
+- The host offers the rating page (`/r/<runId>`) first rather than as a backup, because the page
+  hides the order from the chat entirely.
+- The results say plainly: "Claude Code plan mode: Claude models only. Each answer also carried
+  Claude Code's own setup instructions, so this tests the models inside Claude Code, not on
+  their own."
+
+**What it is for.** A free way for builders to try MySI, and the path that eventually replaces
+the `/personal-bench` skill. It is not the main product: it can't compare vendors, which is the
+point of MySI. `which_model` stores its result like any other, tagged with the mode.
 
 ## Identity (needed to remember the winner)
 
