@@ -42,12 +42,12 @@ The work matches the goal on all four "Done looks like" items. A live link exist
 
 *The builder's own answers; typos fixed at the builder's request.*
 
-**Did you hit the goal?** Yes, I hit the goal entirely. I built a hosted MCP server that my wife accessed in her own Claude desktop app, and ran a test end to end. The product helped her choose 2 tasks, make evals, ran the 3 different models, then had her and a judge agent grade the output blindly to see which model handles the task the best. The pivot should be recorded, as well as all the code is in the repo
+**Did you hit the goal?** Yes, I hit the goal entirely. I built a hosted MCP server that my wife accessed in her own Claude desktop app, and ran a test end to end. The product helped her choose 2 tasks, make evals, and ran 3 different models, then had her and a judge agent grade the output blindly to see which model handles each task best. The pivot is recorded, and all the code is in the repo.
 
-**What did the report show you?** I expected all of this in the report. it needs to be updated because it says the X research is not seen although it is. It also says my wife's run ended in a tie although she saw that Sonnet was her preference
+**What did the report show you?** I expected all of this in the report. It needs to be updated because it says the X research is not seen although it is. It also says my wife's run ended in a tie although she saw that Sonnet was her preference.
 
-**If the plan changed, why?** No, the plan didn't change besides the fact that the form factor isn't an additional app, but an MCP that is used in an agent harness like Claude
+**If the plan changed, why?** No, the plan didn't change besides the fact that the form factor isn't an additional app, but an MCP that is used in an agent harness like Claude.
 
-**Actual difficulty:** I think it was a 4 simply because I had never built an MCP server, so it was a lot of time learning about how to do so on X. Then a whole process of learning Claude Projects (beta) to do the work and doing all the testing
+**Actual difficulty:** I think it was a 4 simply because I had never built an MCP server, so it was a lot of time learning about how to do so on X. Then a whole process of learning Claude Projects (beta) to do the work and doing all the testing.
 
-**What will you change next sprint?** Next sprint I want to spend more time up front building and more time at the end doing iterations and research as opposed to thinking and research and only getting one version built during the sprint
+**What will you change next sprint?** Next sprint I want to spend more time up front building and more time at the end doing iterations and research as opposed to thinking and research and only getting one version built during the sprint.
