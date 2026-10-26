@@ -11,16 +11,16 @@ const env = Object.fromEntries(
 const key = process.env.OPENROUTER_API_KEY ?? env.OPENROUTER_API_KEY;
 if (!key) throw new Error("Set OPENROUTER_API_KEY or put it in product/engine/.env");
 const raw = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "");
-const judges = JSON.parse(JSON.parse(raw).vars.JUDGE_POOL).map((j) => j.id);
+const judges = JSON.parse(JSON.parse(raw).vars.JUDGE_POOL);
 const { cases } = JSON.parse(readFileSync(new URL("../../evals/judge-style-rules.json", import.meta.url), "utf8"));
 
 let failed = 0;
 for (const c of cases) {
-  for (const judge of judges) {
+  for (const { id: judge, reasoning } of judges) {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-      body: JSON.stringify({ model: judge, max_tokens: 2000, messages: [{ role: "user", content: judgePrompt(c.test, Object.entries(c.answers)) }] }),
+      body: JSON.stringify({ model: judge, max_tokens: 2000, ...(reasoning === false ? { reasoning: { enabled: false } } : {}), messages: [{ role: "user", content: judgePrompt(c.test, Object.entries(c.answers)) }] }),
     });
     const body = await res.json();
     let scores;

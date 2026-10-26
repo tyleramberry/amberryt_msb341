@@ -5,7 +5,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { blind, report, type Judgment, type Rating, type Response, type Test } from "./bench.ts";
 import { coach, LIMITS, scrubPersonalInfo, scrubSelfId, type CoachingNote } from "./coach.ts";
-import { complete, isMock, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
+import { complete, isMock, ModelError, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
 import { CLAUDE_CODE_CAVEAT, judgePrompt, MODEL_SYSTEM, modelPrompt, subagentPrompt } from "./prompts.ts";
 
 export type Runner = "openrouter" | "claude_code";
@@ -341,6 +341,7 @@ export class RunObject extends DurableObject<Env> {
         return await fn();
       } catch (e) {
         last = e;
+        if (e instanceof ModelError && !e.retry) break; // trying again would fail the same way
         if (attempt < RETRY_DELAYS_MS.length && !isMock(this.env)) {
           await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
         }
@@ -408,7 +409,13 @@ export class RunObject extends DurableObject<Env> {
       // A reply that doesn't parse is re-asked once (spec: "retry once, then skip").
       let items: ReturnType<typeof parseJudgeJson> | null = null;
       for (let attempt = 0; attempt < 2 && !items; attempt++) {
-        const c = await this.withRetries(() => complete(this.env, j.id, prompt, { maxTokens: JUDGE_TOKENS }));
+        // Failed calls still bill; count them so the run's cost is real.
+        const c = await this.withRetries(() =>
+          complete(this.env, j.id, prompt, { maxTokens: JUDGE_TOKENS, reasoning: j.reasoning }).catch((e) => {
+            if (e instanceof ModelError) cost += e.cost ?? 0;
+            throw e;
+          }),
+        );
         cost += c.cost ?? 0;
         try {
           const parsed = parseJudgeJson(c.text).filter((it) => labels.includes(it.label));
@@ -768,6 +775,9 @@ export class RunObject extends DurableObject<Env> {
         "SELECT test_id, judge, label, overall, reason FROM judgments",
       )
       .toArray();
+    const judgeErrors = this.sql
+      .exec<{ test_id: string; judge: string; error: string }>("SELECT test_id, judge, error FROM judge_calls WHERE error IS NOT NULL")
+      .toArray();
     const finished = view.status === "finished" ? this.buildResults() : null;
     return {
       ...view,
@@ -791,6 +801,7 @@ export class RunObject extends DurableObject<Env> {
             };
           }),
           errors: responses.filter((x) => x.test_id === t.id && x.error).map(({ model, error }) => ({ model, error })),
+          judge_errors: judgeErrors.filter((x) => x.test_id === t.id).map(({ judge, error }) => ({ judge, error })),
         };
       }),
       events: this.events(),

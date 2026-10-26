@@ -1,7 +1,10 @@
 // Model calls through OpenRouter's chat completions API, plus a mock for local runs and tests.
 // With no OPENROUTER_API_KEY (or MOCK_MODELS = "1") every call is answered by the mock.
 
-export type ModelInfo = { id: string; name: string; company: string };
+// `reasoning: false` turns thinking off for models that otherwise spend the whole token budget
+// thinking and never answer (Mistral Large 4, 2026-10-26). Leave it unset for models whose
+// reasoning can't be disabled (Grok 4.7 returns 400).
+export type ModelInfo = { id: string; name: string; company: string; reasoning?: false };
 
 import type { PersonObject } from "./person.ts";
 import type { RegistryObject } from "./registry.ts";
@@ -30,9 +33,8 @@ const DEFAULT_LINEUP: ModelInfo[] = [
 ];
 const DEFAULT_JUDGES: ModelInfo[] = [
   { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek" },
-  { id: "mistralai/mistral-large-4-0", name: "Mistral Large 4", company: "Mistral" },
+  { id: "mistralai/mistral-large-4-0", name: "Mistral Large 4", company: "Mistral", reasoning: false },
   { id: "x-ai/grok-4.7", name: "Grok 4.7", company: "xAI" },
-  { id: "moonshotai/kimi-k3.1-pro", name: "Kimi K3.1 Pro", company: "Moonshot AI" },
 ];
 
 // Claude Code plan mode: the host's Agent tool model aliases. Ids are prefixed so they never
@@ -70,6 +72,18 @@ export function pickJudges(env: Env, lineup: ModelInfo[]): ModelInfo[] {
 
 export const isMock = (env: Env) => env.MOCK_MODELS === "1" || !env.OPENROUTER_API_KEY;
 
+// A failed call. `retry: false` when trying again would fail the same way (the model used the
+// whole token budget), and `cost` is what the failed call still billed.
+export class ModelError extends Error {
+  readonly retry: boolean;
+  readonly cost: number | null;
+  constructor(message: string, retry = true, cost: number | null = null) {
+    super(message);
+    this.retry = retry;
+    this.cost = cost;
+  }
+}
+
 export type Completion = {
   text: string;
   duration_ms: number;
@@ -82,7 +96,7 @@ export async function complete(
   env: Env,
   model: string,
   prompt: string,
-  opts: { maxTokens: number; system?: string; timeoutMs?: number },
+  opts: { maxTokens: number; system?: string; timeoutMs?: number; reasoning?: false },
 ): Promise<Completion> {
   const started = Date.now();
   if (isMock(env)) return mockComplete(model, prompt, started);
@@ -101,6 +115,7 @@ export async function complete(
         { role: "user", content: prompt },
       ],
       max_tokens: opts.maxTokens,
+      ...(opts.reasoning === false ? { reasoning: { enabled: false } } : {}),
       usage: { include: true },
       // Only providers that don't store or train on prompts: these are people's real tasks.
       provider: { data_collection: "deny" },
@@ -113,7 +128,13 @@ export async function complete(
   }
   if (body.error) throw new Error(`OpenRouter: ${body.error.message ?? "error"}`);
   const text = body.choices?.[0]?.message?.content;
-  if (typeof text !== "string" || !text.trim()) throw new Error("OpenRouter: empty answer");
+  if (typeof text !== "string" || !text.trim()) {
+    const cost = body.usage?.cost ?? null;
+    if (body.choices?.[0]?.finish_reason === "length") {
+      throw new ModelError(`ran out of tokens before answering (${body.usage?.completion_tokens ?? "?"} used, mostly thinking)`, false, cost);
+    }
+    throw new ModelError("OpenRouter: empty answer", true, cost);
+  }
   return {
     text: text.trim(),
     duration_ms: Date.now() - started,

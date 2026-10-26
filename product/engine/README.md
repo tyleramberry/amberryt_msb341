@@ -44,7 +44,10 @@ make that model fail on it.
 ## Before a real run
 
 1. `npm run check-models` to confirm the lineup and judge ids in `wrangler.jsonc` still exist on
-   OpenRouter (and see their prices). Update `LINEUP` / `JUDGE_POOL` there if not.
+   OpenRouter (and see their prices). Update `LINEUP` / `JUDGE_POOL` there if not. With a key in
+   `.env` it also sends each judge one small judge prompt and fails on any judge that doesn't
+   answer. A judge that thinks away its whole token budget gets `"reasoning": false` in
+   `JUDGE_POOL`, unless its reasoning can't be turned off.
 2. Create an OpenRouter key with a hard credit limit, then `npx wrangler secret put OPENROUTER_API_KEY`.
 3. `npm run deploy`. The Durable Object migrations (`v1`, `v2`) run on deploy.
 

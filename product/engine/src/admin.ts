@@ -23,7 +23,7 @@ async function dumps(env: Env, limit = 200): Promise<RunDump[]> {
   return Promise.all(ids.slice(0, limit).map((r) => runStub(env, r.run_id).dump() as Promise<RunDump>));
 }
 
-const nameOf = (d: RunDump, id: string | null) => (id ? (d.lineup.find((m) => m.id === id)?.name ?? id) : "");
+const nameOf = (d: RunDump, id: string | null) => (id ? ([...d.lineup, ...d.judges].find((m) => m.id === id)?.name ?? id) : "");
 const html = (body: string) =>
   new Response(body, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 
@@ -59,7 +59,10 @@ function runPage(d: RunDump) {
           <div class="body">${a.text ? markdown(a.text) : "<em>no answer</em>"}</div></div>`;
         })
         .join("");
-      const errors = t.errors.map((e) => `<li>${esc(nameOf(d, e.model))}: ${esc(e.error ?? "")}</li>`).join("");
+      const errors = [
+        ...t.errors.map((e) => `<li>${esc(nameOf(d, e.model))}: ${esc(e.error ?? "")}</li>`),
+        ...t.judge_errors.map((e) => `<li>Judge ${esc(nameOf(d, e.judge))}: ${esc(e.error)}</li>`),
+      ].join("");
       return `<section class="card task">
       <div class="muted">Task ${i + 1} · ${esc(t.category)} · ${esc(t.status)}</div>
       <h2>${esc(t.title)}</h2>
