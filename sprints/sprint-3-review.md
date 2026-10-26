@@ -42,7 +42,7 @@ The work matches the goal on all four "Done looks like" items. A live link exist
 
 *The builder's own answers; typos fixed at the builder's request.*
 
-**Did you hit the goal?** Yes, I hit the goal entirely. I built a hosted MCP server that my wife accessed in her own Claude desktop app, and ran a test end to end. The product helped her choose 2 tasks, make evals, and ran 3 different models, then had her and a judge agent grade the output blindly to see which model handles each task best. The pivot is recorded, and all the code is in the repo.
+**Did you hit the goal?** Yes, I hit the goal entirely. I built a hosted MCP server that my wife accessed in her own Claude desktop app, and ran a test end to end. The product helped her choose 2 tasks and make evals, then ran 3 different models and had her and a judge agent grade the output blindly to see which model handles each task best. The pivot is recorded, and all the code is in the repo.
 
 **What did the report show you?** I expected all of this in the report. It needs to be updated because it says the X research is not seen although it is. It also says my wife's run ended in a tie although she saw that Sonnet was her preference.
 
