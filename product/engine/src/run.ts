@@ -6,7 +6,7 @@ import { DurableObject } from "cloudflare:workers";
 import { blind, report, type Judgment, type Rating, type Response, type Test } from "./bench.ts";
 import { coach, LIMITS, scrubPersonalInfo, scrubSelfId, type CoachingNote } from "./coach.ts";
 import { complete, isMock, ModelError, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
-import { CLAUDE_CODE_CAVEAT, judgePrompt, MODEL_SYSTEM, modelPrompt, subagentPrompt } from "./prompts.ts";
+import { CLAUDE_CODE_CAVEAT, enforceRules, judgePrompt, MODEL_SYSTEM, modelPrompt, subagentPrompt } from "./prompts.ts";
 
 export type Runner = "openrouter" | "claude_code";
 export type RunStatus = "draft" | "running" | "ready" | "finished" | "failed";
@@ -402,7 +402,8 @@ export class RunObject extends DurableObject<Env> {
   }
 
   private async judge(t: Test, j: ModelInfo) {
-    const prompt = judgePrompt(t, this.blindAnswers(t.id));
+    const answers = this.blindAnswers(t.id);
+    const prompt = judgePrompt(t, answers);
     const labels = Object.keys(this.labelsFor(t.id));
     let cost = 0;
     try {
@@ -419,7 +420,7 @@ export class RunObject extends DurableObject<Env> {
         cost += c.cost ?? 0;
         try {
           const parsed = parseJudgeJson(c.text).filter((it) => labels.includes(it.label));
-          if (parsed.length) items = parsed;
+          if (parsed.length) items = enforceRules(t, answers, parsed);
         } catch {
           // fall through to the second attempt
         }
