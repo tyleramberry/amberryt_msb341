@@ -118,6 +118,9 @@ export function createServer(
   );
   const ratingUrl = (runId: string) => `${origin}/r/${runId}`;
   const readOnly = { readOnlyHint: true, openWorldHint: false };
+  // Writing tools only add to or update the person's own run; none deletes anything. Hosts such as
+  // ChatGPT still ask before any tool that isn't read-only, so these never claim readOnlyHint.
+  const writes = (idempotentHint: boolean, openWorldHint = false) => ({ readOnlyHint: false, destructiveHint: false, idempotentHint, openWorldHint });
 
   server.registerTool(
     "check_connection",
@@ -153,6 +156,7 @@ export function createServer(
         from_run: z.string().optional().describe("A previous run_id whose test tasks should be copied into this one."),
         fresh: z.boolean().optional().describe("True to start a new benchmark even though an unfinished one exists."),
       }),
+      annotations: writes(false),
     },
     async ({ label, from_run, fresh }) => {
       // Through a personal link, offer to pick up an unfinished benchmark instead of starting over.
@@ -236,6 +240,7 @@ export function createServer(
         tests: z.array(testInput).describe(`The full set so far, 1 to ${LIMITS.maxTests}, in order.`),
         person_done: z.boolean().optional().describe("True if the person said they have no more tasks to add."),
       }),
+      annotations: writes(true),
     },
     async ({ run_id, tests, person_done }) => {
       const run = await openRun(env, run_id);
@@ -289,6 +294,7 @@ export function createServer(
           .optional()
           .describe('Claude Code only: "claude_code" if the person chose to run on their own Claude plan. Leave out otherwise.'),
       }),
+      annotations: writes(true, true),
     },
     async ({ run_id, person_confirmed, models, runner }) => {
       if (!person_confirmed) {
@@ -407,6 +413,7 @@ export function createServer(
           }),
         ),
       }),
+      annotations: writes(false),
     },
     async ({ run_id, answers }) => {
       const run = await openRun(env, run_id);
@@ -522,6 +529,7 @@ export function createServer(
         worst: z.string().optional().describe("The letter they picked as worst. Leave out if they said the rest were all fine."),
         note: z.string().optional().describe("Anything they said about the answers, in their words."),
       }),
+      annotations: writes(true),
     },
     async ({ run_id, test_id, best, worst, note }) => {
       const run = await openRun(env, run_id);
@@ -675,6 +683,7 @@ export function createServer(
         "Call when the person wants their MySI test tasks re-run on a new AI model. Not built yet: records their " +
         "interest and says it's coming.",
       inputSchema: z.object({ run_id: z.string(), model: z.string().optional().describe("The new model they named.") }),
+      annotations: writes(false),
     },
     async ({ run_id, model }) => {
       if (RUN_ID.test(run_id)) await env.REGISTRY.get(env.REGISTRY.idFromName("global")).recordInterest(run_id, model ?? "");

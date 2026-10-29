@@ -49,6 +49,7 @@ describe("every tool", () => {
     const ro = new Set(["check_connection", "get_task_ideas", "check_run", "get_answers", "get_results", "which_model", "get_run_plan"]);
     for (const t of body.result.tools) {
       assert.equal(t.annotations?.readOnlyHint === true, ro.has(t.name), `${t.name} readOnlyHint`);
+      if (!ro.has(t.name)) assert.equal(t.annotations?.destructiveHint, false, `${t.name} destructiveHint`);
     }
     assert.deepEqual(body.result.tools.map((t) => t.name).sort(),
       [...ro, "start_benchmark", "save_tests", "run_models", "submit_rating", "rerun_test", "submit_answers"].sort());
