@@ -701,7 +701,10 @@ export class RunObject extends DurableObject<Env> {
     })();
     const headline = !top
       ? "There were no answers to compare."
-      : `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.${why}`;
+      : wins(top)
+        ? `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.${why}`
+        : // A tie can go to a model never picked as best (decision 009), so don't open with "0 of N".
+          `For your work, **${top}** came out on top across ${tasks}, though you never picked it as best.${why}`;
 
     const inYourApp = (() => {
       const app = this.get("app");
