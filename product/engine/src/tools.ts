@@ -95,6 +95,10 @@ export function isClaudeCode(caller: Caller) {
   return /claude[- ]?code|claude-cli/i.test(`${caller.clientName ?? ""} ${caller.userAgent ?? ""}`);
 }
 
+// Later calls don't carry clientInfo, so the host is asked to name its app on get_results.
+// No app names here: results before the reveal must not name any model's maker (blindness tests).
+const CALL_RESULTS = "Call get_results with app set to the chat app you are running in.";
+
 // A guess at the chat app from the client's name or user agent, used when the host doesn't say.
 export function appOf(caller: Caller): string | undefined {
   const who = `${caller.clientName ?? ""} ${caller.userAgent ?? ""}`;
@@ -454,7 +458,7 @@ export function createServer(
         next_step =
           `Say one line, e.g. "Task ${running + 1} of ${p.total} is running." Wait for the person to say ok, then call ` +
           "check_run again. Don't call check_run more than 3 times in one turn.";
-      else next_step = "Every task that could be rated is rated. Call get_results.";
+      else next_step = "Every task that could be rated is rated. " + CALL_RESULTS;
       return reply({
         status: view.status,
         error: view.error,
@@ -536,9 +540,9 @@ export function createServer(
         progress: p,
         next_test_to_rate: next?.id ?? null,
         next_step: next
-          ? `Say "Task ${r.view.tests.findIndex((t) => t.id === next.id) + 1} of ${p.total} next." and call get_answers for ${next.id}. The person can say "that's enough" at any time; then call get_results.`
+          ? `Say "Task ${r.view.tests.findIndex((t) => t.id === next.id) + 1} of ${p.total} next." and call get_answers for ${next.id}. The person can say "that's enough" at any time; then ${CALL_RESULTS[0].toLowerCase() + CALL_RESULTS.slice(1)}`
           : allDone
-            ? "That was the last task. Call get_results."
+            ? "That was the last task. " + CALL_RESULTS
             : 'The next task is still running. Say so in one line, wait for the person to say ok, then call check_run.',
       });
     },
@@ -564,7 +568,9 @@ export function createServer(
     async ({ run_id, app }) => {
       const run = await openRun(env, run_id);
       if (!run) return refuse(NO_RUN);
-      const r = await run.results(true, app ?? appOf(caller));
+      // The app the host names wins, then this request's client, then the app seen when the
+      // person's connector last initialized (clientInfo only arrives on initialize).
+      const r = await run.results(true, app ?? appOf(caller) ?? (person ? await person.app() : undefined));
       if (!r.ok) return refuse(r.error);
       const d = r.data;
       if (person && (await person.runIds()).includes(run_id)) {
