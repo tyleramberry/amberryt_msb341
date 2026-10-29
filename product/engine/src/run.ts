@@ -3,7 +3,7 @@
 // small step per alarm, saving every answer as it returns so a retried alarm resumes.
 
 import { DurableObject } from "cloudflare:workers";
-import { APP_VENDOR, inYourApp, instructionSnippet, pickCriteria, snippetWhere } from "./actionable.ts";
+import { APP_VENDOR, inYourApp, instructionSnippet, snippetWhere } from "./actionable.ts";
 import { blind, report, type Judgment, type Rating, type Response, type Test } from "./bench.ts";
 import { coach, LIMITS, scrubPersonalInfo, scrubSelfId, type CoachingNote } from "./coach.ts";
 import { complete, isMock, ModelError, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
@@ -664,6 +664,7 @@ export class RunObject extends DurableObject<Env> {
     const { winner, tiedWith } = lead(rep.rows);
     const top = winner?.model ?? null;
     const categories = [...new Set(tests.map((t) => t.category))].sort();
+    const catRows = new Map<string, typeof rep.rows>();
     const byCategory = categories.map((c) => {
       const catTests = tests.filter((t) => t.category === c);
       const sub = report({
@@ -675,6 +676,7 @@ export class RunObject extends DurableObject<Env> {
         forPerson: true,
       });
       const catHuman = human.some((h) => catTests.some((t) => t.id === h.eval_id));
+      if (catHuman) catRows.set(c, sub.rows);
       return { category: c, winner: catHuman ? (lead(sub.rows).winner?.model ?? null) : null, tests: catTests.length };
     });
     const rated_categories = byCategory.filter((c) => c.winner !== null);
@@ -706,12 +708,20 @@ export class RunObject extends DurableObject<Env> {
           ` (MySI benchmark, ${month}).`
         : `For my kind of work (${rated_categories.map((c) => c.category).join(", ")}), ${top} did best in my own blind test (MySI benchmark, ${month}).`;
 
-    const snippet = instructionSnippet({
-      criteria: pickCriteria(tests.map((t) => ({ criteria: t.criteria, rated: human.some((h) => h.eval_id === t.id) }))),
-      categories: rated_categories.map((c) => c.category),
-      model: yourApp.use_model,
-      month,
-    });
+    // Each kind of work names the model to use for it in the person's app.
+    const snippet = !top
+      ? ""
+      : instructionSnippet({
+          groups: categories.map((c) => {
+            const rows = catRows.get(c);
+            return {
+              category: c,
+              model: rows ? inYourApp(rows, idOf, app, this.runner() === "claude_code").use_model : null,
+              tests: tests.filter((t) => t.category === c),
+            };
+          }),
+          month,
+        });
 
     const reveal = tests.map((t) => {
       const r = human.find((h) => h.eval_id === t.id);

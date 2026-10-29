@@ -279,9 +279,12 @@ describe("the actionable result (Sprint 4)", () => {
     assert.ok(d.rows.some((row) => row.model === d.use_model));
     const lines = d.instruction_snippet.split("\n");
     assert.match(lines[0], /^How I like answers \(from my own MySI blind test, \w{3} \d{4}\):$/);
-    // The rated task's lines come first, then the rest round-robin; the repeat ("Under 50 words") is dropped.
-    assert.deepEqual(lines.slice(1, -1), ["- under 50 words.", "- Groups stops by street", "- No jargon", "- Says Friday and a time window"]);
-    assert.equal(lines[lines.length - 1], `For planning, I use ${d.use_model}.`);
+    // Each kind of work keeps its own lines (QA bug 8); the rated kind comes first and names a model.
+    assert.equal(lines[1], `When I ask for help with planning (I use ${d.use_model}):`);
+    assert.deepEqual(lines.slice(2, 4), ["- under 50 words.", "- Groups stops by street"]);
+    assert.ok(lines.includes("When I ask for help with writing:"), "unrated kinds have no model");
+    assert.ok(lines.includes("- Says Friday and a time window"));
+    assert.ok(!lines.includes("- Under 50 words"), "repeat dropped");
     assert.match(d.snippet_where, /ChatGPT.*Custom instructions/);
     const page = await (await fetch(`${base}/r/${id}`)).text();
     assert.match(page, /Use it in your app/);

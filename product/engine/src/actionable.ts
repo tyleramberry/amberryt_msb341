@@ -36,35 +36,53 @@ export function inYourApp(rows: Row[], idOf: (model: string) => string, app: str
   };
 }
 
-// Up to SNIPPET_LINES of the person's own criteria: all rated tests' lines before any unrated
-// one's, each group taken round-robin in task order so one long task doesn't crowd out the rest;
-// repeats dropped.
-export function pickCriteria(tests: { criteria: string[]; rated: boolean }[], max = SNIPPET_LINES) {
+export type SnippetGroup = { category: string; model: string | null; tests: { criteria: string[] }[] };
+
+const norm = (c: string) => c.replace(/\s+/g, " ").trim();
+const keyOf = (c: string) => c.toLowerCase().replace(/[.!;:,\s]+$/, "");
+
+// One task's criteria can be specific to that task ("Under 50 words"), so the snippet keeps each
+// kind of work's lines under its own heading rather than one list for every chat (QA bug 8).
+// Up to SNIPPET_LINES in all: kinds the person rated first (model set), then the rest; lines are
+// taken one kind at a time, and within a kind one task at a time, so nothing crowds out the rest.
+// Repeats are dropped.
+export function snippetGroups(groups: SnippetGroup[], max = SNIPPET_LINES) {
+  const ordered = [...groups.filter((g) => g.model), ...groups.filter((g) => !g.model)];
+  const queues = ordered.map((g) => {
+    const depth = Math.max(0, ...g.tests.map((t) => t.criteria.length));
+    const q: string[] = [];
+    for (let k = 0; k < depth; k++) for (const t of g.tests) if (t.criteria[k] && norm(t.criteria[k])) q.push(norm(t.criteria[k]));
+    return q;
+  });
+  const picked: string[][] = ordered.map(() => []);
   const seen = new Set<string>();
-  const out: string[] = [];
-  for (const group of [tests.filter((t) => t.rated), tests.filter((t) => !t.rated)]) {
-    const depth = Math.max(0, ...group.map((t) => t.criteria.length));
-    for (let k = 0; k < depth; k++) {
-      for (const t of group) {
-        if (out.length >= max) return out;
-        const c = t.criteria[k]?.replace(/\s+/g, " ").trim();
-        if (!c) continue;
-        const key = c.toLowerCase().replace(/[.!;:,\s]+$/, "");
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(scrubPersonalInfo(c).text);
+  let total = 0;
+  for (let more = true; more && total < max; ) {
+    more = false;
+    queues.forEach((q, gi) => {
+      while (q.length && total < max) {
+        const c = q.shift()!;
+        if (seen.has(keyOf(c))) continue;
+        seen.add(keyOf(c));
+        picked[gi].push(scrubPersonalInfo(c).text);
+        total++;
+        more = true;
+        break;
       }
-    }
+      if (q.length) more = true;
+    });
   }
-  return out;
+  return ordered.map((g, gi) => ({ category: g.category, model: g.model, criteria: picked[gi] })).filter((g) => g.criteria.length || g.model);
 }
 
-export function instructionSnippet(o: { criteria: string[]; categories: string[]; model: string | null; month: string }) {
-  if (!o.model) return "";
-  const lines = [`How I like answers (from my own MySI blind test, ${o.month}):`, ...o.criteria.map((c) => `- ${c}`)];
-  const cats = o.categories;
-  const kinds = !cats.length ? "my kind of work" : cats.length === 1 ? cats[0] : `${cats.slice(0, -1).join(", ")} and ${cats[cats.length - 1]}`;
-  lines.push(`For ${kinds}, I use ${o.model}.`);
+export function instructionSnippet(o: { groups: SnippetGroup[]; month: string }) {
+  const groups = snippetGroups(o.groups);
+  if (!groups.some((g) => g.model)) return "";
+  const lines = [`How I like answers (from my own MySI blind test, ${o.month}):`];
+  for (const g of groups) {
+    lines.push(`When I ask for help with ${g.category}${g.model ? ` (I use ${g.model})` : ""}:`);
+    lines.push(...g.criteria.map((c) => `- ${c}`));
+  }
   return lines.join("\n");
 }
 
