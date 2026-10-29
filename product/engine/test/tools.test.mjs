@@ -264,6 +264,31 @@ describe("get_results", () => {
   });
 });
 
+describe("the actionable result (Sprint 4)", () => {
+  test("results name the model to use in the person's app and a snippet of their own criteria", async () => {
+    const id = await runToReady([
+      T({ criteria: ["Under 50 words", "Says Friday and a time window"] }),
+      T({ category: "planning", title: "Plan routes", criteria: ["under 50 words.", "Groups stops by street"] }),
+      T({ category: "explaining", title: "Explain aeration", criteria: ["No jargon"] }),
+    ]);
+    await tool("submit_rating", { run_id: id, test_id: "t2", best: "A", worst: "B" });
+    const r = await tool("get_results", { run_id: id, app: "chatgpt" });
+    assert.equal(r.isError, false, r.text);
+    const d = r.data;
+    assert.ok(d.use_model, "always one model to use");
+    assert.ok(d.rows.some((row) => row.model === d.use_model));
+    const lines = d.instruction_snippet.split("\n");
+    assert.match(lines[0], /^How I like answers \(from my own MySI blind test, \w{3} \d{4}\):$/);
+    // The rated task's lines come first, then the rest round-robin; the repeat ("Under 50 words") is dropped.
+    assert.deepEqual(lines.slice(1, -1), ["- under 50 words.", "- Groups stops by street", "- No jargon", "- Says Friday and a time window"]);
+    assert.equal(lines[lines.length - 1], `For planning, I use ${d.use_model}.`);
+    assert.match(d.snippet_where, /ChatGPT.*Custom instructions/);
+    const page = await (await fetch(`${base}/r/${id}`)).text();
+    assert.match(page, /Use it in your app/);
+    assert.ok(page.includes("How I like answers"), "page shows the snippet");
+  });
+});
+
 describe("rating page", () => {
   test("unknown ids are 404; a bad form post does not 500", async () => {
     assert.equal((await fetch(`${base}/r/AAAAAAAAAAAAAAAAAAAAAA`)).status, 404);

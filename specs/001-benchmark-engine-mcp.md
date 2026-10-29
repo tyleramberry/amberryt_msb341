@@ -243,9 +243,10 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
     `app` is `claude`, `chatgpt` or `gemini` and the lineup has one; otherwise the winner. In
     Claude Code plan mode it is the winner.
   - `instruction_snippet`: plain text, at most 6 bullet lines plus a header and a model line,
-    built only from the person's own "what a great answer gets right" lines. Rated tests come
-    first, in task order; lines are taken round-robin (each task's first line, then each task's
-    second, and so on), so one long task doesn't crowd out the rest. Exact repeats (ignoring case
+    built only from the person's own "what a great answer gets right" lines. Every rated test's
+    lines come before any unrated test's; within each group lines are taken round-robin in task
+    order (each task's first line, then each task's second, and so on), so one long task doesn't
+    crowd out the rest. Exact repeats (ignoring case
     and end punctuation) are dropped. Emails and phone numbers are scrubbed as in `save_tests`.
     No model call writes it, so the same run always gives the same snippet. Shape:
 

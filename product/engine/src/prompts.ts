@@ -84,7 +84,9 @@ When they answer, call submit_rating.`;
 
 export const RESULTS_NEXT_STEP = `Say the headline first, then in_your_app if it is set. Show the ranking table. If the winner
 differs by kind of work, say so in one sentence. Then reveal, task by task, which AI wrote the answer they picked as best. Then the
-trust lines, then the report link.
+trust lines.
+Then "Use it in your app": say "Pick use_model in this app." Show instruction_snippet exactly as given, in a code block, and say
+snippet_where. Don't rewrite the snippet. Then the report link.
 Then ask: "Want me to remember this?" If yes, and you have a memory feature, save memory_line.
 If not, offer memory_line for them to copy. Finish with: "When a new model comes out, I can
 re-run your test on it. Just ask."`;
