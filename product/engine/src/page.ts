@@ -113,16 +113,41 @@ export function shell(title: string, body: string, extraHead = "") {
 <body>${body}</body></html>`;
 }
 
-// The text the "Use it in Claude" button copies. Claude Code can add the connector itself; a
-// chat app can't change its own settings, so there Claude walks the person through it.
+// Short steps per chat app (spec 002, Step 0). The prompt carries them so the app can walk the
+// person through, and the setup page shows the same lines. ChatGPT's menus moved during 2026, so
+// its steps name the feature, not every menu; Gemini is unverified with a server that has no sign-in.
+export const APP_STEPS = [
+  {
+    app: "Claude",
+    steps: "In claude.ai or the Claude app: Settings, then Connectors, then Add custom connector. Name it MySI and paste your link.",
+  },
+  {
+    app: "ChatGPT",
+    steps:
+      "On chatgpt.com, with a paid plan (Plus or higher): turn on Developer mode in Settings, then create a new app (or connector) named MySI, paste your link, and choose No authentication. " +
+      "In a new chat, add MySI from the + menu. When ChatGPT asks you to approve a MySI step, choose to remember it for this chat, or it will ask at every step. ChatGPT moves these menus often, so the names may differ a little.",
+  },
+  {
+    app: "Gemini",
+    steps:
+      "On gemini.google.com (US, 18 or older, personal Google account, Keep Activity on): Settings, then Connected Apps, then under Custom apps, Add a custom app. Paste your link and click Next. " +
+      "Not yet tested with MySI: Gemini may ask for a sign-in that MySI doesn't have. If it won't connect, use Claude or ChatGPT.",
+  },
+];
+
+// The text the "Get my MySI link" button copies. Claude Code can add the connector itself; a
+// chat app can't change its own settings, so there the app walks the person through it.
 export function connectPrompt(url: string) {
-  return `Please add MySI to my Claude as a connector. MySI is a remote MCP server at this link, which is my personal key, so don't repeat it back or share it:
+  return `Please add MySI to this chat app as a connector. MySI is a remote MCP server at this link, which is my personal key, so don't repeat it back or share it:
 
 ${url}
 
-If you can add connectors yourself (in Claude Code: claude mcp add --transport http --scope user mysi <the link>), do it, then call MySI's check_connection tool to make sure it works. If you're running in a cloud session rather than on my own computer, don't add it there: tell me to open Claude on my computer and paste this again.
+If you can add connectors yourself (in Claude Code: claude mcp add --transport http --scope user mysi <the link>), do it, then call MySI's check_connection tool to make sure it works. If you're running in a cloud session rather than on my own computer, don't add it there: tell me to open the app on my computer and paste this again.
 
-If you can't, tell me how in a few short steps for the app I'm using. In claude.ai or the Claude app that's: Settings, then Connectors, then Add custom connector, name it MySI, and paste the link from this message. Then tell me to start a new chat and say "Find my best AI model."`;
+If you can't, tell me how in a few short steps for the app I'm using. Here are the steps for each app:
+${APP_STEPS.map((a) => `- ${a.app}: ${a.steps}`).join("\n")}
+
+Then tell me to start a new chat and say "Find my best AI model."`;
 }
 
 // One button: mint a personal link (decision 008) and copy the connect prompt. Without
@@ -130,12 +155,12 @@ If you can't, tell me how in a few short steps for the app I'm using. In claude.
 export function setupPage(origin: string, personalUrl?: string) {
   const prompt = personalUrl ? connectPrompt(personalUrl) : "";
   const body = personalUrl
-    ? `<p><strong>Copy this and paste it into Claude.</strong> It holds your own MySI link, so keep it private.
+    ? `<p><strong>Copy this and paste it into your chat app.</strong> It holds your own MySI link, so keep it private.
   This page won't show it again.</p>
   <textarea id="p" readonly rows="9">${esc(prompt)}</textarea>
   <p><button onclick="navigator.clipboard.writeText(document.getElementById('p').value);this.textContent='Copied'">Copy</button></p>`
-    : `<form method="post" action="/link" id="go"><button class="big">Use it in Claude</button></form>
-  <p id="done" class="done" hidden><strong>Copied.</strong> Paste it into Claude and send it. Claude will add MySI for you, or walk you through it in about 30 seconds.</p>
+    : `<form method="post" action="/link" id="go"><button class="big">Get my MySI link</button></form>
+  <p id="done" class="done" hidden><strong>Copied.</strong> Paste it into your chat app and send it. It will add MySI for you, or walk you through it in about a minute.</p>
   <script>
   document.getElementById("go").addEventListener("submit", (e) => {
     if (!navigator.clipboard || !window.ClipboardItem) return; // the form posts and shows the prompt instead
@@ -154,8 +179,11 @@ export function setupPage(origin: string, personalUrl?: string) {
     "MySI",
     `<main class="narrow">
   <h1>MySI</h1>
-  <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside Claude, in the chat you already use.</p>
+  <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside the chat app you already use: Claude, ChatGPT or Gemini.</p>
   ${body}
+  <h2>Adding it to your app</h2>
+  <ul>${APP_STEPS.map((a) => `<li><strong>${a.app}:</strong> ${esc(a.steps)}</li>`).join("")}</ul>
+  <p>Then start a new chat and say <strong>"Find my best AI model."</strong></p>
   <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"
   MySI is an early prototype: its maker can read your test tasks and picks to improve it.</p>
 </main>`,

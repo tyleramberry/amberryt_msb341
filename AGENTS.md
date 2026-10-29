@@ -32,7 +32,7 @@ and why.
 - **This sprint's goal (Sprint 3):** A working prototype of the personal benchmark: a live link,
   my wife builds her own tests through the product, and it ranks 3 to 5 models on them. See
   `sprints/sprint-3-plan.md`.
-- **Where to see it:** https://personal-bench.homeroom-app.workers.dev. Press "Use it in Claude"
+- **Where to see it:** https://personal-bench.homeroom-app.workers.dev. Press "Get my MySI link"
   for a personal connector link (decision 008). Engine code is `product/engine/`; lineup GPT-6.1
   Sol, Gemini 4 Argon, Claude Sonnet 5.5, judges from other vendors. Owner's log at `/admin`.
   My wife did the first outside run on 2026-10-24
