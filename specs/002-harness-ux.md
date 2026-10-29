@@ -215,7 +215,12 @@ which ranks on whatever was rated.
    fun part; the host gives it its own moment.
 5. **How much to trust it**, one or two lines, not the full caveat list: number of tasks, and
    "small gaps may be luck".
-6. **The report link** (`/r/<runId>`), which keeps the full table.
+6. **Use it in your app** (Sprint 4): the model to pick in the app they already use
+   (`use_model`) and a short `instruction_snippet` built from their own "what a great answer
+   gets right" lines, with `snippet_where` saying where to paste it. The host shows the snippet
+   in a code block so it copies cleanly, and doesn't rewrite it. Spec 001, Ranking, has the
+   rules.
+7. **The report link** (`/r/<runId>`), which keeps the full table.
 
 Then **remembering**, in three layers:
 
@@ -226,7 +231,8 @@ Then **remembering**, in three layers:
   host asks "Want me to remember that?" and, if yes, saves it with the app's own memory where
   the app has one. The host doesn't save without asking.
 - **The person remembers (offered).** The same line, ready to paste into custom instructions or a
-  note.
+  note, next to the instruction snippet, which carries their own criteria so the app answers the
+  way they rated.
 
 Last line from the host: "When a new model comes out, I can re-run your test on it. Just ask."
 (Re-runs are next scope; until then `rerun_test` says it's coming soon and records the interest.)
@@ -262,7 +268,7 @@ so ChatGPT and Claude ask fewer permission questions.
 | `check_run` | After `run_models`, and when the person says "check" | `run_id` | per-task status (running, ready to rate, rated), what to do next | yes |
 | `get_answers` | A task is ready to rate | `run_id`, `test_id?` (omitted = next one ready to rate) | task, blind answers A–C (more if the lineup is larger), display rules, page link, widget ref | yes |
 | `submit_rating` | Person picked best and worst | `run_id`, `test_id`, `best`, `worst?`, `note?` | saved, next task ready or not | no |
-| `get_results` | All rated, or the person asks to stop | `run_id`, `app` (the chat app the host runs in) | headline, table, by-category, reveal, trust lines, memory line, best model in your app, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
+| `get_results` | All rated, or the person asks to stop | `run_id`, `app` (the chat app the host runs in) | headline, table, by-category, reveal, trust lines, memory line, best model in your app, model to use and instruction snippet, report link. Reveals all labels and closes rating on the run, since rating after a reveal is not blind | no |
 | `which_model` | Later chats: "which AI for this?", "my results" | `task_description?` | best model for that kind of work, past benchmarks | yes |
 | `rerun_test` | "Test the new model on my stuff" | `run_id`, `model?` | Sprint 3: "coming soon", records interest | no |
 | `get_run_plan` | Claude Code plan mode only, after the person confirmed the test | `run_id` | one slot per test × model: `slot_id`, `model` (haiku, sonnet, opus), exact prompt to send | yes |
@@ -474,9 +480,11 @@ When they answer, call submit_rating.
 ### `get_results` → (`next_step`)
 
 ```
-Say the headline first. Show the ranking table. If the winner differs by kind of work, say so in
-one sentence. Then reveal, task by task, which AI wrote the answer they picked as best. Then the
-trust lines, then the report link.
+Say the headline first, then in_your_app if it is set. Show the ranking table. If the winner
+differs by kind of work, say so in one sentence. Then reveal, task by task, which AI wrote the
+answer they picked as best. Then the trust lines.
+Then "Use it in your app": say "Pick use_model in this app." Show instruction_snippet exactly as
+given, in a code block, and say snippet_where. Don't rewrite the snippet. Then the report link.
 Then ask: "Want me to remember this?" If yes, and you have a memory feature, save memory_line.
 If not, offer memory_line for them to copy. Finish with: "When a new model comes out, I can
 re-run your test on it. Just ask."

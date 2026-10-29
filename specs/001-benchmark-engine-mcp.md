@@ -89,7 +89,7 @@ later chat: "which AI should I use for this email?"
 | `check_run` | `{run_id}` | Run status (`draft`, `running`, `ready`, `finished`, `failed`) and each test's status (`queued`, `running`, `ready_to_rate`, `rated`), plus what to do next. | yes |
 | `get_answers` | `{run_id, test_id?}` | One test's prompt, context, criteria and answers labelled A, B, C, D, with display rules and the page link. Omitted `test_id` = the next test ready to rate. | yes |
 | `submit_rating` | `{run_id, test_id, best, worst?, note?}` | Saved; whether the next test is ready. Re-rating overwrites. `best` = `worst` is refused. | no |
-| `get_results` | `{run_id, app?}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, in_your_app, report_url, cost_usd}`. One winner: ties go to the cheaper, faster model (decision 009). `app` is the chat app the host runs in; `in_your_app` names the best model usable there. Ranks on whatever is rated; if nothing is rated, says so and asks the person to rate at least one test. Reveals every label and marks the run `finished`, so no more ratings. | yes* |
+| `get_results` | `{run_id, app?}` | `{headline, markdown, rows, by_category, reveal, trust, memory_line, in_your_app, use_model, instruction_snippet, snippet_where, report_url, cost_usd}`. One winner: ties go to the cheaper, faster model (decision 009). `app` is the chat app the host runs in; `in_your_app` names the best model usable there, `use_model` is that model's name, and `instruction_snippet` is a few lines built from the person's own criteria to paste into the app's custom instructions (see Ranking). Ranks on whatever is rated; if nothing is rated, says so and asks the person to rate at least one test. Reveals every label and marks the run `finished`, so no more ratings. | yes* |
 | `which_model` | `{task_description?, run_id?}` | The person's winner for the closest kind of work, or "you haven't tested this kind of work yet", and their past benchmarks with links. Called through a personal connector URL, it answers from all of that person's runs; through plain `/mcp`, it needs a `run_id` and answers from that run only. | yes |
 | `rerun_test` | `{run_id, model?}` | Sprint 3 stub: says it's coming soon and records the interest. | no |
 
@@ -237,6 +237,30 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
 - `get_results` takes `app` (`claude`, `chatgpt`, `gemini`, `other`), which the host sets to the
   app it is running in, falling back to the client's name. The result adds `in_your_app`: whether
   the winner runs in that app and, if not, the best model that does and its rank (decision 009).
+- **The actionable result (Sprint 4).** Every finished run ends with one thing to do in the app
+  the person already uses:
+  - `use_model`: the model to pick there. The best-ranked model from the app's own company when
+    `app` is `claude`, `chatgpt` or `gemini` and the lineup has one; otherwise the winner. In
+    Claude Code plan mode it is the winner.
+  - `instruction_snippet`: plain text, at most 6 bullet lines plus a header and a model line,
+    built only from the person's own "what a great answer gets right" lines. Rated tests come
+    first, in task order; lines are taken round-robin (each task's first line, then each task's
+    second, and so on), so one long task doesn't crowd out the rest. Exact repeats (ignoring case
+    and end punctuation) are dropped. Emails and phone numbers are scrubbed as in `save_tests`.
+    No model call writes it, so the same run always gives the same snippet. Shape:
+
+    ```
+    How I like answers (from my own MySI blind test, Oct 2026):
+    - No em dashes
+    - Under 150 words
+    For writing and math, I use Claude Sonnet 5.5.
+    ```
+  - `snippet_where`: one sentence on where to paste it in that app (ChatGPT: Settings,
+    Personalization, Custom instructions; Claude: Settings, Profile, personal preferences;
+    Gemini: Settings, Saved info). For `other` or no app, it says to paste it into whatever
+    custom instructions or memory the app has.
+  - The results page shows the same model and snippet under "Use it in your app", with a copy
+    button.
 - Columns: rank, model, your score, your picks for best, median time, and a new **cost per
   answer** (the skill couldn't measure cost; the API can). No judge column. The chat table and the
   rating page show the same columns.
