@@ -687,10 +687,17 @@ export class RunObject extends DurableObject<Env> {
     const why = (() => {
       if (!winner || !tiedWith.length) return "";
       const group = [winner, ...tiedWith];
-      const cheapest = group.every((r) => winner.cost === null || r.cost === null || winner.cost <= r.cost);
-      const fastest = group.every((r) => winner.median_s === null || r.median_s === null || winner.median_s <= r.median_s);
+      // "Cheapest" or "fastest" only when the group actually differs on it, so equal costs
+      // (such as $0 on mock models) don't get credited as a win.
+      const leads = (v: (r: (typeof group)[number]) => number | null) => {
+        const xs = group.map(v).filter((x): x is number => x !== null);
+        const w = v(winner);
+        return w !== null && xs.length > 1 && xs.every((x) => w <= x) && xs.some((x) => x !== w);
+      };
+      const cheapest = leads((r) => r.cost);
+      const fastest = leads((r) => r.median_s);
       const how = cheapest && fastest ? "the cheapest and fastest" : cheapest ? "the cheapest" : fastest ? "the fastest" : "the best mix of cost and speed";
-      return ` It tied with ${tiedWith.map((r) => r.model).join(" and ")} on your picks and wins because it was ${how} of them.`;
+      return ` It tied with ${tiedWith.map((r) => r.model).join(" and ")} on your score, so it's listed first because it was ${how} of them.`;
     })();
     const headline = !top
       ? "There were no answers to compare."
