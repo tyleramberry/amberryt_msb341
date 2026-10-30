@@ -3,6 +3,7 @@
 // small step per alarm, saving every answer as it returns so a retried alarm resumes.
 
 import { DurableObject } from "cloudflare:workers";
+import { APP_VENDOR, inYourApp, instructionSnippet, snippetWhere } from "./actionable.ts";
 import { blind, report, type Judgment, type Rating, type Response, type Test } from "./bench.ts";
 import { coach, LIMITS, scrubPersonalInfo, scrubSelfId, type CoachingNote } from "./coach.ts";
 import { complete, isMock, ModelError, parseJudgeJson, type Env, type ModelInfo } from "./models.ts";
@@ -17,9 +18,6 @@ export type DraftTest = Omit<Test, "id">;
 type Fail = { ok: false; error: string };
 type Ok<T> = { ok: true } & T;
 
-// Chat apps whose own models are in a lineup, keyed by get_results' `app` input.
-export const APP_VENDOR: Record<string, string> = { claude: "anthropic", chatgpt: "openai", gemini: "google" };
-const APP_NAME: Record<string, string> = { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini" };
 
 const MAX_IN_FLIGHT = 4;
 const ANSWER_TOKENS = 2000;
@@ -666,6 +664,7 @@ export class RunObject extends DurableObject<Env> {
     const { winner, tiedWith } = lead(rep.rows);
     const top = winner?.model ?? null;
     const categories = [...new Set(tests.map((t) => t.category))].sort();
+    const catRows = new Map<string, typeof rep.rows>();
     const byCategory = categories.map((c) => {
       const catTests = tests.filter((t) => t.category === c);
       const sub = report({
@@ -677,6 +676,7 @@ export class RunObject extends DurableObject<Env> {
         forPerson: true,
       });
       const catHuman = human.some((h) => catTests.some((t) => t.id === h.eval_id));
+      if (catHuman) catRows.set(c, sub.rows);
       return { category: c, winner: catHuman ? (lead(sub.rows).winner?.model ?? null) : null, tests: catTests.length };
     });
     const rated_categories = byCategory.filter((c) => c.winner !== null);
@@ -696,20 +696,9 @@ export class RunObject extends DurableObject<Env> {
       ? "There were no answers to compare."
       : `For your work, **${top}** came out on top: you picked it as best on ${wins(top)} of ${tasks}.${why}`;
 
-    const inYourApp = (() => {
-      const app = this.get("app");
-      const vendor = app ? APP_VENDOR[app] : undefined;
-      if (!app || !vendor || !top || this.runner() === "claude_code") return null;
-      const appName = APP_NAME[app];
-      const idOf = (model: string) => lineup.find((m) => m.name === model)?.id ?? model;
-      const i = rep.rows.findIndex((r) => idOf(r.model).startsWith(vendor + "/"));
-      if (i === 0) return `${top} is made for ${appName}, the app you already use, so you can switch to it there without changing apps.`;
-      if (i < 0) return `None of these models run in ${appName}. To use ${top}, you'd need an app that can use it.`;
-      return (
-        `${top} doesn't run in ${appName}. The best one you can use there is ${rep.rows[i].model} (ranked ${i + 1}). ` +
-        `To use ${top} you'd need to switch apps, or use an app that can run models from any company.`
-      );
-    })();
+    const app = this.get("app");
+    const idOf = (model: string) => lineup.find((m) => m.name === model)?.id ?? model;
+    const yourApp = inYourApp(rep.rows, idOf, app, this.runner() === "claude_code");
 
     const month = new Date(this.get("created_at") ?? Date.now()).toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
     const memoryLine = !top
@@ -718,6 +707,21 @@ export class RunObject extends DurableObject<Env> {
         ? rated_categories.map((c, i) => (i === 0 ? `For ${c.category} tasks I do best with ${c.winner}` : `for ${c.category}, ${c.winner}`)).join("; ") +
           ` (MySI benchmark, ${month}).`
         : `For my kind of work (${rated_categories.map((c) => c.category).join(", ")}), ${top} did best in my own blind test (MySI benchmark, ${month}).`;
+
+    // Each kind of work names the model to use for it in the person's app.
+    const snippet = !top
+      ? ""
+      : instructionSnippet({
+          groups: categories.map((c) => {
+            const rows = catRows.get(c);
+            return {
+              category: c,
+              model: rows ? inYourApp(rows, idOf, app, this.runner() === "claude_code").use_model : null,
+              tests: tests.filter((t) => t.category === c),
+            };
+          }),
+          month,
+        });
 
     const reveal = tests.map((t) => {
       const r = human.find((h) => h.eval_id === t.id);
@@ -742,7 +746,10 @@ export class RunObject extends DurableObject<Env> {
     return {
       headline,
       winner: top,
-      in_your_app: inYourApp,
+      in_your_app: yourApp.line,
+      use_model: yourApp.use_model,
+      instruction_snippet: snippet,
+      snippet_where: snippetWhere(app),
       mode: this.runner(),
       markdown: rep.markdown,
       rows: rep.rows,
@@ -815,6 +822,9 @@ export type Results = {
   headline: string;
   winner: string | null; // one model: ties break on cost and speed (decision 009)
   in_your_app: string | null; // the best model the person can use in the chat app they're in
+  use_model: string | null; // the model to pick in that app (the winner when no app is known)
+  instruction_snippet: string; // their own criteria, to paste into custom instructions (spec 001)
+  snippet_where: string;
   mode: Runner;
   markdown: string;
   rows: ReturnType<typeof report>["rows"];

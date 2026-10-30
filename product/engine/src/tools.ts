@@ -589,6 +589,9 @@ export function createServer(
       return reply({
         headline: d.headline,
         in_your_app: d.in_your_app,
+        use_model: d.use_model,
+        instruction_snippet: d.instruction_snippet,
+        snippet_where: d.snippet_where,
         ranking_table: table,
         by_category: d.by_category,
         reveal: d.reveal,

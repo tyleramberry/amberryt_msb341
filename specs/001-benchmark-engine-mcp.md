@@ -242,18 +242,23 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
   - `use_model`: the model to pick there. The best-ranked model from the app's own company when
     `app` is `claude`, `chatgpt` or `gemini` and the lineup has one; otherwise the winner. In
     Claude Code plan mode it is the winner.
-  - `instruction_snippet`: plain text, at most 6 bullet lines plus a header and a model line,
-    built only from the person's own "what a great answer gets right" lines. Rated tests come
-    first, in task order; lines are taken round-robin (each task's first line, then each task's
-    second, and so on), so one long task doesn't crowd out the rest. Exact repeats (ignoring case
-    and end punctuation) are dropped. Emails and phone numbers are scrubbed as in `save_tests`.
-    No model call writes it, so the same run always gives the same snippet. Shape:
+  - `instruction_snippet`: plain text, at most 6 bullet lines in all, built only from the
+    person's own "what a great answer gets right" lines and grouped by kind of work. A line is
+    often specific to its task ("Under 50 words"), so each kind keeps its own heading instead of
+    one list that would apply to every chat (QA bug 8). Each kind the person rated names the model
+    to use for it in their app (the same rule as `use_model`, on that kind's ranking); kinds they
+    rated come first, unrated kinds after, with no model. Lines are taken one kind at a time, and
+    within a kind one task at a time, so one long task doesn't crowd out the rest. Exact repeats
+    (ignoring case and end punctuation) are dropped. Emails and phone numbers are scrubbed as in
+    `save_tests`. No model call writes it, so the same run always gives the same snippet. Shape:
 
     ```
     How I like answers (from my own MySI blind test, Oct 2026):
+    When I ask for help with writing (I use Claude Sonnet 5.5):
     - No em dashes
     - Under 150 words
-    For writing and math, I use Claude Sonnet 5.5.
+    When I ask for help with math (I use GPT-6.1 Sol):
+    - Shows the steps, no ASCII art
     ```
   - `snippet_where`: one sentence on where to paste it in that app (ChatGPT: Settings,
     Personalization, Custom instructions; Claude: Settings, Profile, personal preferences;

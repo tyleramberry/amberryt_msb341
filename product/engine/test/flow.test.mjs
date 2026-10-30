@@ -108,6 +108,8 @@ test("full flow with mock models", async () => {
   assert.match(res.data.in_your_app, /Claude/, "says what the person can use in the app they're in");
   assert.equal(res.data.reveal.length, 3);
   assert.ok(res.data.memory_line.includes("MySI benchmark"));
+  assert.ok(res.data.use_model, "names one model to use in the person's app");
+  assert.match(res.data.instruction_snippet, /^How I like answers/, "gives a snippet of their own criteria");
   assert.match(res.text, MODEL_NAMES, "results reveal the models");
 
   // Results close rating.

@@ -258,6 +258,14 @@ export function resultsPage(view: RunView, r: Results) {
   <h1>Your MySI results</h1>
   <p class="lead">${inline(r.headline)}</p>
   ${r.in_your_app ? `<p>${esc(r.in_your_app)}</p>` : ""}
+  ${
+    r.instruction_snippet
+      ? `<h2>Use it in your app</h2>
+  <p>Pick <strong>${esc(r.use_model ?? "")}</strong>. Then paste this into your app so it answers the way you rated. ${esc(r.snippet_where)}</p>
+  <textarea id="snippet" readonly rows="${r.instruction_snippet.split("\n").length + 1}">${esc(r.instruction_snippet)}</textarea>
+  <p><button onclick="navigator.clipboard.writeText(document.getElementById('snippet').value);this.textContent='Copied'">Copy</button></p>`
+      : ""
+  }
   <h2>Which AI wrote what</h2><ol>${reveal}</ol>
   ${markdown(r.markdown.replace(/^# Personal benchmark\n/, ""))}
   <p class="muted">Cost of this benchmark: US$${r.cost_usd.toFixed(4)}.</p>
