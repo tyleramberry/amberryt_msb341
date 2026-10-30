@@ -102,7 +102,7 @@ test("full flow with mock models", async () => {
 
   const res = await call("get_results", { run_id: runId, app: "claude" });
   assert.equal(res.isError, false, res.text);
-  assert.match(res.data.headline, /came out on top: you picked it as best on \d of 3 tasks/);
+  assert.match(res.data.headline, /came out on top(: you picked it as best on [1-3] of 3 tasks| across 3 tasks, though you never picked it as best)/);
   assert.doesNotMatch(res.data.headline, /\(tied\)/, "always one winner (decision 009)");
   assert.match(res.data.ranking_table, /\| Rank \| AI model \| Your score \(0–2\) \| Your picks for best \| Time \(s\) \| Cost per answer \|/);
   assert.match(res.data.in_your_app, /Claude/, "says what the person can use in the app they're in");
