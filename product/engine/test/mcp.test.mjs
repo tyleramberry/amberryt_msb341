@@ -38,7 +38,8 @@ describe("setup page", () => {
     assert.match(prompt, /Add custom connector/);
     assert.match(prompt, /^Please add MySI to this chat app/, "app-neutral");
     assert.match(prompt, /- ChatGPT: .*Developer mode.*No authentication.*remember it for this chat/);
-    assert.match(prompt, /- Gemini: .*Add a custom app.*Not yet tested with MySI/);
+    assert.match(prompt, /- Gemini: .*Add a custom app.*exactly "@MySI find my best AI model".*Always allow/, "Gemini needs the @ opener (bug 13)");
+    assert.doesNotMatch(prompt, /Not yet tested/, "Gemini connects with no sign-in (live test 2026-10-30)");
     const list = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
