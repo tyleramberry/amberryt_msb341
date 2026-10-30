@@ -20,7 +20,13 @@ type Ok<T> = { ok: true } & T;
 
 
 const MAX_IN_FLIGHT = 4;
-const ANSWER_TOKENS = 2000;
+// A ceiling, not a target: long answers and thinking models need room (live Gemini test, bug 9:
+// at 2,000 tokens two answers stopped mid-sentence and one model returned nothing). An answer that
+// still hits the limit is tried once more with double, then shown with a note so it isn't rated
+// as if it were whole.
+const ANSWER_TOKENS = 16_000;
+const ANSWER_TIMEOUT_MS = 300_000;
+export const CUT_OFF_NOTE = "\n\n[This answer hit the length limit and was cut off here.]";
 const JUDGE_TOKENS = 2000;
 const RETRY_DELAYS_MS = [2000, 5000]; // two retries after the first try
 
@@ -350,9 +356,19 @@ export class RunObject extends DurableObject<Env> {
 
   private async answer(t: Test, m: ModelInfo) {
     try {
-      const c = await this.withRetries(() =>
-        complete(this.env, m.id, modelPrompt(t), { system: MODEL_SYSTEM, maxTokens: ANSWER_TOKENS }),
-      );
+      const call = (maxTokens: number) =>
+        this.withRetries(() => complete(this.env, m.id, modelPrompt(t), { system: MODEL_SYSTEM, maxTokens, timeoutMs: ANSWER_TIMEOUT_MS }));
+      let c = await call(ANSWER_TOKENS).catch((e) => {
+        if (e instanceof ModelError && e.outOfTokens) return call(ANSWER_TOKENS * 2);
+        throw e;
+      });
+      if (c.cut_off) {
+        const first = c;
+        c = await call(ANSWER_TOKENS * 2).catch(() => first);
+        // Both calls bill.
+        if (c !== first && (first.cost !== null || c.cost !== null)) c = { ...c, cost: (first.cost ?? 0) + (c.cost ?? 0) };
+      }
+      if (c.cut_off) this.log("model_call", `${t.id} cut off at the length limit`);
       this.sql.exec(
         `INSERT OR REPLACE INTO responses
            (test_id, model, raw_text, display_text, latency_ms, tokens_in, tokens_out, cost_usd, error)
@@ -360,7 +376,7 @@ export class RunObject extends DurableObject<Env> {
         t.id,
         m.id,
         c.text,
-        scrubSelfId(c.text, `${t.prompt}\n${t.context}`),
+        scrubSelfId(c.text, `${t.prompt}\n${t.context}`) + (c.cut_off ? CUT_OFF_NOTE : ""),
         c.duration_ms,
         c.tokens_in,
         c.tokens_out,

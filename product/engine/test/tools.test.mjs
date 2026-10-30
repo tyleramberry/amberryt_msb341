@@ -235,6 +235,21 @@ describe("submit_rating", () => {
   });
 });
 
+describe("long answers (live Gemini test, bug 9)", () => {
+  test("a cut-off answer is retried with more room, and one still cut off says so", async () => {
+    const id = await runToReady([
+      T({ prompt: "MOCK_LONG:openai/gpt-6.1-sol MOCK_CUTOFF:anthropic/claude-sonnet-5.5 Write a quick text to a client." }),
+    ]);
+    const a = await tool("get_answers", { run_id: id, test_id: "t1" });
+    const texts = a.data.answers.map((x) => x.text);
+    assert.equal(texts.length, 3);
+    const cut = texts.filter((t) => /cut off/.test(t));
+    assert.equal(cut.length, 1, "only the always-cut-off answer carries the note: " + JSON.stringify(texts));
+    assert.match(cut[0], /Point thr\n\n\[This answer hit the length limit and was cut off here\.\]$/);
+    assert.equal(texts.filter((t) => /Point thr/.test(t)).length, 1, "the retried answer came back whole");
+  });
+});
+
 describe("get_results", () => {
   test("with no ratings there is no ranking, only a request to rate one task (decided 2026-10-25)", async () => {
     const id = await runToReady();
