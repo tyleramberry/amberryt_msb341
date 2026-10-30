@@ -16,6 +16,21 @@
       "expect": { "lower": "A", "than": "B", "max_overall": { "A": 5 } }
     },
     {
+      "id": "ascii-art-math",
+      "note": "Answers rebuilt from the interview 06 run notes (full text wasn't saved): A is GPT-5's style, terse bullets plus a rough ASCII graph, judged 9 and 10, her worst. B is Gemini's style, bold headers, numbered steps, emoji, no graph, judged 5 and 6, her best.",
+      "test": {
+        "id": "t2", "category": "math", "title": "Intercepts of exponential function",
+        "prompt": "Explain how to find the intercepts of h(x) = 2^(x+2) − 3. Make it super visual and simple, not a ton of text.",
+        "context": "",
+        "criteria": ["Easy to understand", "Not a lot of text", "Visual, I learn a lot better when it's a visual", "Gets the right intercepts"]
+      },
+      "answers": {
+        "A": "- **y-intercept:** x = 0 → h(0) = 2^2 − 3 = 1 → (0, 1)\n- **x-intercept:** 2^(x+2) = 3 → x + 2 = log₂3 → x = log₂3 − 2 ≈ −0.415 → (−0.415, 0)\n- **Asymptote:** y = −3\n\n```\n        y\n        |\n      1 +            *\n        |         *\n -------*-----+---------- x\n     -0.415   0\n      * |\n - - - -|- - - - - - - -  y = -3\n        |\n```",
+        "B": "**🎯 Goal:** find where the graph crosses each axis.\n\n**1️⃣ y-intercept (set x = 0)**\nh(0) = 2^(0+2) − 3 = 4 − 3 = **1**\n👉 Point: **(0, 1)**\n\n**2️⃣ x-intercept (set h(x) = 0)**\n2^(x+2) − 3 = 0\n2^(x+2) = 3\nx + 2 = log₂(3)\nx = log₂(3) − 2 ≈ **−0.415**\n👉 Point: **(−0.415, 0)**\n\n✅ **Answer:** the graph crosses the y-axis at (0, 1) and the x-axis at about (−0.415, 0)."
+      },
+      "expect": { "lower": "A", "than": "B" }
+    },
+    {
       "id": "too-long",
       "test": {
         "id": "t1", "category": "writing", "title": "Quick thank-you text",

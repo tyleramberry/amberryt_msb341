@@ -1,7 +1,8 @@
 // Runs product/evals/judge-style-rules.json against the configured judge pool on OpenRouter and
-// prints pass/fail per case and judge. Needs OPENROUTER_API_KEY (read from .env if not set).
+// prints pass/fail per case and judge, scoring the way the engine does (judge reply, then the
+// rules the engine enforces in code). Needs OPENROUTER_API_KEY (read from .env if not set).
 import { readFileSync } from "node:fs";
-import { judgePrompt } from "../src/prompts.ts";
+import { enforceRules, judgePrompt } from "../src/prompts.ts";
 import { parseJudgeJson } from "../src/models.ts";
 
 const env = Object.fromEntries(
@@ -24,7 +25,8 @@ for (const c of cases) {
     });
     const body = await res.json();
     let scores;
-    try { scores = Object.fromEntries(parseJudgeJson(body.choices[0].message.content).map((s) => [s.label, s.overall])); }
+    const answers = Object.entries(c.answers);
+    try { scores = Object.fromEntries(enforceRules(c.test, answers, parseJudgeJson(body.choices[0].message.content)).map((s) => [s.label, s.overall])); }
     catch (e) { console.log(`ERROR ${c.id} ${judge}: ${body.error?.message ?? e.message}`); failed++; continue; }
     const ok = scores[c.expect.lower] < scores[c.expect.than] &&
       Object.entries(c.expect.max_overall ?? {}).every(([l, max]) => scores[l] <= max);

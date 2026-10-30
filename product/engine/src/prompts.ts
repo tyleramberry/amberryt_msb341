@@ -115,11 +115,52 @@ export function modelPrompt(t: Test) {
   return `TASK:\n${t.prompt}\n\nCONTEXT:\n${t.context.trim() || "None"}`;
 }
 
-// Counted, not judged, so a judge can't miss them: models skim past em dashes and length.
+// A line drawn with text characters (axis, slope, box) rather than written: almost no letters or
+// digits, and a stroke like | / \ or a run like ---- or ....  Markdown rules and tables don't
+// count.
+function isAsciiArtLine(line: string) {
+  const s = line.replace(/\s/g, "");
+  if (!s || /^([-*_])\1{2,}$/.test(s) || /^\|.*[^|]\|$/.test(s)) return false;
+  const alnum = (s.match(/[\p{L}\p{N}]/gu) ?? []).length;
+  return alnum <= 3 && (/[|/\\]/.test(s) || /([-_=*.~])\1{2,}/.test(s));
+}
+
+export function asciiArtLines(text: string) {
+  return text.split("\n").filter(isAsciiArtLine).length;
+}
+
+// Counted, not judged, so a judge can't miss them: models skim past em dashes, length and
+// ASCII drawings.
 export function answerFacts(text: string) {
   const words = text.split(/\s+/).filter(Boolean).length;
   const dashes = (text.match(/\u2014/g) ?? []).length;
-  return `(${words} words, ${dashes} em dash${dashes === 1 ? "" : "es"} "\u2014")`;
+  const art = asciiArtLines(text);
+  return (
+    `(${words} words, ${dashes} em dash${dashes === 1 ? "" : "es"} "\u2014"` +
+    (art ? `, ${art} line${art === 1 ? "" : "s"} of ASCII art` : "") +
+    ")"
+  );
+}
+
+const EM_DASH_RULE = /em[\s-]?dash/i;
+const AVOID = /\b(no|not|avoid|without|never|don'?t|zero|hate)\b/i;
+
+// Rules a judge can't be trusted to apply are applied here after it scores: an answer that
+// breaks a "no em dashes" criterion scores 1 on it and at most 5 overall (interview 06).
+export function enforceRules<T extends { label: string; criteria_scores: number[]; overall: number }>(
+  t: Test,
+  answers: [label: string, text: string][],
+  items: T[],
+): T[] {
+  const ruleIdx = t.criteria.findIndex((c) => EM_DASH_RULE.test(c) && AVOID.test(c));
+  if (ruleIdx < 0) return items;
+  const text = Object.fromEntries(answers);
+  return items.map((it) => {
+    if (!text[it.label]?.includes("\u2014")) return it;
+    const criteria_scores = [...it.criteria_scores];
+    if (ruleIdx < criteria_scores.length) criteria_scores[ruleIdx] = 1;
+    return { ...it, criteria_scores, overall: Math.min(it.overall, 5) };
+  });
 }
 
 export function judgePrompt(t: Test, answers: [label: string, text: string][]) {
@@ -130,6 +171,12 @@ export function judgePrompt(t: Test, answers: [label: string, text: string][]) {
     "A criterion that says what to avoid (for example \"no em dashes\", \"not too long\", \"no big words\") " +
       "is a hard rule: an answer that breaks it scores 1 on that criterion and at most 5 overall. " +
       "Each answer's word and em dash counts are given; trust them over your own reading.",
+    "The person reads these answers in a chat app. Unless they ask for a drawing, ASCII art (graphs, " +
+      "axes or diagrams made of text characters) is hard to read there and does not make an answer " +
+      "visual or easy to understand. When the person asks for something visual, simple or easy to " +
+      "follow, reward clean layout: short numbered steps, headers, spacing and the key results in bold. " +
+      "An answer with ASCII art scores at most 2 on such a criterion. ASCII art line counts are given " +
+      "when an answer has any.",
     "",
     `TASK:\n${t.prompt}`,
     "",

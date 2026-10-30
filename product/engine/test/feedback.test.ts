@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { report, type Response } from "../src/bench.ts";
-import { answerFacts, judgePrompt } from "../src/prompts.ts";
+import { readFileSync } from "node:fs";
+import { answerFacts, asciiArtLines, enforceRules, judgePrompt } from "../src/prompts.ts";
 import { appOf } from "../src/tools.ts";
 
 // Her real run: two tests, a three-way tie on her picks (each model scored 1.0).
@@ -45,6 +46,40 @@ test("judges get word and em dash counts, and avoid-rules are hard rules", () =>
   assert.match(p, /hard rule/);
   assert.match(p, /RESPONSE A \(4 words, 1 em dash/);
   assert.match(p, /RESPONSE B \(3 words, 0 em dashes/);
+});
+
+const evalCases = JSON.parse(readFileSync(new URL("../../evals/judge-style-rules.json", import.meta.url), "utf8")).cases;
+const evalCase = (id: string) => evalCases.find((c: { id: string }) => c.id === id);
+
+test("judges are told which answer has ASCII art, and that it isn't 'visual' in a chat", () => {
+  const { test: t, answers } = evalCase("ascii-art-math");
+  assert.ok(asciiArtLines(answers.A) >= 5);
+  assert.equal(asciiArtLines(answers.B), 0);
+  const p = judgePrompt(t, Object.entries(answers));
+  assert.match(p, /RESPONSE A \(\d+ words, 0 em dashes "—", \d+ lines of ASCII art\)/);
+  assert.match(p, /RESPONSE B \(\d+ words, 0 em dashes "—"\)/);
+  assert.match(p, /ASCII art .* does not make an answer\s+visual/);
+});
+
+test("markdown tables, rules and math lines aren't ASCII art", () => {
+  assert.equal(asciiArtLines("| a | b |\n|---|:-:|\n| 1 | 2 |\n---\n2^(x+2) = 3\nx + 2 = log(3)\n- step one"), 0);
+});
+
+test("a judge that ignores the em dash rule is overruled in code", () => {
+  const { test: t, answers } = evalCase("em-dash-rule");
+  // What the judges did in interview 06: the em dash answer on top.
+  const judged = [
+    { label: "A", criteria_scores: [5, 5, 5, 4], overall: 9, reason: "" },
+    { label: "B", criteria_scores: [5, 5, 5, 5], overall: 8, reason: "" },
+  ];
+  const [a, b] = enforceRules(t, Object.entries(answers), judged);
+  assert.equal(a.overall, 5);
+  assert.deepEqual(a.criteria_scores, [5, 5, 5, 1]);
+  assert.equal(b.overall, 8);
+  assert.ok(a.overall < b.overall);
+  // No em dash rule in the criteria: scores are left alone.
+  const free = { ...t, criteria: ["Warm"] };
+  assert.equal(enforceRules(free, Object.entries(answers), judged)[0].overall, 9);
 });
 
 test("the chat app is guessed from the client", () => {
