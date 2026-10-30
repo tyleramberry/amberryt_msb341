@@ -77,7 +77,10 @@ export function scrubPersonalInfo(text: string): { text: string; found: string[]
 }
 
 // Model names an answer might use to identify itself, as [brand, pattern]. A brand the person
-// named in their own task is kept, so "compare ChatGPT and Gemini" still reads right.
+// named in their own task is kept, so "compare ChatGPT and Gemini" still reads right. Only
+// self-identification is scrubbed ("I'm Claude", "As an OpenAI model", "made by Anthropic" next to
+// "I"), so companies an answer is about stay (live Gemini test, bug 10: an internship list lost
+// Anthropic and its careers link).
 const SELF_ID: [string, string][] = [
   ["chatgpt", "ChatGPT"],
   ["gpt", "GPT-?\\d+(?:\\.\\d+)?(?:[- ]?(?:mini|nano|pro|turbo|sol|luna))*"],
@@ -105,7 +108,18 @@ export function scrubSelfId(answer: string, taskText: string): string {
   let out = answer;
   for (const [brand, pattern] of SELF_ID) {
     if (task.includes(brand)) continue;
-    out = out.replace(new RegExp(`\\b${pattern}\\b`, "gi"), REMOVED);
+    const name = `(${pattern})\\b`;
+    out = out
+      .replace(new RegExp(`(\\b(?:I am|I'm|I’m|my name is|this is|(?<!\\b(?:such|well|same|just) )as(?: an?)?)\\s+)${name}`, "gi"), `$1${REMOVED}`)
+      .replace(new RegExp(`\\b${name}(?=\\s+here\\b)`, "gi"), REMOVED)
+      // "made by Anthropic" only counts in a sentence where the answer talks about itself.
+      .split(/(?<=[.!?\n])/)
+      .map((sentence) =>
+        /\b(?:I|I'm|I’m|me|my)\b/.test(sentence)
+          ? sentence.replace(new RegExp(`(\\b(?:(?:made|built|created|developed|trained) by|from)\\s+)${name}`, "gi"), `$1${REMOVED}`)
+          : sentence,
+      )
+      .join("");
   }
   return out;
 }
