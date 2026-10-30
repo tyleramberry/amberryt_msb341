@@ -2,7 +2,7 @@
 // own app, and a snippet of their own criteria to paste into its custom instructions.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inYourApp, instructionSnippet, snippetGroups, SNIPPET_LINES, snippetWhere } from "../src/actionable.ts";
+import { inYourApp, instructionSnippet, isGeneral, snippetGroups, SNIPPET_LINES, snippetWhere } from "../src/actionable.ts";
 
 const ids: Record<string, string> = {
   "GPT-6.1 Sol": "openai/gpt-6.1-sol",
@@ -76,6 +76,46 @@ test("the snippet puts each kind of work's own lines under it, with the model to
     ].join("\n"),
   );
   assert.equal(instructionSnippet({ groups: [{ category: "writing", model: null, tests: [{ criteria: ["x"] }] }], month: "Oct 2026" }), "", "nothing rated, no snippet");
+});
+
+test("lines about one task's content are left out of the snippet (bug 12, live Gemini run)", () => {
+  // Her real criteria from the live run.
+  for (const c of [
+    "Formats the output as a clean, easy-to-read Markdown table with columns for Company, Description, Role, Application Link, and Target LinkedIn Contacts.",
+    "Focuses specifically on AI-forward tech companies with locations in San Francisco, New York, or Salt Lake City.",
+    "Includes the main lessons from Shoe Dog directly tailored to being a founder.",
+    "Covers what Phil Knight teaches about those lessons, including direct quotes or excerpts to go back and read.",
+    "Says Friday and a time window",
+  ])
+    assert.equal(isGeneral(c), false, c);
+  for (const c of [
+    "Does not miss obvious open roles or provide broken/vague links.",
+    "Recommends high-quality, relevant watch/listen content specifically valuable to an entrepreneur, avoiding generic or low-effort filler.",
+    "No em dashes",
+    "Under 150 words. Sounds like me.",
+    "Uses a Markdown table, no ASCII art",
+    "Explains it like I'm new to AI",
+  ])
+    assert.equal(isGeneral(c), true, c);
+});
+
+test("a kind whose lines are all about its task keeps its heading and model", () => {
+  const s = instructionSnippet({
+    groups: [
+      { category: "summarizing", model: "Gemini 4 Argon", tests: [{ criteria: ["Includes the main lessons from Shoe Dog", "No filler"] }] },
+      { category: "research", model: "Gemini 4 Argon", tests: [{ criteria: ["Focuses on San Francisco"] }] },
+    ],
+    month: "Oct 2026",
+  });
+  assert.equal(
+    s,
+    [
+      "How I like answers (from my own MySI blind test, Oct 2026):",
+      "When I ask for help with summarizing (I use Gemini 4 Argon):",
+      "- No filler",
+      "When I ask for help with research (I use Gemini 4 Argon):",
+    ].join("\n"),
+  );
 });
 
 test("snippet_where names the right place for each app", () => {

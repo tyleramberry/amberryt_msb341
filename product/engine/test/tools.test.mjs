@@ -298,8 +298,10 @@ describe("the actionable result (Sprint 4)", () => {
     // Each kind of work keeps its own lines (QA bug 8); the rated kind comes first and names a model.
     assert.equal(lines[1], `When I ask for help with planning (I use ${d.use_model}):`);
     assert.deepEqual(lines.slice(2, 4), ["- under 50 words.", "- Groups stops by street"]);
-    assert.ok(lines.includes("When I ask for help with writing:"), "unrated kinds have no model");
-    assert.ok(lines.includes("- Says Friday and a time window"));
+    assert.ok(lines.includes("When I ask for help with explaining:"), "unrated kinds have no model");
+    assert.ok(!lines.some((l) => l.includes("writing")), "an unrated kind with no lines left is dropped");
+    assert.ok(lines.includes("- No jargon"));
+    assert.ok(!lines.includes("- Says Friday and a time window"), "lines about one task's content are left out (bug 12)");
     assert.ok(!lines.includes("- Under 50 words"), "repeat dropped");
     assert.match(d.snippet_where, /ChatGPT.*Custom instructions/);
     const page = await (await fetch(`${base}/r/${id}`)).text();

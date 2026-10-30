@@ -249,7 +249,13 @@ A line-by-line port of `bench.py report`, so the same inputs give the same table
     to use for it in their app (the same rule as `use_model`, on that kind's ranking); kinds they
     rated come first, unrated kinds after, with no model. Lines are taken one kind at a time, and
     within a kind one task at a time, so one long task doesn't crowd out the rest. Exact repeats
-    (ignoring case and end punctuation) are dropped. Emails and phone numbers are scrubbed as in
+    (ignoring case and end punctuation) are dropped. Lines about one task's content are dropped
+    too (bug 12, live Gemini run: "Includes the main lessons from Shoe Dog", "locations in San
+    Francisco, New York, or Salt Lake City"), since pasted into custom instructions they'd steer
+    every chat. The test: after a sentence's first word, a capitalized word that isn't a general
+    term (I, AI, Markdown, ASCII, LaTeX, JSON, CSV, HTML, PDF, URL, English and a few more) marks a
+    name, place, title or day, so the line is about that task. A kind left with no lines keeps
+    its heading and model. Emails and phone numbers are scrubbed as in
     `save_tests`. No model call writes it, so the same run always gives the same snippet. Shape:
 
     ```
