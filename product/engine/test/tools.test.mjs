@@ -248,6 +248,20 @@ describe("long answers (live Gemini test, bug 9)", () => {
     assert.match(cut[0], /Point thr\n\n\[This answer hit the length limit and was cut off here\.\]$/);
     assert.equal(texts.filter((t) => /Point thr/.test(t)).length, 1, "the retried answer came back whole");
   });
+
+  test("results say which model is missing an answer or was cut off (bug 11)", async () => {
+    const id = await runToReady([
+      T({ prompt: "MOCK_FAIL:openai/gpt-6.1-sol MOCK_CUTOFF:anthropic/claude-sonnet-5.5 Write a quick text to a client." }),
+      T({ category: "planning", title: "Plan routes" }),
+    ]);
+    await tool("submit_rating", { run_id: id, test_id: "t1", best: "A" });
+    await tool("submit_rating", { run_id: id, test_id: "t2", best: "A" });
+    const r = await tool("get_results", { run_id: id });
+    assert.equal(r.isError, false, r.text);
+    assert.ok(r.data.trust.some((t) => /GPT-6\.1 Sol had no answer on 1 of the 2 tasks you rated .* comes from 1 task\./.test(t)), JSON.stringify(r.data.trust));
+    assert.ok(r.data.trust.some((t) => /Claude Sonnet 5\.5's answer on 1 task was cut off/.test(t)), JSON.stringify(r.data.trust));
+    assert.ok(!r.data.trust.some((t) => /Gemini/.test(t)));
+  });
 });
 
 describe("get_results", () => {

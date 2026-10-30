@@ -769,6 +769,25 @@ export class RunObject extends DurableObject<Env> {
     if (rated < tests.length) trust.push(`You rated ${rated} of ${tests.length} tasks; the ranking uses only those.`);
     const failed = this.tests().length - tests.length;
     if (failed) trust.push(`${failed} test task${failed === 1 ? "" : "s"} had fewer than 2 answers and ${failed === 1 ? "was" : "were"} left out.`);
+    // A model with no answer on a rated task is scored on fewer tasks (live Gemini test, bug 11).
+    const ratedIds = human.map((h) => h.eval_id);
+    for (const m of lineup) {
+      const missing = ratedIds.filter((id) => !Object.values(blindMap[id] ?? {}).includes(m.name)).length;
+      if (!missing || missing === ratedIds.length) continue;
+      const scored = ratedIds.length - missing;
+      trust.push(
+        `${m.name} had no answer on ${missing} of the ${ratedIds.length} tasks you rated (it failed or timed out), ` +
+          `so its score comes from ${scored} task${scored === 1 ? "" : "s"}.`,
+      );
+    }
+    const cutOff = this.sql
+      .exec<{ test_id: string; model: string; display_text: string }>("SELECT test_id, model, display_text FROM responses WHERE error IS NULL")
+      .toArray()
+      .filter((r) => ratedIds.includes(r.test_id) && r.display_text.endsWith(CUT_OFF_NOTE));
+    for (const m of lineup) {
+      const n = cutOff.filter((r) => r.model === m.id).length;
+      if (n) trust.push(`${m.name}'s answer on ${n} task${n === 1 ? " was" : "s were"} cut off at the length limit.`);
+    }
 
     return {
       headline,
