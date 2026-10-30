@@ -131,7 +131,7 @@ export const APP_STEPS = [
     app: "Gemini",
     steps:
       "On gemini.google.com (US, 18 or older, personal Google account, Keep Activity on): Settings, then Connected Apps, then under Custom apps, Add a custom app. Paste your link and click Next. " +
-      "Not yet tested with MySI: Gemini may ask for a sign-in that MySI doesn't have. If it won't connect, use Claude or ChatGPT.",
+      'Then start a new chat with exactly "@MySI find my best AI model" (Gemini only uses MySI when you name it with @). When Gemini asks about a MySI step, press Always allow.',
   },
 ];
 
@@ -147,7 +147,7 @@ If you can add connectors yourself (in Claude Code: claude mcp add --transport h
 If you can't, tell me how in a few short steps for the app I'm using. Here are the steps for each app:
 ${APP_STEPS.map((a) => `- ${a.app}: ${a.steps}`).join("\n")}
 
-Then tell me to start a new chat and say "Find my best AI model."`;
+Then tell me to start a new chat and say "Find my best AI model." (In Gemini, it has to be exactly "@MySI find my best AI model".)`;
 }
 
 // One button: mint a personal link (decision 008) and copy the connect prompt. Without
@@ -183,7 +183,7 @@ export function setupPage(origin: string, personalUrl?: string) {
   ${body}
   <h2>Adding it to your app</h2>
   <ul>${APP_STEPS.map((a) => `<li><strong>${a.app}:</strong> ${esc(a.steps)}</li>`).join("")}</ul>
-  <p>Then start a new chat and say <strong>"Find my best AI model."</strong></p>
+  <p>Then start a new chat and say <strong>"Find my best AI model."</strong> In Gemini, say <strong>"@MySI find my best AI model"</strong>.</p>
   <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"
   MySI is an early prototype: its maker can read your test tasks and picks to improve it.</p>
 </main>`,

@@ -76,9 +76,11 @@ The setup page (the Worker's `/`) is where a person starts. As built:
     app) rather than every menu, and say the menus move.
   - **Gemini** (gemini.google.com, US, 18+, personal Google account, Keep Activity on):
     Settings, Connected Apps, Custom apps, Add a custom app, paste the link, Next (Google's help
-    page, read 2026-10-29). *Unverified with MySI:* the page names only Dynamic Client
-    Registration or entered credentials, and MySI has no sign-in, so Gemini may refuse it. The
-    page says so instead of promising it works; if it fails, use Claude or ChatGPT.
+    page, read 2026-10-29). It connects with no sign-in (live test 2026-10-30,
+    `product/bench/live-tests/2026-10-30-gemini.md`). Gemini only calls a custom app when the
+    message names it: "@MySI help me benchmark some models" got a generic answer, and only
+    "@MySI find my best AI model" started MySI (bug 13). So the Gemini steps give that exact first
+    message, and say to press Always allow when Gemini asks about MySI's steps.
   - Cursor and other builder tools: not on the page; the Claude Code line covers builders.
 - **The first sentence to type is printed on the page**: "Find my best AI model." Tell them to
   click **Always allow** when the chat app asks permission for MySI's tools, or they'll get a
