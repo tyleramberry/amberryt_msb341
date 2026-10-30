@@ -57,12 +57,29 @@ The setup page (the Worker's `/`) is where a person starts. As built:
 
 - **Rename to MySI** everywhere the person sees it (page, server name, connector name).
 - **Give each person their own connector URL**, `https://<host>/mcp/u/<key>`, created when they
-  press the one button, "Use it in Claude". The key is long and random. This is how MySI
-  remembers them across chats without accounts or OAuth (see "Identity" below).
-- The button copies a prompt with that link to paste into Claude: Claude Code adds the connector
-  itself; claude.ai walks the person through Settings > Connectors. The prompt warns not to add
-  it in a cloud session (the first user's snag). Other harnesses (ChatGPT developer mode, Cursor)
-  are not on the page yet.
+  press the one button, "Get my MySI link" (was "Use it in Claude" until Sprint 4). The key is
+  long and random. This is how MySI remembers them across chats without accounts or OAuth (see
+  "Identity" below).
+- The button copies a prompt with that link to paste into the chat app they use. The prompt is
+  app-neutral and carries short steps for each app, so the app can walk the person through them.
+  Claude Code adds the connector itself. The prompt warns not to add it in a cloud session (the
+  first user's snag). The page shows the same steps under the button (Sprint 4: one of the three
+  users must be on ChatGPT or Gemini with no help):
+  - **Claude** (claude.ai or the app): Settings, Connectors, Add custom connector, name it MySI,
+    paste the link.
+  - **ChatGPT** (web, a paid plan: Plus or higher): turn on Developer mode in Settings, then
+    create a new app or connector, paste the link, and choose No authentication. In a new chat,
+    add MySI from the + menu. When ChatGPT asks to approve a MySI step, choose to remember it for
+    the chat, or it asks every step (QA bug 4: tools without `readOnlyHint` count as writes).
+    *Unverified:* sources from Jul to Oct 2026 disagree on the menu names (Settings, Connectors,
+    Advanced vs Settings, Plugins, +), so the steps name the feature (Developer mode, create an
+    app) rather than every menu, and say the menus move.
+  - **Gemini** (gemini.google.com, US, 18+, personal Google account, Keep Activity on):
+    Settings, Connected Apps, Custom apps, Add a custom app, paste the link, Next (Google's help
+    page, read 2026-10-29). *Unverified with MySI:* the page names only Dynamic Client
+    Registration or entered credentials, and MySI has no sign-in, so Gemini may refuse it. The
+    page says so instead of promising it works; if it fails, use Claude or ChatGPT.
+  - Cursor and other builder tools: not on the page; the Claude Code line covers builders.
 - **The first sentence to type is printed on the page**: "Find my best AI model." Tell them to
   click **Always allow** when the chat app asks permission for MySI's tools, or they'll get a
   permission pop-up on every step.

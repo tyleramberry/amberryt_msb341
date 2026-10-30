@@ -16,12 +16,15 @@ const init = {
 const text = (r) => r.body.result.content.map((c) => c.text).join("");
 
 describe("setup page", () => {
-  test("GET / serves one 'Use it in Claude' button", async () => {
+  test("GET / serves one 'Get my MySI link' button and steps for Claude, ChatGPT and Gemini", async () => {
     const res = await fetch(base + "/");
     assert.equal(res.status, 200);
     assert.match(res.headers.get("content-type"), /text\/html/);
     const html = await res.text();
-    assert.match(html, /<button[^>]*>Use it in Claude<\/button>/);
+    assert.match(html, /<button[^>]*>Get my MySI link<\/button>/);
+    for (const app of ["Claude", "ChatGPT", "Gemini"]) assert.match(html, new RegExp(`<strong>${app}:</strong>`));
+    assert.match(html, /Developer mode/);
+    assert.match(html, /Connected Apps/);
     assert.ok(!/\/mcp\/u\//.test(html), "no personal link before the click");
   });
 
@@ -33,6 +36,9 @@ describe("setup page", () => {
     assert.ok(prompt.includes(url), "prompt carries the link");
     assert.match(prompt, /claude mcp add --transport http --scope user mysi/);
     assert.match(prompt, /Add custom connector/);
+    assert.match(prompt, /^Please add MySI to this chat app/, "app-neutral");
+    assert.match(prompt, /- ChatGPT: .*Developer mode.*No authentication.*remember it for this chat/);
+    assert.match(prompt, /- Gemini: .*Add a custom app.*Not yet tested with MySI/);
     const list = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },

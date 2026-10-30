@@ -4,7 +4,7 @@
 > the work you actually use AI for into test tasks, runs them on several models, and tells you
 > which model is best for *your* work.
 
-**Where to see it:** https://personal-bench.homeroom-app.workers.dev: press "Use it in Claude"
+**Where to see it:** https://personal-bench.homeroom-app.workers.dev: press "Get my MySI link"
 to get your own connector link, then MySI interviews you, runs your tests on GPT-6.1 Sol,
 Gemini 4 Argon and Claude Sonnet 5.5, and ranks them from your blind picks
 ([spec](specs/001-benchmark-engine-mcp.md)). The first outside user ran it on 2026-10-24
@@ -22,7 +22,7 @@ history.
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
-| MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Use it in Claude" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
+| MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Get my MySI link" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
 | MySI engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
 | Benchmark runs | [`product/bench/runs/`](product/bench/runs/) | In-repo |
