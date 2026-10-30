@@ -6,7 +6,7 @@ import { createMcpHandler } from "agents/mcp/server";
 import { adminRoutes } from "./admin.ts";
 import type { Env } from "./models.ts";
 import { connectPrompt, notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
-import { createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
+import { appOf, createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
 
 export { RunObject } from "./run.ts";
 export { RegistryObject } from "./registry.ts";
@@ -85,6 +85,8 @@ export default {
         return new Response("This MySI link isn't valid. Get a new one at " + url.origin, { status: 404 });
       }
       const caller = await callerOf(request);
+      const app = caller.clientName ? appOf(caller) : undefined;
+      if (app) await person.setApp(app);
       const mcp = createMcpHandler(() => createServer(env, url.origin, person, caller));
       return mcp(new Request(new URL("/mcp", url), request), env, ctx);
     }

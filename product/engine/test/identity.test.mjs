@@ -72,3 +72,27 @@ test("a run started on one personal URL is not listed for another person", async
   assert.doesNotMatch(bStart.text, new RegExp(run.data.run_id), "person B must not be offered person A's run");
   assert.doesNotMatch(bStart.text, /mine/);
 });
+
+test("the app seen at initialize is used for in_your_app when get_results has no app", async () => {
+  const key = await mintKey();
+  const path = `/mcp/u/${key}`;
+  const init = await fetch(base + path, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "openai-mcp", version: "1.0" } } }),
+  });
+  assert.equal(init.status, 200);
+  const run = await tool(path, "start_benchmark", {});
+  const runId = run.data.run_id;
+  await tool(path, "save_tests", { run_id: runId, tests: TESTS });
+  assert.equal((await tool(path, "run_models", { run_id: runId, person_confirmed: true })).isError, false);
+  for (let i = 0; i < 120; i++) {
+    if ((await tool(path, "check_run", { run_id: runId })).data.next_test_to_rate === "t1") break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  const rated = await tool(path, "submit_rating", { run_id: runId, test_id: "t1", best: "A", worst: "B" });
+  assert.match(rated.data.next_step, /get_results with app/, "the host is asked to name its app");
+  const res = await tool(path, "get_results", { run_id: runId });
+  assert.equal(res.isError, false, res.text);
+  assert.match(res.data.in_your_app ?? "", /ChatGPT/);
+});

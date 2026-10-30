@@ -37,6 +37,16 @@ export class PersonObject extends DurableObject<Env> {
     return this.sql.exec("SELECT 1 FROM person WHERE k = 'created_at'").toArray().length > 0;
   }
 
+  // The chat app guessed from clientInfo at initialize, kept for later calls that only carry a
+  // user agent (see appOf in tools.ts).
+  setApp(app: string) {
+    this.sql.exec("INSERT OR REPLACE INTO person (k, v) VALUES ('app', ?)", app);
+  }
+
+  app(): string | undefined {
+    return this.sql.exec<{ v: string }>("SELECT v FROM person WHERE k = 'app'").toArray()[0]?.v;
+  }
+
   addRun(runId: string) {
     this.sql.exec("INSERT OR IGNORE INTO runs (run_id, created_at) VALUES (?, ?)", runId, new Date().toISOString());
   }
