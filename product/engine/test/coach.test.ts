@@ -45,6 +45,14 @@ test("self-identification is scrubbed unless the person named the brand", () => 
   assert.equal(scrubSelfId("ChatGPT is better for this.", "Compare ChatGPT and Claude"), "ChatGPT is better for this.");
   assert.equal(scrubSelfId("I'm Llama 4 Maverick.", "x"), "I'm [model name removed].");
   assert.equal(scrubSelfId("Use a llama-shaped planter. Ask Kimi.", "x"), "Use a llama-shaped planter. Ask Kimi.");
+  assert.equal(scrubSelfId("I'm a model from OpenAI.", "x"), "I'm a model from [model name removed].");
+});
+
+test("companies an answer is about are kept (live Gemini test, bug 10)", () => {
+  const list = "- Anthropic (SF, NY): AI safety company that builds the Claude family of models. https://www.anthropic.com/careers\n- OpenAI (SF): makes ChatGPT.";
+  assert.equal(scrubSelfId(list, "List AI companies hiring interns in San Francisco"), list);
+  assert.equal(scrubSelfId("I'd apply to Google DeepMind first.", "x"), "I'd apply to Google DeepMind first.");
+  assert.equal(scrubSelfId("Labs such as OpenAI, as well as Anthropic, hire interns.", "x"), "Labs such as OpenAI, as well as Anthropic, hire interns.");
 });
 
 test("judge JSON is found inside a code fence", () => {
