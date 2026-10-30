@@ -73,14 +73,17 @@ export function pickJudges(env: Env, lineup: ModelInfo[]): ModelInfo[] {
 export const isMock = (env: Env) => env.MOCK_MODELS === "1" || !env.OPENROUTER_API_KEY;
 
 // A failed call. `retry: false` when trying again would fail the same way (the model used the
-// whole token budget), and `cost` is what the failed call still billed.
+// whole token budget), and `cost` is what the failed call still billed. `outOfTokens` when it
+// used the whole budget before writing anything, so a bigger budget might work.
 export class ModelError extends Error {
   readonly retry: boolean;
   readonly cost: number | null;
-  constructor(message: string, retry = true, cost: number | null = null) {
+  readonly outOfTokens: boolean;
+  constructor(message: string, retry = true, cost: number | null = null, outOfTokens = false) {
     super(message);
     this.retry = retry;
     this.cost = cost;
+    this.outOfTokens = outOfTokens;
   }
 }
 
@@ -90,6 +93,7 @@ export type Completion = {
   cost: number | null;
   tokens_in: number | null;
   tokens_out: number | null;
+  cut_off: boolean; // the answer hit max_tokens and stops mid-way
 };
 
 export async function complete(
@@ -99,7 +103,7 @@ export async function complete(
   opts: { maxTokens: number; system?: string; timeoutMs?: number; reasoning?: false },
 ): Promise<Completion> {
   const started = Date.now();
-  if (isMock(env)) return mockComplete(model, prompt, started);
+  if (isMock(env)) return mockComplete(model, prompt, started, opts.maxTokens);
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -131,7 +135,7 @@ export async function complete(
   if (typeof text !== "string" || !text.trim()) {
     const cost = body.usage?.cost ?? null;
     if (body.choices?.[0]?.finish_reason === "length") {
-      throw new ModelError(`ran out of tokens before answering (${body.usage?.completion_tokens ?? "?"} used, mostly thinking)`, false, cost);
+      throw new ModelError(`ran out of tokens before answering (${body.usage?.completion_tokens ?? "?"} used, mostly thinking)`, false, cost, true);
     }
     throw new ModelError("OpenRouter: empty answer", true, cost);
   }
@@ -141,11 +145,14 @@ export async function complete(
     cost: body.usage?.cost ?? null,
     tokens_in: body.usage?.prompt_tokens ?? null,
     tokens_out: body.usage?.completion_tokens ?? null,
+    cut_off: body.choices?.[0]?.finish_reason === "length",
   };
 }
 
 // Deterministic stand-in answers, so the full flow runs with no key and no network.
-async function mockComplete(model: string, prompt: string, started: number): Promise<Completion> {
+// MOCK_CUTOFF:<model> in a task always hits the token limit; MOCK_LONG:<model> hits it unless the
+// budget is over 20,000 tokens, so a retry with a bigger budget finishes.
+async function mockComplete(model: string, prompt: string, started: number, maxTokens: number): Promise<Completion> {
   await new Promise((r) => setTimeout(r, 20));
   let h = 0;
   for (const ch of model + prompt) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
@@ -165,16 +172,19 @@ async function mockComplete(model: string, prompt: string, started: number): Pro
       cost: 0,
       tokens_in: null,
       tokens_out: null,
+      cut_off: false,
     };
   }
   const task = /TASK:\n([\s\S]*?)\n\nCONTEXT:/.exec(prompt)?.[1] ?? "";
   if (task.includes(`MOCK_FAIL:${model}`)) throw new Error("mock failure");
+  const cut_off = task.includes(`MOCK_CUTOFF:${model}`) || (task.includes(`MOCK_LONG:${model}`) && maxTokens <= 20_000);
   return {
-    text: `Mock answer (${h % 1000}) to: ${task.slice(0, 80)}\n\n- Point one\n- Point two`,
+    text: `Mock answer (${h % 1000}) to: ${task.slice(0, 80)}\n\n- Point one\n- Point two` + (cut_off ? "\n- Point thr" : ""),
     duration_ms: 1000 + (h % 4000),
     cost: 0,
     tokens_in: null,
     tokens_out: null,
+    cut_off,
   };
 }
 
