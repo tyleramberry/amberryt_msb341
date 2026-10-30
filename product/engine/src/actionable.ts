@@ -36,6 +36,26 @@ export function inYourApp(rows: Row[], idOf: (model: string) => string, app: str
   };
 }
 
+// Capitalized words that are general preferences, not a task's names, places or titles.
+const GENERAL_TERMS = new Set(
+  "I AI ASCII CSV English HTML JSON LaTeX Markdown OK PDF SQL URL URLs YAML".split(" "),
+);
+
+// A line naming something from its task (a book, a person, a city, a column, a day) would steer
+// every chat once pasted into custom instructions (bug 12), so the snippet keeps only lines with
+// no capitalized word past each sentence's first, other than GENERAL_TERMS.
+export function isGeneral(line: string) {
+  return line
+    .split(/(?<=[.!?:;])\s+|\s+-\s+/)
+    .every((sentence) =>
+      sentence
+        .split(/\s+/)
+        .slice(1)
+        .map((w) => w.replace(/^[^\p{L}\d]+|[^\p{L}\d]+$/gu, "").replace(/['’](s|m|d|ll|re|ve)$/, ""))
+        .every((w) => !/^\p{Lu}/u.test(w) || GENERAL_TERMS.has(w)),
+    );
+}
+
 export type SnippetGroup = { category: string; model: string | null; tests: { criteria: string[] }[] };
 
 const norm = (c: string) => c.replace(/\s+/g, " ").trim();
@@ -51,7 +71,7 @@ export function snippetGroups(groups: SnippetGroup[], max = SNIPPET_LINES) {
   const queues = ordered.map((g) => {
     const depth = Math.max(0, ...g.tests.map((t) => t.criteria.length));
     const q: string[] = [];
-    for (let k = 0; k < depth; k++) for (const t of g.tests) if (t.criteria[k] && norm(t.criteria[k])) q.push(norm(t.criteria[k]));
+    for (let k = 0; k < depth; k++) for (const t of g.tests) if (t.criteria[k] && norm(t.criteria[k]) && isGeneral(norm(t.criteria[k]))) q.push(norm(t.criteria[k]));
     return q;
   });
   const picked: string[][] = ordered.map(() => []);
