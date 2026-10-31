@@ -29,7 +29,9 @@ const pw = loadPlaywright();
 const skip = pw ? false : "Playwright is not installed";
 
 const TOKEN = "test-admin-password-123";
-const SIZES = { mobile: { width: 375, height: 740 }, desktop: { width: 1440, height: 900 } };
+// Spec 003 sizes: 390px phone (740px tall, so the fold is conservative) and 1280px desktop,
+// plus a 360px phone for sideways scroll only.
+const SIZES = { small: { width: 360, height: 640 }, mobile: { width: 390, height: 740 }, desktop: { width: 1280, height: 800 } };
 const MODEL_NAMES = /GPT-|Gemini \d|Claude Sonnet|DeepSeek|Mistral|Grok|openai\/|google\/|anthropic\//;
 const LINK = /\/mcp\/u\/[A-Za-z0-9_-]{22}/;
 // Hosts a page may load from besides its own. Anything else is a privacy and speed problem.
@@ -67,8 +69,8 @@ const TASK = (title, prompt) => ({ category: "writing", title, prompt, context: 
 async function open(url, { size = "desktop", js = true, auth = false, clipboard = true, dark = false, reducedMotion } = {}) {
   const context = await browser.newContext({
     viewport: SIZES[size],
-    isMobile: size === "mobile",
-    hasTouch: size === "mobile",
+    isMobile: size !== "desktop",
+    hasTouch: size !== "desktop",
     javaScriptEnabled: js,
     colorScheme: dark ? "dark" : "light",
     reducedMotion,
@@ -77,11 +79,14 @@ async function open(url, { size = "desktop", js = true, auth = false, clipboard 
   });
   if (clipboard) await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
   const page = await context.newPage();
+  page.setDefaultTimeout(8000);
   const problems = [];
   const foreign = [];
-  page.on("console", (m) => m.type() === "error" && problems.push("console: " + m.text()));
+  const fromFontHost = (m) => { try { return ALLOWED_HOSTS.includes(new URL(m.location().url).hostname); } catch { return false; } };
+  page.on("console", (m) => m.type() === "error" && !fromFontHost(m) && problems.push("console: " + m.text()));
   page.on("pageerror", (e) => problems.push("page error: " + e.message));
-  page.on("requestfailed", (r) => problems.push(`failed request: ${r.url()} (${r.failure()?.errorText})`));
+  // Font hosts can be unreachable (offline, or a locked-down network); the page must work without them.
+  page.on("requestfailed", (r) => ALLOWED_HOSTS.includes(new URL(r.url()).hostname) || problems.push(`failed request: ${r.url()} (${r.failure()?.errorText})`));
   page.on("request", (r) => {
     const host = new URL(r.url()).hostname;
     if (r.url().startsWith("http") && !r.url().startsWith(base) && !ALLOWED_HOSTS.includes(host)) foreign.push(r.url());
@@ -193,7 +198,13 @@ function assertFast(s, label) {
   assert.ok(s.requests <= 15, `${label}: ${s.requests} requests (limit 15)`);
 }
 
-const mainButton = (page) => page.getByRole("button", { name: /get .*(link|started|mysi)|start/i }).first();
+// Spec 003 fixes the text as "Get my MySI link".
+const endlessAnimations = (page) =>
+  page.evaluate(() =>
+    document.getAnimations().filter((a) => a.playState === "running" && a.effect?.getTiming().iterations === Infinity && Number(a.effect.getTiming().duration) > 10).length,
+  );
+
+const mainButton = (page) => page.getByRole("button", { name: /get my mysi link/i }).first();
 
 before(async () => {
   if (skip) return;
@@ -283,11 +294,30 @@ describe("setup page (/)", { skip }, () => {
 
   test("still tells people how to add it in Claude, ChatGPT and Gemini", async () => {
     const p = await open("/");
-    const text = await p.page.locator("body").innerText();
+    const text = await p.page.locator("body").textContent();
     for (const app of ["Claude", "ChatGPT", "Gemini"]) assert.match(text, new RegExp(app));
     assert.match(text, /Find my best AI model/i);
     assert.match(text, /@MySI/);
     assert.match(text, /prototype|maker can read/i, "the privacy note stays");
+    // Each app's steps can be brought on screen (spec 003 puts them behind tabs).
+    for (const [app, phrase] of [["ChatGPT", /Developer mode/], ["Gemini", /Connected Apps/], ["Claude", /Add custom connector/]]) {
+      const tab = p.page.getByRole("tab", { name: new RegExp(`^\\s*${app}\\s*$`) });
+      if (await tab.count()) await tab.first().click();
+      assert.ok(await p.page.getByText(phrase).first().isVisible(), `${app} steps are visible after picking ${app}`);
+    }
+    await p.close();
+  });
+
+  test("Copy again puts the same prompt back on the clipboard", async () => {
+    const p = await open("/");
+    await mainButton(p.page).click();
+    await p.page.getByText(/copied/i).first().waitFor({ state: "visible", timeout: 5000 });
+    const first = await p.page.evaluate(() => navigator.clipboard.readText());
+    await p.page.evaluate(() => navigator.clipboard.writeText(""));
+    await p.page.getByRole("button", { name: /copy again/i }).click();
+    await p.page.waitForFunction(async () => (await navigator.clipboard.readText()).length > 0, null, { timeout: 3000 });
+    assert.equal(await p.page.evaluate(() => navigator.clipboard.readText()), first);
+    assert.doesNotMatch(await p.page.content(), LINK, "the preview never writes the key into the page");
     await p.close();
   });
 
@@ -341,10 +371,17 @@ describe("setup page (/)", { skip }, () => {
 
   test("motion stops when the person asks for reduced motion", async () => {
     const p = await open("/", { reducedMotion: "reduce" });
-    const endless = await p.page.evaluate(() =>
-      document.getAnimations().filter((a) => a.playState === "running" && a.effect?.getTiming().iterations === Infinity && Number(a.effect.getTiming().duration) > 10).length,
-    );
-    assert.equal(endless, 0, "no endless animations under prefers-reduced-motion");
+    assert.equal(await endlessAnimations(p.page), 0, "no endless animations under prefers-reduced-motion");
+    // The demo's text must also stop changing (it's driven by a script, not CSS).
+    const before = await p.page.locator("body").innerText();
+    await p.page.waitForTimeout(1500);
+    assert.equal(await p.page.locator("body").innerText(), before, "nothing on the page keeps typing itself");
+    await p.close();
+  });
+
+  test("360px phone: no sideways scroll", async () => {
+    const p = await open("/", { size: "small" });
+    assert.deepEqual((await p.page.evaluate(audit)).filter((x) => /sideways/.test(x)), []);
     await p.close();
   });
 
@@ -420,6 +457,60 @@ describe("owner's log (/admin)", { skip }, () => {
       }
     });
   }
+
+  test("search and filter chips narrow the list, and everything shows with JavaScript off", async () => {
+    const rows = (page) => page.locator("[data-status]");
+    const p = await open("/admin", { auth: true });
+    const total = await rows(p.page).count();
+    assert.ok(total >= 3, `rows carry data-status (found ${total})`);
+    await p.page.getByRole("searchbox").or(p.page.getByPlaceholder(/search|label/i)).first().fill("browser-log-check");
+    await p.page.waitForTimeout(200);
+    const shown = await rows(p.page).filter({ visible: true }).allInnerTexts();
+    assert.equal(shown.length, 1, "search leaves one run");
+    assert.match(shown[0], /browser-log-check/);
+    await p.page.getByRole("searchbox").or(p.page.getByPlaceholder(/search|label/i)).first().fill("");
+    await p.page.getByRole("button", { name: /^\s*finished/i }).first().click();
+    await p.page.waitForTimeout(200);
+    for (const st of await rows(p.page).filter({ visible: true }).evaluateAll((els) => els.map((e) => e.dataset.status))) assert.match(st, /finish/);
+    await p.page.getByRole("button", { name: /^\s*all/i }).first().click();
+    await p.page.waitForTimeout(200);
+    assert.equal(await rows(p.page).filter({ visible: true }).count(), total, "All brings every run back");
+    await p.close();
+    const q = await open("/admin", { auth: true, js: false });
+    assert.equal(await rows(q.page).filter({ visible: true }).count(), total, "no JavaScript: every run shows");
+    await q.close();
+  });
+
+  test("the summary says how often the judges matched the person's picks", async () => {
+    const p = await open("/admin", { auth: true });
+    assert.match(await p.page.locator("body").innerText(), /matched their pick on \d+ of \d+/i);
+    await p.close();
+  });
+
+  test("a run shows the agreement badge, a timeline, and Show all opens a clamped answer", async () => {
+    const p = await open(`/admin/runs/${runs.rated}`, { auth: true });
+    const text = await p.page.locator("body").innerText();
+    assert.match(text, /Judges agreed|Judges picked [A-E], they picked [A-E]/);
+    assert.match(text, /their worst/i);
+    const more = p.page.getByRole("button", { name: /show all/i }).or(p.page.getByText(/show all/i));
+    const clamped = () => p.page.evaluate(() => [...document.querySelectorAll("*")].filter((e) => !["none", ""].includes(getComputedStyle(e).webkitLineClamp) || (getComputedStyle(e).maxHeight !== "none" && e.scrollHeight > e.clientHeight + 2)).length);
+    if (await more.count()) {
+      const before = await clamped();
+      await more.first().click();
+      await p.page.waitForTimeout(300);
+      assert.ok((await clamped()) < before, "Show all unclamps an answer");
+    }
+    assert.equal(await endlessAnimations(p.page), 0, "nothing loops forever on a finished run");
+    await p.close();
+  });
+
+  test("360px phone: list and run pages don't scroll sideways", async () => {
+    for (const url of ["/admin", `/admin/runs/${runs.rated}`]) {
+      const p = await open(url, { size: "small", auth: true });
+      assert.deepEqual((await p.page.evaluate(audit)).filter((x) => /sideways/.test(x)), [], url);
+      await p.close();
+    }
+  });
 
   test("loads fast", async () => {
     for (const url of ["/admin", `/admin/runs/${runs.rated}`]) {
