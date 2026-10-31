@@ -1,0 +1,332 @@
+<title>MySI Owner's Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a console. Summary strip on top (what's happening across all runs), then the run list.
+   A run opens into tasks on the left and a sticky event stream on the right. */
+:root {
+  --bg: #0b0d12;
+  --panel: #12151d;
+  --panel-2: #181c26;
+  --line: #242a39;
+  --fg: #e9ecf3;
+  --muted: #8a91a6;
+  /* Owner sees model names, so color follows the company, the same three hues as the setup page. */
+  --openai: #8ea8ff;
+  --anthropic: #ffa27e;
+  --google: #6fdcc0;
+  --other: #c9b6ff;
+  --ok: #6fdcc0;
+  --warn: #f2c66d;
+  --bad: #ff7b8a;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f6fa; --panel: #ffffff; --panel-2: #eef0f6; --line: #dde1ec; --fg: #11131a; --muted: #5a6177;
+    --openai: #3f5fe0; --anthropic: #cf5a31; --google: #13917a; --other: #7a55d6; --ok: #13917a; --warn: #a87510; --bad: #c8304a; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f5f6fa; --panel: #ffffff; --panel-2: #eef0f6; --line: #dde1ec; --fg: #11131a; --muted: #5a6177;
+  --openai: #3f5fe0; --anthropic: #cf5a31; --google: #13917a; --other: #7a55d6; --ok: #13917a; --warn: #a87510; --bad: #c8304a; color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+.mono, code { font-family: var(--mono); }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--openai); outline-offset: 2px; border-radius: 6px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.mark { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--display); letter-spacing: -0.02em; }
+.mark .dots { display: inline-flex; gap: 3px; } .mark .dots i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+.mark .dots i:nth-child(1) { background: var(--openai); } .mark .dots i:nth-child(2) { background: var(--anthropic); } .mark .dots i:nth-child(3) { background: var(--google); }
+.mark small { font: 500 12px/1 var(--mono); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-left: 4px; }
+.btn { font: 500 13px/1 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+
+h1 { font: 800 clamp(26px, 3.2vw, 36px)/1.05 var(--display); letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+.head { display: flex; justify-content: space-between; align-items: end; gap: 16px; padding-block: 28px 20px; flex-wrap: wrap; }
+
+/* Summary strip */
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 2fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.stat { background: var(--panel); padding: 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.stat .k { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stat .v { font: 700 28px/1 var(--display); letter-spacing: -0.02em; }
+.stat .d { font-size: 13px; color: var(--muted); }
+.stack { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.stack span { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend b { color: var(--fg); font-weight: 600; }
+.sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+/* Filters */
+.bar { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding-block: 28px 12px; flex-wrap: wrap; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button { font: 500 13px/1 var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { color: var(--fg); border-color: var(--fg); }
+.filters .c { font-family: var(--mono); margin-left: 4px; opacity: 0.7; }
+input[type="search"] { font: 14px var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; width: 240px; max-width: 100%; }
+
+/* Run list */
+.runs { display: grid; gap: 8px; padding-bottom: 64px; }
+.run { display: grid; grid-template-columns: 128px minmax(0, 1.4fr) 120px minmax(0, 1fr) minmax(0, 1fr) 90px 70px; gap: 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; text-decoration: none; transition: border-color .15s, transform .15s; }
+.run:hover { border-color: var(--muted); transform: translateY(-1px); }
+.run > * { min-width: 0; }
+.run .when { font: 13px/1.3 var(--mono); color: var(--muted); }
+.run .label { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.run .label small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--mono); border-radius: 999px; padding: 5px 9px; border: 1px solid currentColor; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.finished { color: var(--ok); } .pill.running { color: var(--openai); } .pill.running::before { animation: pulse 1.4s infinite; }
+.pill.rating { color: var(--warn); } .pill.draft { color: var(--muted); } .pill.failed { color: var(--bad); }
+@keyframes pulse { 50% { opacity: 0.25; } }
+.segs { display: flex; gap: 3px; } .segs i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); display: block; max-width: 28px; }
+.segs i.on { background: var(--fg); } .segs i.err { background: var(--bad); }
+.segs-l { font: 12px/1 var(--mono); color: var(--muted); margin-top: 6px; display: block; }
+.who { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who .sw { margin: 0; width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.muted { color: var(--muted); }
+.cost { font: 13px/1 var(--mono); text-align: right; color: var(--muted); }
+.colhead { display: grid; grid-template-columns: 128px minmax(0, 1.4fr) 120px minmax(0, 1fr) minmax(0, 1fr) 90px 70px; gap: 16px; padding: 0 17px 4px; font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.colhead span:last-child { text-align: right; }
+
+/* Run detail */
+.crumb { padding-block: 20px 0; font-size: 14px; }
+.crumb a { color: var(--muted); text-decoration: none; } .crumb a:hover { color: var(--fg); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.meta .btn { cursor: default; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; padding-block: 24px 64px; align-items: start; }
+.layout > * { min-width: 0; }
+.task { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 16px; margin-bottom: 16px; }
+.task-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.task-top .k { font: 500 12px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.task h2 { font: 700 21px/1.2 var(--display); letter-spacing: -0.015em; margin: 0; }
+.bubble { background: var(--panel-2); border-radius: 14px 14px 14px 4px; padding: 12px 14px; max-width: 62ch; }
+.bubble .k { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 6px; }
+.crit { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.crit li { font-size: 13px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; }
+.verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; border-left: 2px solid var(--fg); padding: 2px 0 2px 14px; }
+.verdict .k { font: 500 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.verdict q { font-style: italic; color: var(--muted); }
+.agree { font: 500 12px/1 var(--mono); border-radius: 6px; padding: 5px 8px; background: var(--panel-2); }
+.agree.no { color: var(--warn); } .agree.yes { color: var(--ok); }
+.answers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ans { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; align-content: start; position: relative; background: var(--bg); }
+.ans.best { border-color: var(--ok); } .ans.worst { border-color: var(--bad); border-style: dashed; }
+.ribbon { position: absolute; top: -9px; right: 12px; font: 600 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 8px; border-radius: 999px; color: var(--bg); }
+.best .ribbon { background: var(--ok); } .worst .ribbon { background: var(--bad); }
+.ans-h { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.lbl { font: 600 12px/1 var(--mono); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; color: var(--muted); }
+.facts { display: flex; gap: 12px; font: 12px/1 var(--mono); color: var(--muted); }
+.judges { display: grid; gap: 6px; }
+.judge { display: grid; grid-template-columns: 92px minmax(0, 1fr) 34px; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.judge .t { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; } .judge .t i { display: block; height: 100%; background: var(--muted); border-radius: 3px; }
+.judge .s { font-family: var(--mono); text-align: right; color: var(--fg); }
+.body { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; max-height: 9.5em; overflow: hidden; position: relative; }
+.body.open { max-height: none; }
+.body:not(.open)::after { content: ""; position: absolute; inset: auto 0 0; height: 3em; background: linear-gradient(transparent, var(--bg)); }
+.more { justify-self: start; font: 500 12px/1 var(--mono); color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.err { border: 1px solid var(--bad); color: var(--bad); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.err b { font-weight: 600; }
+
+.stream { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+.stream h3 { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 14px; }
+.ev { list-style: none; margin: 0; padding: 0; display: grid; }
+.ev li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; padding-bottom: 14px; position: relative; }
+.ev li::before { content: ""; position: absolute; left: 6px; top: 14px; bottom: 0; width: 1px; background: var(--line); }
+.ev li:last-child::before { display: none; }
+.ev .dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--muted); background: var(--panel); margin-top: 3px; }
+.ev .dot.ok { border-color: var(--ok); } .ev .dot.bad { border-color: var(--bad); } .ev .dot.you { border-color: var(--fg); background: var(--fg); }
+.ev .a { font-size: 13px; } .ev .t { font: 11px/1.4 var(--mono); color: var(--muted); }
+
+@media (max-width: 1000px) {
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .strip .wide { grid-column: 1 / -1; }
+  .colhead { display: none; }
+  .run { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label status" "when cost" "rated winner"; gap: 8px 16px; }
+  .run .label { grid-area: label; } .run .status { grid-area: status; justify-self: end; } .run .when { grid-area: when; } .run .cost { grid-area: cost; }
+  .run .rated { grid-area: rated; } .run .winner { grid-area: winner; justify-self: end; } .run .on { display: none; }
+  .layout { grid-template-columns: minmax(0, 1fr); } .stream { position: static; }
+  .answers { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) { .strip { grid-template-columns: minmax(0, 1fr); } input[type="search"] { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .pill.running::before { animation: none; } .run { transition: none; } }
+</style>
+
+<header class="wrap top">
+  <div class="mark"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>MySI <small>Owner's log</small></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn" href="#runs">All runs</a>
+    <a class="btn" href="#export">Download all as JSON</a>
+  </div>
+</header>
+
+<main id="view-runs">
+  <div class="wrap">
+    <div class="head">
+      <div><h1>Every benchmark, live</h1><p class="sub">Newest first. Times in UTC. Example data in this mockup.</p></div>
+    </div>
+
+    <div class="strip" aria-label="Summary across all runs">
+      <div class="stat"><span class="k">Runs</span><span class="v num">14</span><span class="d">2 running now</span></div>
+      <div class="stat"><span class="k">Finished</span><span class="v num">6</span><span class="d">43% of runs</span></div>
+      <div class="stat"><span class="k">Tasks rated</span><span class="v num">23<span class="muted" style="font-size:18px"> / 31</span></span><span class="d">by the person, blind</span></div>
+      <div class="stat"><span class="k">Spend</span><span class="v num">$1.84</span><span class="d">$0.13 per run</span></div>
+      <div class="stat wide">
+        <span class="k">Their best picks, by model</span>
+        <div class="stack" aria-hidden="true"><span style="flex:10;background:var(--anthropic)"></span><span style="flex:8;background:var(--openai)"></span><span style="flex:5;background:var(--google)"></span></div>
+        <div class="legend"><span><i class="sw" style="background:var(--anthropic)"></i>Claude Sonnet 5.5 <b class="num">10</b></span><span><i class="sw" style="background:var(--openai)"></i>GPT-6.1 Sol <b class="num">8</b></span><span><i class="sw" style="background:var(--google)"></i>Gemini 4 Argon <b class="num">5</b></span></div>
+        <span class="d">Judges' top answer matched their pick on <b style="color:var(--fg)">13 of 23</b> tasks.</span>
+      </div>
+    </div>
+
+    <div class="bar">
+      <div class="filters" role="group" aria-label="Filter by status">
+        <button aria-pressed="true" data-f="all">All<span class="c">14</span></button>
+        <button aria-pressed="false" data-f="running">Running<span class="c">2</span></button>
+        <button aria-pressed="false" data-f="rating">Waiting on picks<span class="c">4</span></button>
+        <button aria-pressed="false" data-f="finished">Finished<span class="c">6</span></button>
+        <button aria-pressed="false" data-f="draft">Draft<span class="c">1</span></button>
+        <button aria-pressed="false" data-f="failed">Failed<span class="c">1</span></button>
+      </div>
+      <input type="search" id="q" placeholder="Search labels" aria-label="Search labels">
+    </div>
+
+    <div class="colhead" aria-hidden="true"><span>Started</span><span>Label</span><span>Status</span><span>Rated</span><span>Their winner</span><span>Run on</span><span>Cost</span></div>
+    <div class="runs" id="runs"></div>
+  </div>
+</main>
+
+<main id="view-run" hidden>
+  <div class="wrap">
+    <div class="crumb"><a href="#runs">← All runs</a></div>
+    <div class="head" style="padding-bottom:0">
+      <div>
+        <h1>Interview 07, teacher</h1>
+        <p class="sub">Started 2026-10-30 18:42 UTC · finished in 14 min · in ChatGPT</p>
+        <div class="meta">
+          <span class="pill finished">finished</span>
+          <span class="btn"><i class="sw" style="background:var(--openai);margin:0"></i>GPT-6.1 Sol</span>
+          <span class="btn"><i class="sw" style="background:var(--google);margin:0"></i>Gemini 4 Argon</span>
+          <span class="btn"><i class="sw" style="background:var(--anthropic);margin:0"></i>Claude Sonnet 5.5</span>
+          <span class="btn mono">$0.1412</span>
+        </div>
+      </div>
+      <div class="stat" style="background:none;padding:0;text-align:right">
+        <span class="k">Their winner</span><span class="v" style="font-size:26px">Gemini 4 Argon</span><span class="d">2 of 3 tasks</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <section class="task">
+          <div class="task-top"><span class="k">Task 1 · Teaching · rated</span><span class="agree no">Judges picked B, they picked C</span></div>
+          <h2>Fraction warm-up with no worksheets</h2>
+          <div class="bubble"><span class="k">What they'd type</span>Give me a 10-minute warm-up on fractions for 4th graders. No worksheets, they need to move.</div>
+          <ul class="crit" aria-label="A great answer"><li>Kids get out of their seats</li><li>Fits in 10 minutes</li><li>No prep beyond index cards</li></ul>
+          <div class="verdict"><span class="k">Their pick</span><div>Best <b>Gemini 4 Argon</b>, worst <b>Claude Sonnet 5.5</b> <span class="muted">(on the page)</span><br><q>A reads like a lesson plan template. C I could run tomorrow.</q></div></div>
+          <div class="answers">
+            <article class="ans worst"><span class="ribbon">their worst</span>
+              <div class="ans-h"><span class="who"><i class="sw" style="background:var(--anthropic)"></i>Claude Sonnet 5.5</span><span class="lbl">A</span></div>
+              <div class="facts"><span>11.2s</span><span>$0.0081</span></div>
+              <div class="judges"><div class="judge"><span>DeepSeek V4</span><span class="t"><i style="width:60%"></i></span><span class="s">6</span></div><div class="judge"><span>Grok 4.7</span><span class="t"><i style="width:70%"></i></span><span class="s">7</span></div></div>
+              <div class="body"><p><strong>Objective:</strong> Students will be able to identify equivalent fractions.</p><p><strong>Materials:</strong> none.</p><p><strong>Procedure:</strong> 1. Introduce the concept of equivalent fractions using a number line drawn on the board. 2. Ask students to stand when they hear a fraction equal to one half. 3. Discuss.</p></div>
+              <button class="more" type="button">Show all</button>
+            </article>
+            <article class="ans">
+              <div class="ans-h"><span class="who"><i class="sw" style="background:var(--openai)"></i>GPT-6.1 Sol</span><span class="lbl">B</span></div>
+              <div class="facts"><span>8.4s</span><span>$0.0064</span></div>
+              <div class="judges"><div class="judge"><span>DeepSeek V4</span><span class="t"><i style="width:90%"></i></span><span class="s">9</span></div><div class="judge"><span>Grok 4.7</span><span class="t"><i style="width:80%"></i></span><span class="s">8</span></div></div>
+              <div class="body"><p><strong>Fraction pizza.</strong> Draw a circle and split it into 8. Ask who'd rather have 2/8 or 1/4. Let them argue in pairs for a minute, then have each pair walk to the side of the room that matches their answer.</p></div>
+              <button class="more" type="button">Show all</button>
+            </article>
+            <article class="ans best"><span class="ribbon">their best</span>
+              <div class="ans-h"><span class="who"><i class="sw" style="background:var(--google)"></i>Gemini 4 Argon</span><span class="lbl">C</span></div>
+              <div class="facts"><span>6.9s</span><span>$0.0052</span></div>
+              <div class="judges"><div class="judge"><span>DeepSeek V4</span><span class="t"><i style="width:80%"></i></span><span class="s">8</span></div><div class="judge"><span>Grok 4.7</span><span class="t"><i style="width:80%"></i></span><span class="s">8</span></div></div>
+              <div class="body"><p><strong>Fraction line-up.</strong> Give 6 kids a card each (1/2, 1/4, 3/4, 2/8, 1/3, 2/3). The class orders them on the floor, out loud, and moves anyone who's in the wrong spot. Swap in new kids and new cards each round.</p></div>
+              <button class="more" type="button">Show all</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="task">
+          <div class="task-top"><span class="k">Task 2 · Email · rated</span><span class="agree yes">Judges agreed</span></div>
+          <h2>Reply to a parent about a missing grade</h2>
+          <div class="bubble"><span class="k">What they'd type</span>A parent says their kid's science grade is missing. It's in the gradebook. Reply kindly in under 80 words.</div>
+          <ul class="crit"><li>Under 80 words</li><li>Says where to find the grade</li><li>Warm, not defensive</li></ul>
+          <div class="verdict"><span class="k">Their pick</span><div>Best <b>GPT-6.1 Sol</b> <span class="muted">(in the chat)</span></div></div>
+          <div class="err"><b>Mistral Medium 3.5</b> (judge): Provider returned error. Scored by 1 of 2 judges.</div>
+        </section>
+      </div>
+
+      <aside class="stream" aria-label="Timeline">
+        <h3>Timeline</h3>
+        <ol class="ev">
+          <li><span class="dot"></span><div><div class="a">Connected from ChatGPT</div><div class="t">18:38:02</div></div></li>
+          <li><span class="dot"></span><div><div class="a">Saved 3 test tasks</div><div class="t">18:41:47</div></div></li>
+          <li><span class="dot ok"></span><div><div class="a">Run started on OpenRouter</div><div class="t">18:42:10</div></div></li>
+          <li><span class="dot ok"></span><div><div class="a">9 of 9 answers in</div><div class="t">18:43:31</div></div></li>
+          <li><span class="dot bad"></span><div><div class="a">Judge Mistral Medium 3.5 failed on task 2</div><div class="t">18:43:58</div></div></li>
+          <li><span class="dot you"></span><div><div class="a">Rated task 1 on the page</div><div class="t">18:49:12</div></div></li>
+          <li><span class="dot you"></span><div><div class="a">Rated task 2 in the chat</div><div class="t">18:52:40</div></div></li>
+          <li><span class="dot you"></span><div><div class="a">Rated task 3 on the page</div><div class="t">18:55:03</div></div></li>
+          <li><span class="dot ok"></span><div><div class="a">Results shown: Gemini 4 Argon</div><div class="t">18:56:20</div></div></li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<script>
+// Mockup data. Production renders these rows on the server from RunDump (admin.ts).
+const C = { "Claude Sonnet 5.5": "var(--anthropic)", "GPT-6.1 Sol": "var(--openai)", "Gemini 4 Argon": "var(--google)" };
+const runs = [
+  ["2026-10-31 02:12", "Run 14", "rating", 1, 4, null, "OpenRouter", "$0.118", "Claude"],
+  ["2026-10-31 01:55", "Run 13", "running", 0, 3, null, "OpenRouter", "$0.041", "ChatGPT"],
+  ["2026-10-30 22:08", "Live test, Gemini", "running", 0, 2, null, "OpenRouter", "$0.022", "Gemini"],
+  ["2026-10-30 18:42", "Interview 07, teacher", "finished", 3, 3, "Gemini 4 Argon", "OpenRouter", "$0.141", "ChatGPT"],
+  ["2026-10-30 15:20", "admin-log-check", "finished", 1, 1, "Claude Sonnet 5.5", "OpenRouter", "$0.012", "Claude"],
+  ["2026-10-29 21:03", "Run 09", "failed", 0, 2, null, "OpenRouter", "$0.004", "Claude"],
+  ["2026-10-29 17:44", "Run 08", "draft", 0, 0, null, "OpenRouter", "$0.000", "Claude"],
+  ["2026-10-24 19:30", "Interview 06", "finished", 4, 4, "Claude Sonnet 5.5", "OpenRouter", "$0.162", "Claude"],
+  ["2026-10-24 16:02", "Control, Claude plan", "finished", 3, 3, "Claude Opus", "Claude plan", "$0.000", "Claude Code"],
+];
+const label = { running: "running", rating: "waiting on picks", finished: "finished", draft: "draft", failed: "failed" };
+const list = document.getElementById("runs");
+function render(filter, q) {
+  list.innerHTML = "";
+  runs.filter((r) => (filter === "all" || r[2] === filter) && r[1].toLowerCase().includes(q)).forEach((r) => {
+    const [when, name, st, rated, total, win, on, cost, app] = r;
+    const a = document.createElement("a"); a.className = "run"; a.href = "#run";
+    const segs = Array.from({ length: Math.max(total, 1) }, (_, i) => `<i class="${st === "failed" ? "err" : i < rated ? "on" : ""}"></i>`).join("");
+    a.innerHTML = `<span class="when num">${when}</span>
+      <span class="label">${name}<small>in ${app}</small></span>
+      <span class="status"><span class="pill ${st}">${label[st]}</span></span>
+      <span class="rated"><span class="segs">${total ? segs : ""}</span><span class="segs-l">${total ? rated + " of " + total + " rated" : "no tasks yet"}</span></span>
+      <span class="winner">${win ? `<span class="who"><i class="sw" style="background:${C[win] || "var(--other)"}"></i>${win}</span>` : '<span class="muted">—</span>'}</span>
+      <span class="on muted" style="font-size:13px">${on}</span>
+      <span class="cost num">${cost}</span>`;
+    list.append(a);
+  });
+  if (!list.children.length) list.innerHTML = '<p class="muted">No runs match.</p>';
+}
+let f = "all";
+document.querySelectorAll(".filters button").forEach((b) => b.addEventListener("click", () => {
+  f = b.dataset.f; document.querySelectorAll(".filters button").forEach((x) => x.setAttribute("aria-pressed", x === b)); render(f, q.value.toLowerCase());
+}));
+const q = document.getElementById("q"); q.addEventListener("input", () => render(f, q.value.toLowerCase()));
+render("all", "");
+document.querySelectorAll(".more").forEach((b) => b.addEventListener("click", () => { const body = b.previousElementSibling; body.classList.toggle("open"); b.textContent = body.classList.contains("open") ? "Show less" : "Show all"; }));
+// Two views in one mockup, routed on the hash. Production keeps /admin and /admin/runs/<id>.
+function route() { const run = location.hash === "#run"; document.getElementById("view-runs").hidden = run; document.getElementById("view-run").hidden = !run; scrollTo(0, 0); }
+addEventListener("hashchange", route); route();
+</script>
