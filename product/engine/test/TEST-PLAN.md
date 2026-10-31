@@ -13,6 +13,7 @@ test:protocol` to hit a deployed Worker. Last full run 2026-10-24: 73 tests, all
 | Per-tool | every tool, refusals, blindness, limits, personal URLs, owner's log | `tools.test.mjs`, `limits.test.mjs`, `identity.test.mjs`, `admin.test.mjs` |
 | Pure logic | bench.py port against the builder runs' `report.md`; tie-break, judge style counts and chat-app detection (decision 009); coaching and scrubbing | `bench.test.ts`, `golden.test.mjs`, `feedback.test.ts`, `coach.test.ts` |
 | Tool flow | start_benchmark -> save_tests -> run_models -> check_run -> get_results, mock models | `flow.test.mjs` (`npm run test:flow`, needs a running dev server) |
+| Pages in a browser | setup page (/) and owner's log (/admin): main button mints and copies the prompt, no-JS fallback, log list/run/export, XSS, mobile 375px and desktop 1440px in light and dark, contrast and labels (plus axe-core with `AXE=<axe.min.js>`), keyboard focus, reduced motion, load speed; smoke test of rating and results pages | `pages.test.mjs` (`npm run test:pages`, needs Playwright + Chromium, skips without; `SHOTS=<dir>` saves screenshots) |
 | Judge eval | do the judges enforce "avoid" rules like no em dashes | `product/evals/judge-style-rules.json`, `npm run eval:judges` (real OpenRouter calls) |
 | Manual (Tyler / wife) | add connector in Claude unaided; log every snag | done 2026-10-24, interview 06; ChatGPT not tried |
 
