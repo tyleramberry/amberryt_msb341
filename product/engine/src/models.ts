@@ -2,8 +2,9 @@
 // With no OPENROUTER_API_KEY (or MOCK_MODELS = "1") every call is answered by the mock.
 
 // `reasoning: false` turns thinking off for models that otherwise spend the whole token budget
-// thinking and never answer (Mistral Large 4, 2026-10-26). Leave it unset for models whose
-// reasoning can't be disabled (Grok 4.7 returns 400).
+// thinking and never answer (DeepSeek V4 Pro on harder tests, 2026-10-30). Leave it unset for
+// models whose reasoning can't be disabled (Grok 4.7 returns 400). Mistral Large 4 was dropped as a judge on 2026-10-30: Mistral started rejecting
+// reasoning off for it, and with reasoning on it thinks past any token budget and never answers.
 export type ModelInfo = { id: string; name: string; company: string; reasoning?: false };
 
 import type { PersonObject } from "./person.ts";
@@ -32,8 +33,8 @@ const DEFAULT_LINEUP: ModelInfo[] = [
   { id: "anthropic/claude-sonnet-5.5", name: "Claude Sonnet 5.5", company: "Anthropic" },
 ];
 const DEFAULT_JUDGES: ModelInfo[] = [
-  { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek" },
-  { id: "mistralai/mistral-large-4-0", name: "Mistral Large 4", company: "Mistral", reasoning: false },
+  { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek", reasoning: false },
+  { id: "mistralai/mistral-medium-3-5", name: "Mistral Medium 3.5", company: "Mistral" },
   { id: "x-ai/grok-4.7", name: "Grok 4.7", company: "xAI" },
 ];
 
@@ -189,11 +190,18 @@ async function mockComplete(model: string, prompt: string, started: number, maxT
 }
 
 // Pull the JSON array out of a judge's reply, even if it wrapped it in a code fence.
+// Some judges write their thinking as prose before the JSON, and that prose can hold brackets, so
+// try each "[" until the rest of the reply parses as an array.
 export function parseJudgeJson(text: string) {
-  const start = text.indexOf("[");
   const end = text.lastIndexOf("]");
-  if (start < 0 || end < start) throw new Error("judge reply has no JSON array");
-  const items = JSON.parse(text.slice(start, end + 1)) as any[];
+  let items: any[] | undefined;
+  for (let start = text.indexOf("["); start >= 0 && start < end && !items; start = text.indexOf("[", start + 1)) {
+    try {
+      const parsed = JSON.parse(text.slice(start, end + 1));
+      if (Array.isArray(parsed)) items = parsed;
+    } catch {}
+  }
+  if (!items) throw new Error("judge reply has no JSON array");
   return items.map((it) => {
     if (typeof it.label !== "string" || typeof it.overall !== "number") throw new Error("bad judge item");
     return {

@@ -19,7 +19,7 @@ const answer = { choices: [{ message: { content: "ok" }, finish_reason: "stop" }
 
 test("reasoning: false turns thinking off; unset sends nothing", async () => {
   const sent = stubFetch(answer);
-  await complete(env, "mistralai/mistral-large-4-0", "hi", { maxTokens: 10, reasoning: false });
+  await complete(env, "m", "hi", { maxTokens: 10, reasoning: false });
   await complete(env, "x-ai/grok-4.7", "hi", { maxTokens: 10 });
   assert.deepEqual(sent[0].reasoning, { enabled: false });
   assert.equal("reasoning" in sent[1], false);
