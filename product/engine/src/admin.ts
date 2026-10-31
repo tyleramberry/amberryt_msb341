@@ -90,7 +90,7 @@ const CSS = `
   .segs-l { font:12px/1 var(--mono); color:var(--muted); margin-top:6px; display:block; }
   .who { display:inline-flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
   .who .sw { margin:0; width:10px; height:10px; border-radius:3px; }
-  .on { font-size:13px; color:var(--muted); }
+  .runner { font-size:13px; color:var(--muted); }
   .cost { font:13px/1 var(--mono); text-align:right; color:var(--muted); }
   .colhead { padding:0 17px 4px; font:500 12px/1 var(--mono); text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
   .colhead span:last-child { text-align:right; }
@@ -158,12 +158,12 @@ const CSS = `
     .colhead { display:none; }
     .run.cols { grid-template-columns:minmax(0, 1fr) auto; grid-template-areas:"label status" "when cost" "rated winner"; gap:8px 16px; }
     .run .label { grid-area:label; } .run .status { grid-area:status; justify-self:end; } .run .when { grid-area:when; } .run .cost { grid-area:cost; }
-    .run .rated { grid-area:rated; } .run .winner { grid-area:winner; justify-self:end; } .run .on { display:none; }
+    .run .rated { grid-area:rated; } .run .winner { grid-area:winner; justify-self:end; } .run .runner { display:none; }
     .layout { grid-template-columns:minmax(0, 1fr); } .stream { position:static; }
     .answers { grid-template-columns:minmax(0, 1fr); }
     .won { text-align:left; }
   }
-  @media (max-width:520px) { .strip { grid-template-columns:minmax(0, 1fr); } input[type="search"] { width:100%; } .bar > * { width:100%; } }
+  @media (max-width:520px) { .stat { padding:12px; } .stat .v { font-size:24px; } input[type="search"] { width:100%; } .bar > * { width:100%; } }
   @media (prefers-reduced-motion: reduce) { .pill.running::before { animation:none; } .run { transition:none; } }
 `;
 
@@ -187,7 +187,7 @@ function runRow(d: RunDump) {
       <span class="status">${pill(s)}</span>
       <span class="rated">${d.tests.length ? `<span class="segs" aria-hidden="true">${segs}</span><span class="segs-l">${rated} of ${d.tests.length} rated</span>` : '<span class="segs-l">no tasks yet</span>'}</span>
       <span class="winner">${winner}</span>
-      <span class="on">${d.runner === "claude_code" ? "Claude plan" : "OpenRouter"}</span>
+      <span class="runner">${d.runner === "claude_code" ? "Claude plan" : "OpenRouter"}</span>
       <span class="cost num">${usd(d.cost_usd)}</span>
     </a>`;
 }
