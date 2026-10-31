@@ -27,13 +27,15 @@ export function agreement(t: DumpTest): { counted: boolean; matched: boolean; to
   return { counted, matched: counted && top !== null && top === t.rating?.best, top };
 }
 
-// The status the log shows. "rating" (waiting on picks) is a run whose answers are all in and
-// that still needs the person, built from the run's own states.
+// The status the log shows, built from the run's own states. "rating" (waiting on picks) is a
+// run with no task still being answered and at least one ready to rate. A run whose every task is
+// rated (or failed) has nothing left for the person but asking for results, so the log counts it
+// as finished.
 export type LogStatus = "running" | "rating" | "finished" | "draft" | "failed";
 export function logStatus(d: Pick<RunDump, "status" | "tests">): LogStatus {
   if (d.status === "finished" || d.status === "draft" || d.status === "failed") return d.status;
-  const working = d.tests.some((t) => t.status === "queued" || t.status === "running");
-  return working || !d.tests.length ? "running" : "rating";
+  if (!d.tests.length || d.tests.some((t) => t.status === "queued" || t.status === "running")) return "running";
+  return d.tests.some((t) => t.status === "ready_to_rate") ? "rating" : "finished";
 }
 
 export function summary(runs: RunDump[]) {
@@ -46,7 +48,7 @@ export function summary(runs: RunDump[]) {
   return {
     runs: runs.length,
     running: runs.filter((d) => logStatus(d) === "running").length,
-    finished: runs.filter((d) => d.status === "finished").length,
+    finished: runs.filter((d) => logStatus(d) === "finished").length,
     rated: tests.filter((t) => t.rating).length,
     tasks: tests.length,
     spend: runs.reduce((s, d) => s + d.cost_usd, 0),

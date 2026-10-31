@@ -24,4 +24,5 @@ test("a run with every answer in that still needs picks is waiting on picks", ()
   assert.equal(logStatus({ status: "running", tests: [{ status: "rated" }, { status: "running" }] } as any), "running");
   assert.equal(logStatus({ status: "ready", tests: [{ status: "rated" }, { status: "ready_to_rate" }] } as any), "rating");
   assert.equal(logStatus({ status: "finished", tests: [] } as any), "finished");
+  assert.equal(logStatus({ status: "ready", tests: [{ status: "rated" }, { status: "failed" }] } as any), "finished", "nothing left to rate");
 });
