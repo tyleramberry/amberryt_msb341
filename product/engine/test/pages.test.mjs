@@ -306,8 +306,7 @@ describe("setup page (/)", { skip }, () => {
     });
   }
 
-  // todo until the redesign lands: today's prompt textarea has no label (found 2026-10-31).
-  test("after the click (no JavaScript), the prompt page is accessible too", { todo: "prompt textarea needs a label" }, async () => {
+  test("after the click (no JavaScript), the prompt page is accessible too", async () => {
     const p = await open("/", { js: false, size: "mobile" });
     await mainButton(p.page).click();
     await p.page.waitForLoadState("load");
