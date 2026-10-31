@@ -60,3 +60,8 @@ test("judge JSON is found inside a code fence", () => {
   assert.deepEqual(items, [{ label: "A", criteria_scores: [4, 5], overall: 10, reason: "ok" }]);
   assert.throws(() => parseJudgeJson("no json"));
 });
+
+test("judge JSON is found after thinking prose that holds brackets", () => {
+  const items = parseJudgeJson('I need scores [1-5] per criterion. A has em dashes.\n[{"label":"A","criteria_scores":[5,1],"overall":5,"reason":"dashes"}]');
+  assert.deepEqual(items, [{ label: "A", criteria_scores: [5, 1], overall: 5, reason: "dashes" }]);
+});

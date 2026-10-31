@@ -18,16 +18,20 @@ const { cases } = JSON.parse(readFileSync(new URL("../../evals/judge-style-rules
 let failed = 0;
 for (const c of cases) {
   for (const { id: judge, reasoning } of judges) {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-      body: JSON.stringify({ model: judge, max_tokens: 2000, ...(reasoning === false ? { reasoning: { enabled: false } } : {}), messages: [{ role: "user", content: judgePrompt(c.test, Object.entries(c.answers)) }] }),
-    });
-    const body = await res.json();
-    let scores;
+    // Like the engine, a reply that doesn't parse is asked once more before it counts as an error.
+    let scores, error;
     const answers = Object.entries(c.answers);
-    try { scores = Object.fromEntries(enforceRules(c.test, answers, parseJudgeJson(body.choices[0].message.content)).map((s) => [s.label, s.overall])); }
-    catch (e) { console.log(`ERROR ${c.id} ${judge}: ${body.error?.message ?? e.message}`); failed++; continue; }
+    for (let attempt = 0; attempt < 2 && !scores; attempt++) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+        body: JSON.stringify({ model: judge, max_tokens: 2000, ...(reasoning === false ? { reasoning: { enabled: false } } : {}), messages: [{ role: "user", content: judgePrompt(c.test, answers) }] }),
+      });
+      const body = await res.json();
+      try { scores = Object.fromEntries(enforceRules(c.test, answers, parseJudgeJson(body.choices[0].message.content)).map((s) => [s.label, s.overall])); }
+      catch (e) { error = body.error?.message ?? e.message; }
+    }
+    if (!scores) { console.log(`ERROR ${c.id} ${judge}: ${error}`); failed++; continue; }
     const ok = scores[c.expect.lower] < scores[c.expect.than] &&
       Object.entries(c.expect.max_overall ?? {}).every(([l, max]) => scores[l] <= max);
     if (!ok) failed++;
