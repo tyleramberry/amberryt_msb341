@@ -835,6 +835,7 @@ export class RunObject extends DurableObject<Env> {
     return {
       ...view,
       finished_at: this.get("finished_at"),
+      app: this.get("app"), // set once results are asked for from a known chat app
       winner: finished?.winner ?? null,
       tests: view.tests.map((t) => {
         const labels = this.labelsFor(t.id);

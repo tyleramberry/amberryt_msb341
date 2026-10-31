@@ -55,6 +55,9 @@ test("the log shows the person's task, their pick and note, and the model behind
   assert.match(page, /B was stiff/);
   assert.match(page, /their best/);
   assert.match(page, /GPT-6.1 Sol|Gemini 4 Argon|Claude Sonnet 5.5/, "owner sees model names");
+  assert.match(page, /Judges agreed|Judges picked [A-C], they picked A|Judges tied on [A-C, ]+, they picked A/, "agreement badge on a rated task");
+  // Spec 003: the summary strip says how often the judges' top answer was their pick.
+  assert.match(list, /Judges' top answer matched their pick on <b>\d+ of [1-9]\d*<\/b> task/);
 
   const json = await (await fetch(base + "/admin/export.json", { headers: auth(TOKEN) })).json();
   const run = json.runs.find((r) => r.run_id === runId);

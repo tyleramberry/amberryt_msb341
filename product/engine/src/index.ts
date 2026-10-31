@@ -4,8 +4,9 @@
 
 import { createMcpHandler } from "agents/mcp/server";
 import { adminRoutes } from "./admin.ts";
-import type { Env } from "./models.ts";
-import { connectPrompt, notFoundPage, ratingPage, resultsPage, setupPage } from "./page.ts";
+import { lineupFor, type Env } from "./models.ts";
+import { connectPrompt, notFoundPage, ratingPage, resultsPage } from "./page.ts";
+import { setupPage } from "./setup.ts";
 import { appOf, createServer, newRunId, PERSON_KEY, personStub, runStub, type Caller } from "./tools.ts";
 
 export { RunObject } from "./run.ts";
@@ -64,7 +65,7 @@ async function callerOf(request: Request): Promise<Caller> {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.pathname === "/" && request.method === "GET") return html(setupPage(url.origin));
+    if (url.pathname === "/" && request.method === "GET") return html(setupPage(url.origin, lineupFor(env)));
 
     // "Get my link" on the setup page: mint a personal key. Same 128-bit format as run ids.
     if (url.pathname === "/link" && request.method === "POST") {
@@ -74,7 +75,7 @@ export default {
       if (request.headers.get("accept")?.includes("application/json")) {
         return Response.json({ url: personalUrl, prompt: connectPrompt(personalUrl) }, { headers: { "cache-control": "no-store" } });
       }
-      return html(setupPage(url.origin, personalUrl));
+      return html(setupPage(url.origin, lineupFor(env), personalUrl));
     }
 
     const personal = /^\/mcp\/u\/([^/]+)$/.exec(url.pathname);
