@@ -2,8 +2,8 @@
 // With no OPENROUTER_API_KEY (or MOCK_MODELS = "1") every call is answered by the mock.
 
 // `reasoning: false` turns thinking off for models that otherwise spend the whole token budget
-// thinking and never answer. Leave it unset for models whose reasoning can't be disabled (Grok 4.7
-// returns 400). Mistral Large 4 was dropped as a judge on 2026-10-30: Mistral started rejecting
+// thinking and never answer (DeepSeek V4 Pro on harder tests, 2026-10-30). Leave it unset for
+// models whose reasoning can't be disabled (Grok 4.7 returns 400). Mistral Large 4 was dropped as a judge on 2026-10-30: Mistral started rejecting
 // reasoning off for it, and with reasoning on it thinks past any token budget and never answers.
 export type ModelInfo = { id: string; name: string; company: string; reasoning?: false };
 
@@ -33,7 +33,7 @@ const DEFAULT_LINEUP: ModelInfo[] = [
   { id: "anthropic/claude-sonnet-5.5", name: "Claude Sonnet 5.5", company: "Anthropic" },
 ];
 const DEFAULT_JUDGES: ModelInfo[] = [
-  { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek" },
+  { id: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro", company: "DeepSeek", reasoning: false },
   { id: "mistralai/mistral-medium-3-5", name: "Mistral Medium 3.5", company: "Mistral" },
   { id: "x-ai/grok-4.7", name: "Grok 4.7", company: "xAI" },
 ];
