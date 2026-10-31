@@ -1,6 +1,8 @@
 # Spec 003: Redesign the setup page and the owner's log
 
-**Status:** Draft (design done, build next)
+**Status:** Built (2026-10-31). Two changes from the mockups: in the light theme, salmon, mint,
+warn and ok are a shade darker so small text on them passes AA contrast (all text is 12px or
+larger too); and a tie among the judges' top scores reads "Judges tied on A, B, they picked C".
 **Date:** 2026-10-31
 
 Mockups (open in a browser, both themes, phone and desktop):

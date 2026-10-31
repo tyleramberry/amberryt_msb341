@@ -1,4 +1,5 @@
-// HTML pages: the setup page at / and the rating page at /r/<run_id>.
+// HTML pages: the shared look (spec 003) and the rating page at /r/<run_id>. The setup page at / is
+// in setup.ts, the owner's log in admin.ts.
 // The rating page is built only from the blind view until the run is finished, so no model
 // name, score or cost is in the page source before the reveal.
 
@@ -72,16 +73,63 @@ export function markdown(src: string) {
   return out.join("\n");
 }
 
-const STYLE = `
-  :root { color-scheme: light dark; --bg:#fbfaf7; --fg:#1d1d1b; --muted:#6b6a65; --card:#fff; --line:#e4e1d8; --accent:#2f5d50; --pick:#e6f0ec; --bad:#f6e7e4; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#161614; --fg:#ecebe6; --muted:#a3a29b; --card:#1f1f1c; --line:#33322e; --accent:#7fb8a5; --pick:#22332d; --bad:#3a2723; } }
+// Spec 003: one visual system for every page. Dark-first "lab at night" with a full light theme.
+// Three hues are the only color: blind labels A, B, C on the person's pages, and the company of
+// each model on the owner's log (OpenAI, Anthropic, Google; anyone else violet). Light-theme hues
+// are a shade darker than the mockups so small text on them passes AA contrast.
+const BASE = `
+  :root {
+    --bg:#0b0d12; --panel:#12151d; --panel-2:#181c26; --line:#242a39; --fg:#e9ecf3; --muted:#8a91a6;
+    --a:#8ea8ff; --b:#ffa27e; --c:#6fdcc0; --other:#c9b6ff;
+    --cta-fg:#0b0d12; --cta-bg:#f3f5fb; --ok:#6fdcc0; --warn:#f2c66d; --bad:#ff7b8a;
+    --best-bg:#13241f; --worst-bg:#2a1519;
+    --display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    --body:"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:"Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg:#f5f6fa; --panel:#ffffff; --panel-2:#eef0f6; --line:#dde1ec; --fg:#11131a; --muted:#5a6177;
+      --a:#3f5fe0; --b:#b84a22; --c:#0f7a66; --other:#7a55d6; --cta-fg:#f5f6fa; --cta-bg:#11131a;
+      --ok:#0f7a66; --warn:#8a5f0a; --bad:#c8304a; --best-bg:#e2f3ee; --worst-bg:#fbe6e9; color-scheme:light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#f5f6fa; --panel:#ffffff; --panel-2:#eef0f6; --line:#dde1ec; --fg:#11131a; --muted:#5a6177;
+    --a:#3f5fe0; --b:#b84a22; --c:#0f7a66; --other:#7a55d6; --cta-fg:#f5f6fa; --cta-bg:#11131a;
+    --ok:#0f7a66; --warn:#8a5f0a; --bad:#c8304a; --best-bg:#e2f3ee; --worst-bg:#fbe6e9; color-scheme:light;
+  }
+  :root { --openai:var(--a); --anthropic:var(--b); --google:var(--c); }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+  [hidden] { display:none !important; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 var(--body); -webkit-font-smoothing:antialiased; }
+  a { color:inherit; }
+  code, .mono { font-family:var(--mono); }
+  .num { font-variant-numeric:tabular-nums; }
+  .muted { color:var(--muted); }
+  :focus-visible { outline:2px solid var(--a); outline-offset:3px; border-radius:6px; }
+  .wrap { max-width:1120px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-block:20px; flex-wrap:wrap; }
+  .mark { display:flex; align-items:center; gap:10px; font:800 20px/1 var(--display); letter-spacing:-0.02em; color:var(--fg); text-decoration:none; }
+  .mark .dots { display:inline-flex; gap:3px; }
+  .mark .dots i { width:7px; height:7px; border-radius:50%; display:block; }
+  .mark .dots i:nth-child(1) { background:var(--a); } .mark .dots i:nth-child(2) { background:var(--b); } .mark .dots i:nth-child(3) { background:var(--c); }
+  .mark small { font:500 12px/1 var(--mono); color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; margin-left:4px; }
+  .tag { font:500 12px/1 var(--mono); letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:6px 10px; }
+  .btn { font:500 13px/1 var(--body); color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:9px 14px; text-decoration:none; display:inline-flex; gap:8px; align-items:center; cursor:pointer; }
+  .btn:hover { border-color:var(--muted); }
+  .sw { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; flex:none; }
+`;
+
+// The rating and results pages keep their Sprint 3 layout and only take the new tokens.
+const APP = `
   main { max-width:1100px; margin:0 auto; padding:32px 16px 64px; }
   main.narrow { max-width:640px; }
-  h1 { font-size:26px; margin:0 0 4px; } h2 { font-size:19px; margin:28px 0 8px; } h3,h4,h5,h6 { font-size:16px; margin:16px 0 6px; }
-  p.lead, .muted { color:var(--muted); }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  h1 { font:800 32px/1.1 var(--display); letter-spacing:-0.03em; margin:0 0 8px; }
+  h2 { font:700 20px/1.25 var(--display); letter-spacing:-0.015em; margin:28px 0 8px; } h3,h4,h5,h6 { font-size:16px; margin:16px 0 6px; }
+  p.lead { color:var(--muted); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
   .task { margin:16px 0 20px; }
   .answers { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); }
   .answer h2 { margin:0 0 8px; font-size:17px; }
@@ -90,28 +138,38 @@ const STYLE = `
   .pick { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
   .pick label { display:inline-flex; gap:6px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:4px 10px; cursor:pointer; }
   .pick input:checked + span { font-weight:600; }
-  .answer.best { background:var(--pick); } .answer.worst { background:var(--bad); }
-  textarea { width:100%; min-height:60px; font:inherit; border:1px solid var(--line); border-radius:8px; padding:8px; background:var(--card); color:var(--fg); }
-  button, .button { background:var(--accent); color:var(--bg); border:0; border-radius:8px; padding:8px 16px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+  .answer.best { background:var(--best-bg); border-color:var(--ok); } .answer.worst { background:var(--worst-bg); border-color:var(--bad); border-style:dashed; }
+  textarea { width:100%; min-height:60px; font:14px/1.5 var(--mono); border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--panel-2); color:var(--fg); }
+  button, .button { background:var(--a); color:var(--bg); border:0; border-radius:999px; padding:10px 18px; font:600 15px/1 var(--body); cursor:pointer; text-decoration:none; display:inline-block; }
   nav.tasks { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
   nav.tasks a { border:1px solid var(--line); border-radius:999px; padding:2px 10px; color:var(--fg); text-decoration:none; font-size:14px; }
-  nav.tasks a.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  nav.tasks a.on { border-color:var(--a); color:var(--a); font-weight:600; }
   .table { overflow-x:auto; } table { border-collapse:collapse; width:100%; font-size:15px; }
   th, td { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
-  .url { display:flex; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
-  .url code { flex:1; overflow-wrap:anywhere; font-size:15px; }
   ol { padding-left:20px; } li { margin:4px 0; }
-  .error { color:#b3261e; }
-  button.big { font-size:18px; padding:14px 28px; margin:20px 0 8px; }
-  .done { background:var(--pick); border-radius:10px; padding:12px 14px; }
+  .error { color:var(--bad); }
+  .done { background:var(--best-bg); border-radius:10px; padding:12px 14px; }
 `;
 
-export function shell(title: string, body: string, extraHead = "") {
+const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">`;
+
+// `css` is the page's own stylesheet; the rating and results pages use the default.
+export function shell(title: string, body: string, extraHead = "", css = APP) {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)}</title>${extraHead}<style>${STYLE}</style></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${esc(title)}</title>${FONTS}${extraHead}<style>${BASE}${css}</style></head>
 <body>${body}</body></html>`;
 }
+
+// A model's hue on pages that show names: the color of its company.
+export function hueOf(company: string | undefined) {
+  const c = (company ?? "").toLowerCase();
+  return c === "openai" ? "var(--openai)" : c === "anthropic" ? "var(--anthropic)" : c === "google" ? "var(--google)" : "var(--other)";
+}
+
+// The three-dot wordmark, shared by the setup page and the log.
+export const MARK = `<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>MySI`;
 
 // Short steps per chat app (spec 002, Step 0). The prompt carries them so the app can walk the
 // person through, and the setup page shows the same lines. ChatGPT's menus moved during 2026, so
@@ -148,46 +206,6 @@ If you can't, tell me how in a few short steps for the app I'm using. Here are t
 ${APP_STEPS.map((a) => `- ${a.app}: ${a.steps}`).join("\n")}
 
 Then tell me to start a new chat and say "Find my best AI model." (In Gemini, it has to be exactly "@MySI find my best AI model".)`;
-}
-
-// One button: mint a personal link (decision 008) and copy the connect prompt. Without
-// JavaScript the form posts to /link and the page shows the prompt once (personalUrl set).
-export function setupPage(origin: string, personalUrl?: string) {
-  const prompt = personalUrl ? connectPrompt(personalUrl) : "";
-  const body = personalUrl
-    ? `<p><strong>Copy this and paste it into your chat app.</strong> It holds your own MySI link, so keep it private.
-  This page won't show it again.</p>
-  <textarea id="p" readonly rows="9">${esc(prompt)}</textarea>
-  <p><button onclick="navigator.clipboard.writeText(document.getElementById('p').value);this.textContent='Copied'">Copy</button></p>`
-    : `<form method="post" action="/link" id="go"><button class="big">Get my MySI link</button></form>
-  <p id="done" class="done" hidden><strong>Copied.</strong> Paste it into your chat app and send it. It will add MySI for you, or walk you through it in about a minute.</p>
-  <script>
-  document.getElementById("go").addEventListener("submit", (e) => {
-    if (!navigator.clipboard || !window.ClipboardItem) return; // the form posts and shows the prompt instead
-    e.preventDefault();
-    const text = fetch("/link", { method: "POST", headers: { accept: "application/json" } })
-      .then((r) => r.json())
-      .then((j) => new Blob([j.prompt], { type: "text/plain" }));
-    // A promise inside ClipboardItem keeps the click's permission while the link is made (Safari).
-    navigator.clipboard.write([new ClipboardItem({ "text/plain": text })]).then(
-      () => { e.target.hidden = true; document.getElementById("done").hidden = false; },
-      () => e.target.submit(),
-    );
-  });
-  </script>`;
-  return shell(
-    "MySI",
-    `<main class="narrow">
-  <h1>MySI</h1>
-  <p class="lead">Find out which AI model is best at <em>your</em> work. It runs inside the chat app you already use: Claude, ChatGPT or Gemini.</p>
-  ${body}
-  <h2>Adding it to your app</h2>
-  <ul>${APP_STEPS.map((a) => `<li><strong>${a.app}:</strong> ${esc(a.steps)}</li>`).join("")}</ul>
-  <p>Then start a new chat and say <strong>"Find my best AI model."</strong> In Gemini, say <strong>"@MySI find my best AI model"</strong>.</p>
-  <p class="muted">Your link lets MySI remember your results, so later you can ask "which AI should I use for this?"
-  MySI is an early prototype: its maker can read your test tasks and picks to improve it.</p>
-</main>`,
-  );
 }
 
 export function notFoundPage() {
