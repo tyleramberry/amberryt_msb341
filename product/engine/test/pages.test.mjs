@@ -489,7 +489,7 @@ describe("owner's log (/admin)", { skip }, () => {
   test("a run shows the agreement badge, a timeline, and Show all opens a clamped answer", async () => {
     const p = await open(`/admin/runs/${runs.rated}`, { auth: true });
     const text = await p.page.locator("body").innerText();
-    assert.match(text, /Judges agreed|Judges picked [A-E], they picked [A-E]/);
+    assert.match(text, /Judges agreed|Judges picked [A-E], they picked [A-E]|Judges tied on [A-E](, [A-E])+, they picked [A-E]/);
     assert.match(text, /their worst/i);
     const more = p.page.getByRole("button", { name: /show all/i }).or(p.page.getByText(/show all/i));
     const clamped = () => p.page.evaluate(() => [...document.querySelectorAll("*")].filter((e) => !["none", ""].includes(getComputedStyle(e).webkitLineClamp) || (getComputedStyle(e).maxHeight !== "none" && e.scrollHeight > e.clientHeight + 2)).length);
@@ -501,6 +501,16 @@ describe("owner's log (/admin)", { skip }, () => {
     }
     assert.equal(await endlessAnimations(p.page), 0, "nothing loops forever on a finished run");
     await p.close();
+  });
+
+  test("phones still show how many tasks a run has rated", async () => {
+    for (const size of ["small", "mobile"]) {
+      const p = await open("/admin", { size, auth: true });
+      const row = p.page.locator(`a[href="/admin/runs/${runs.rated}"]`).first();
+      const marks = await row.locator("i").evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== "none").length);
+      assert.ok(marks >= 1, `${size}: the rated bar shows (found ${marks} visible segments)`);
+      await p.close();
+    }
   });
 
   test("360px phone: list and run pages don't scroll sideways", async () => {
