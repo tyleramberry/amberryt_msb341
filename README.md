@@ -22,6 +22,7 @@ history.
 | Output | Where | Access |
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
+| Herd: multiplayer plugin for Hermes Agent (Sprint 4) | https://github.com/tyleramberry/herd | Public |
 | MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Get my MySI link" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
 | MySI engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
@@ -31,7 +32,19 @@ history.
 | AI interview conversation (Sprint 2 worksheet Part 2) | https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73 | Public link; scores in [`discovery/worksheet.md`](discovery/worksheet.md) |
 | Sprint 2 reflection video | https://www.loom.com/share/c10c024c9abc4ecf94669d5471a5a845 | Loom |
 
-No other repo holds this work.
+Sprint 4 work (Herd) lives in the `herd` repo above. No other repo holds this work.
+
+## Sprint 4: Herd for the Nous Research Hermes Agent hackathon (in progress)
+
+Plan: [`sprints/sprint-4-plan.md`](sprints/sprint-4-plan.md). Changed Nov 4 from MySI user testing to
+Herd; MySI is on hold until Sprint 5. Status against its "Done looks like":
+
+| Deliverable | Status | Where |
+|---|---|---|
+| Two Hermes instances message each other in one shared space, polished UI | In progress (code freeze target Nov 8) | [`herd`](https://github.com/tyleramberry/herd) |
+| Catalog PR to the Hermes plugin catalog repo | Not started (due Nov 11, 5 PM EST) | — |
+| Demo video on X, under 90 seconds, tagged @NousResearch | Not started (due Nov 11, 5 PM EST) | — |
+| Entry form with both links | Not started (due Nov 11, 5 PM EST) | — |
 
 ## Sprint 3: Build a working personal benchmark (in progress)
 
