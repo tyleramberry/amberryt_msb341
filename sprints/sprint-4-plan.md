@@ -20,3 +20,4 @@
 **Predicted difficulty:** 4
 
 **Changes:** Nov 4: switched from getting three outside users through MySI to building Herd, a multiplayer plugin for Hermes Agent, for the Nous Research hackathon. Recruiting MySI testers over SMS was harder than I expected because not many people are technical enough to see the need, and the hackathon has a $1,000 prize, so MySI moves to Sprint 5.
+Nov 7: cancelled the Nov 8 code freeze. It was never meant to be a hard deadline; one of the agents set it and I corrected that. Work continues up to the Nov 11 5:00 PM EST hackathon deadline, and the "code freeze target Nov 8" in Done looks like no longer applies.
