@@ -23,6 +23,7 @@ history.
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
 | Herd: multiplayer plugin for Hermes Agent (Sprint 4) | https://github.com/tyleramberry/herd | Public |
+| Switchboard: shared memory, skills and secrets for every agent harness (Sprint 5) | https://github.com/tyleramberry/switchboard | Private. Spec: [`specs/004-agent-switchboard.md`](specs/004-agent-switchboard.md) |
 | MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Get my MySI link" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
 | MySI engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
@@ -32,7 +33,7 @@ history.
 | AI interview conversation (Sprint 2 worksheet Part 2) | https://claude.ai/share/2c9fbc48-628a-4abe-9edc-f58770172f73 | Public link; scores in [`discovery/worksheet.md`](discovery/worksheet.md) |
 | Sprint 2 reflection video | https://www.loom.com/share/c10c024c9abc4ecf94669d5471a5a845 | Loom |
 
-Sprint 4 work (Herd) lives in the `herd` repo above. No other repo holds this work.
+Sprint 4 work (Herd) lives in the `herd` repo and Sprint 5 work (Switchboard) lives in the `switchboard` repo above. The spec, decisions and sprint docs for both stay in this repo.
 
 ## Sprint 4: Herd for the Nous Research Hermes Agent hackathon (in progress)
 
