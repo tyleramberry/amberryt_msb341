@@ -23,7 +23,7 @@ history.
 |---|---|---|
 | Course repo (this one) | https://github.com/tyleramberry/amberryt_msb341 | Private, shared with Professor Murff (`sdmurff`) |
 | Herd: multiplayer plugin for Hermes Agent (Sprint 4) | https://github.com/tyleramberry/herd | Public |
-| Switchboard: shared memory, skills and secrets for every agent harness (Sprint 5) | https://github.com/tyleramberry/switchboard | Private. Spec: [`specs/004-agent-switchboard.md`](specs/004-agent-switchboard.md) |
+| Switchboard: shared memory, skills and secrets for every agent harness (Sprint 5) | https://github.com/tyleramberry/switchboard | Public. Spec: [`specs/004-agent-switchboard.md`](specs/004-agent-switchboard.md) |
 | MySI engine and connector (MCP) | https://personal-bench.homeroom-app.workers.dev (connector URL: `/mcp`) | Public, no sign-in. "Get my MySI link" mints a personal connector URL (`/mcp/u/<key>`); rating pages at `/r/<run_id>`; owner log at `/admin` (password) |
 | MySI engine code | [`product/engine/`](product/engine/) | In-repo |
 | Personal benchmark prototype | [`.claude/skills/personal-bench/`](.claude/skills/personal-bench/) | In-repo; runs inside Claude Code |
@@ -35,17 +35,26 @@ history.
 
 Sprint 4 work (Herd) lives in the `herd` repo and Sprint 5 work (Switchboard) lives in the `switchboard` repo above. The spec, decisions and sprint docs for both stay in this repo.
 
-## Sprint 4: Herd for the Nous Research Hermes Agent hackathon (in progress)
+## Sprint 5: Switchboard, one shared setup for every agent harness (in progress)
 
-Plan: [`sprints/sprint-4-plan.md`](sprints/sprint-4-plan.md). Changed Nov 4 from MySI user testing to
-Herd; MySI is on hold until Sprint 5. Status against its "Done looks like":
+Plan: [`sprints/sprint-5-plan.md`](sprints/sprint-5-plan.md). Spec: [`specs/004-agent-switchboard.md`](specs/004-agent-switchboard.md).
+Status against its "Done looks like":
 
 | Deliverable | Status | Where |
 |---|---|---|
-| Two Hermes instances message each other in one shared space, polished UI | In progress (code freeze target Nov 8) | [`herd`](https://github.com/tyleramberry/herd) |
-| Catalog PR to the Hermes plugin catalog repo | Not started (due Nov 11, 5 PM EST) | — |
-| Demo video on X, under 90 seconds, tagged @NousResearch | Not started (due Nov 11, 5 PM EST) | — |
-| Entry form with both links | Not started (due Nov 11, 5 PM EST) | — |
+| One command sets up my agent in any new harness | Done: Hermes + Claude Code installed on the Air (Nov 16) and on a fresh Mac mini install (Nov 19), with backups, manifest `pin` and `doctor` | [`switchboard`](https://github.com/tyleramberry/switchboard) |
+| Handoff works across agents; memory and skills shared live | Done Nov 16: a real model turn ran Hermes → Claude Code → Hermes; the handoff notes sit in shared memory | Home memory notes, tagged `sprint-5` |
+| Secrets are used but never seen; survives 10 red-team attempts | Done: 10/10 pass; all three findings (rot13 leak, Keychain ACL, manifest tamper) fixed and re-proven | `redteam/RESULTS.md` in the switchboard repo |
+| An MCP server running the core tools | Done: 7 tools; 50/50 tests pass on both Macs | switchboard repo |
+| Evidence and write-up | Done: problem, design, cost, failures, Sprint 6 backlog | `WRITEUP.md` in the switchboard repo |
+| Sprint review and retro | Not started | — |
+
+## Sprint 4: Herd for the Nous Research Hermes Agent hackathon (reviewed)
+
+[Plan](sprints/sprint-4-plan.md) · [Review and retro](sprints/sprint-4-review.md). Two Macs exchanged
+messages through the plugin in both directions (Nov 6); code is public in [`herd`](https://github.com/tyleramberry/herd).
+As of the Nov 9 review the hackathon entry was incomplete: the catalog PR was closed Nov 7, and no
+X video or entry form link was found. MySI stayed on hold.
 
 ## Sprint 3: Build a working personal benchmark (in progress)
 

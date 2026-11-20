@@ -3,7 +3,7 @@ title: Harness Research — Sprint 1
 date: 2026-09-28
 sprint: 1
 tags: [research, harness-engineering, sprint-1, msb341]
-related: "[[agent-harness-comp]]"
+related: "agent-harness-comp (page not written yet)"
 ---
 
 # Harness Research — Sprint 1
@@ -17,7 +17,7 @@ This file holds three things from Sprint 1:
 3. **Parts to steal:** specific patterns from open-source harnesses I want to reuse
 
 It feeds directly into `mvpspec.md`. For the side-by-side of the five harnesses I studied
-(Codex, OpenCode, Hermes, OpenClaw, Pi), see [[agent-harness-comp]].
+(Codex, OpenCode, Hermes, OpenClaw, Pi), see the agent-harness-comp comparison (page not written yet).
 
 ---
 

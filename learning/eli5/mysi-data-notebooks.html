@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MySI notebooks</title>
+<style>
+  :root { --ink:#1d2330; --bg:#fbfaf6; --card:#fff; --line:#d8d4c8; --accent:#d9480f; --soft:#fde8dc; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#f1efe8; --bg:#16181d; --card:#1f232b; --line:#3a3f4a; --accent:#ff8a4c; --soft:#3a2418; }
+  }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:20px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:20px; margin:0 0 20px; color:var(--accent); }
+  figure { margin:0 0 24px; background:var(--card); border:2px solid var(--line); border-radius:16px; padding:12px; }
+  figcaption { font-size:22px; font-weight:700; padding:4px 8px 0; }
+  svg { width:100%; height:auto; display:block; }
+  svg text { font-family:inherit; fill:var(--ink); font-size:15px; }
+  svg .big { font-size:17px; font-weight:700; }
+  svg .nb { fill:var(--card); stroke:var(--ink); stroke-width:3; }
+  svg .row { fill:var(--soft); stroke:var(--line); stroke-width:1.5; }
+  svg .tag { fill:var(--accent); }
+  svg .tagt { fill:#fff; font-weight:700; font-size:14px; }
+  svg .arrow { stroke:var(--accent); stroke-width:3; fill:none; }
+  small { display:block; font-size:15px; color:var(--ink); opacity:.85; margin-top:8px; }
+</style>
+</head>
+<body>
+<main>
+<h1>MySI keeps three kinds of notebooks</h1>
+
+<figure>
+<svg viewBox="0 0 700 220" role="img"><title>One notebook for one test run, with pages for tests, answers and picks</title>
+  <rect class="nb" x="40" y="20" width="250" height="180" rx="12"/>
+  <text class="big" x="60" y="50">RUN notebook</text>
+  <rect class="row" x="60" y="65" width="210" height="34" rx="6"/><text x="72" y="88">tests</text>
+  <rect class="row" x="60" y="107" width="210" height="34" rx="6"/><text x="72" y="130">answers</text>
+  <rect class="row" x="60" y="149" width="210" height="34" rx="6"/><text x="72" y="172">my picks</text>
+  <rect class="tag" x="330" y="90" width="130" height="40" rx="20"/><text class="tagt" x="350" y="116">run_id: 7</text>
+  <path class="arrow" d="M330 110 L295 110"/>
+  <text x="480" y="105">one benchmark</text><text x="480" y="128">= one notebook</text>
+</svg>
+<figcaption>1. One run, one notebook</figcaption>
+</figure>
+
+<figure>
+<svg viewBox="0 0 700 220" role="img"><title>One notebook per person listing their run numbers and winners</title>
+  <rect class="nb" x="40" y="20" width="250" height="180" rx="12"/>
+  <text class="big" x="60" y="50">PERSON notebook</text>
+  <rect class="row" x="60" y="65" width="210" height="34" rx="6"/><text x="72" y="88">my runs</text>
+  <rect class="row" x="60" y="107" width="210" height="34" rx="6"/><text x="72" y="130">winner</text>
+  <rect class="tag" x="330" y="60" width="100" height="34" rx="17"/><text class="tagt" x="348" y="83">run_id: 7</text>
+  <rect class="tag" x="330" y="110" width="100" height="34" rx="17"/><text class="tagt" x="348" y="133">run_id: 9</text>
+  <path class="arrow" d="M330 77 L295 77"/><path class="arrow" d="M330 127 L295 127"/>
+  <text x="460" y="105">one person</text><text x="460" y="128">= one notebook</text>
+</svg>
+<figcaption>2. One person, one notebook</figcaption>
+</figure>
+
+<figure>
+<svg viewBox="0 0 700 220" role="img"><title>One shared notebook that lists every run and counts runs per day</title>
+  <rect class="nb" x="40" y="20" width="250" height="180" rx="12"/>
+  <text class="big" x="60" y="50">REGISTRY notebook</text>
+  <rect class="row" x="60" y="65" width="210" height="34" rx="6"/><text x="72" y="88">all runs</text>
+  <rect class="row" x="60" y="107" width="210" height="34" rx="6"/><text x="72" y="130">runs per day</text>
+  <rect class="row" x="60" y="149" width="210" height="34" rx="6"/><text x="72" y="172">model interest</text>
+  <text x="330" y="105">only one</text><text x="330" y="128">for everyone</text>
+</svg>
+<figcaption>3. One for everyone</figcaption>
+</figure>
+
+<figure>
+<svg viewBox="0 0 700 220" role="img"><title>The same run_id tag appears in all three notebooks and connects them</title>
+  <rect class="nb" x="20" y="60" width="180" height="100" rx="12"/><text class="big" x="38" y="90">RUN</text>
+  <rect class="nb" x="260" y="60" width="180" height="100" rx="12"/><text class="big" x="278" y="90">PERSON</text>
+  <rect class="nb" x="500" y="60" width="180" height="100" rx="12"/><text class="big" x="518" y="90">REGISTRY</text>
+  <rect class="tag" x="40" y="108" width="100" height="34" rx="17"/><text class="tagt" x="58" y="131">run_id: 7</text>
+  <rect class="tag" x="280" y="108" width="100" height="34" rx="17"/><text class="tagt" x="298" y="131">run_id: 7</text>
+  <rect class="tag" x="520" y="108" width="100" height="34" rx="17"/><text class="tagt" x="538" y="131">run_id: 7</text>
+  <path class="arrow" d="M110 100 Q 240 20 330 100"/><path class="arrow" d="M330 100 Q 460 20 570 100"/>
+</svg>
+<figcaption>4. Same sticker links them</figcaption>
+</figure>
+
+<small><b>Where this picture is simplified:</b> each notebook really has several tables (the Run one has nine), and nothing checks that the stickers match.</small>
+<small><b>Say it back:</b> If you hold run_id 7, how would you find that person's winner?</small>
+</main>
+</body>
+</html>
