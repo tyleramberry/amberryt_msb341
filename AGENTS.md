@@ -7,18 +7,19 @@ and why.
 
 ## What I am working on
 
-- **My role:** Solo founder: product, engineering, design, and go-to-market. On Herd I build with
-  a co-founder.
-- **Now (Sprint 4, from 2026-11-04): Herd**, a Hermes Agent plugin that makes Hermes
-  multiplayer, built for the Nous Research Hermes Agent plugin hackathon ($1,000 prize). It puts
-  my personal Hermes instance and me, and my co-founder's personal Hermes instance and him, into
-  shared channels with a Slack-like interface, inside the Hermes desktop app, across machines.
-  The agents talk to each other, the two of us can DM, and we work alongside our agents and can
-  jump into the agent-to-agent conversation.
-- **Why the switch:** MySI works decently, but recruiting testers over SMS was harder than
-  expected, because few people are technical enough to see the need. The hackathon prize made
-  Herd worth the time. See the Changes line in `sprints/sprint-4-plan.md`.
-- **On hold until Sprint 5: MySI** ("my SI", short for my superintelligence), a personal model
+- **My role:** Solo founder: product, engineering, design, and go-to-market. On Herd (Sprint 4)
+  I built with a co-founder.
+- **Now (Sprint 5, from 2026-11-11): Switchboard**, one shared Home (`~/agent-home`) holding my
+  memory, skills and a secrets manifest, with one MCP server every harness connects to.
+  One-command setup in a new harness, handoff between agents without re-explaining, and secrets
+  agents can use but never see. Code: https://github.com/tyleramberry/switchboard.
+- **Why this sprint:** I switch back and forth between Claude, Grokbot, Hermes and Buzz. One
+  plug-and-play setup makes the next projects (finishing MySI, Sundae Planner) much easier. See
+  `sprints/sprint-5-plan.md`.
+- **Herd (Sprint 4, reviewed):** the multiplayer Hermes plugin built for the Nous Research
+  hackathon lives at https://github.com/tyleramberry/herd. Review and retro:
+  `sprints/sprint-4-review.md`. The hackathon entry was incomplete as of that review.
+- **On hold: MySI** ("my SI", short for my superintelligence), a personal model
   benchmark. It turns the work a person actually uses AI for into test tasks, runs them on
   several models, and ranks the models for that person. Pivoted from Homeroom in Sprint 3
   (`decisions/006-pivot-to-personal-benchmark.md`). Belief behind it: each person should own
@@ -30,20 +31,18 @@ and why.
 
 ## Current state
 
-- **This sprint's goal (Sprint 4):** Herd works (two separate Hermes instances message each other
-  in one shared space, in a cohesive, polished UI) and the hackathon entry is in. See
-  `sprints/sprint-4-plan.md`.
-- **Herd deadlines:** code freeze target Nov 8. Due 5:00 PM EST, Tuesday Nov 11: (1) a PR adding
-  Herd to the Hermes plugin catalog repo, (2) a demo video on X under 90 seconds, tagged
-  @NousResearch, recorded on a working build, (3) the entry form with both links.
-- **Where Herd lives:** https://github.com/tyleramberry/herd (public, MIT; `sdmurff` invited as a
-  collaborator). Herd code, architecture docs (`docs/`) and its agent task board live there, not
-  in this repo. This repo holds the sprint plan, the review, and the README links.
+- **This sprint's goal (Sprint 5):** the five "Done looks like" items in `sprints/sprint-5-plan.md`.
+  Status Nov 19: built and verified on both Macs (Air Nov 16, fresh Mac mini install Nov 19),
+  red team 10/10 with all findings fixed, 50/50 tests. The sprint review and retro are not
+  written yet.
+- **Where Switchboard lives:** code, red-team results (`redteam/RESULTS.md`) and `WRITEUP.md` in
+  the switchboard repo (public). Real data stays out of that repo: Home is `~/agent-home`, a
+  local git repo on each Mac. Spec: `specs/004-agent-switchboard.md`.
 - **Where the work lives:** `README.md` lists every repo and live link. Keep it current — it is what
-  the graders use to find the work. Add the catalog PR and the X video there when they exist.
-- **Sprint review note:** much of the Herd work happens inside Hermes Agent, which
-  `/sprint-review` can't scan. Commit to `herd` often with clear messages; those commits are the
-  sprint's timeline.
+  the graders use to find the work.
+- **Sprint review note:** much of the Switchboard work happens in the switchboard repo and in
+  Hermes sessions, which `/sprint-review` can't scan. Commit to `switchboard` often with clear
+  messages; those commits are the sprint's timeline.
 - **MySI (paused):** live at https://personal-bench.homeroom-app.workers.dev ("Get my MySI link"
   for a personal connector link, decision 008). Engine code is `product/engine/`; lineup GPT-6.1
   Sol, Gemini 4 Argon, Claude Sonnet 5.5; owner's log at `/admin`. Specs:
