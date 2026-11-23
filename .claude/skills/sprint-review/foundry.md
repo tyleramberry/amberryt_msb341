@@ -51,7 +51,7 @@ as **What did the client or your users say?**. People are named by role ("the cl
 
 ## The reminder (end of step 7)
 
-The **Sprint N Wrap-up** is due **Friday at 8:00 AM**, when studio starts: the GitHub link to
+The **Sprint N Wrap-up** is due **Saturday at 11:59 PM**: the GitHub link to
 this file and the Loom link. Add: if the client's confidentiality terms do not allow recording
 their data, record the demo on sample data and say so at the start of the video. Before
 submitting, check that **Work files and links** in the README lists every repo, deployed app,

@@ -14,7 +14,7 @@ The plan is due **the Monday after the sprint starts, at 11:59 PM**, not Wednesd
 |---|---|---|---|
 | 1 | Fri, Oct 23, 2026 | Mon, Oct 26, 11:59 PM | Fri, Nov 6, 8:00 AM |
 | 2 | Fri, Nov 6 | Mon, Nov 9, 11:59 PM | Fri, Nov 20, 8:00 AM |
-| 3 | Fri, Nov 20 | Mon, Nov 23, 11:59 PM | Fri, Dec 4, 8:00 AM |
+| 3 | Fri, Nov 20 | Mon, Nov 23, 11:59 PM | Sat, Dec 5, 11:59 PM |
 
 ## Context (step 2)
 
