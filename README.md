@@ -35,19 +35,21 @@ history.
 
 Sprint 4 work (Herd) lives in the `herd` repo and Sprint 5 work (Switchboard) lives in the `switchboard` repo above. The spec, decisions and sprint docs for both stay in this repo.
 
-## Sprint 5: Switchboard, one shared setup for every agent harness (in progress)
+## Sprint 5: Switchboard, one shared setup for every agent harness (shipped; review pending)
 
 Plan: [`sprints/sprint-5-plan.md`](sprints/sprint-5-plan.md). Spec: [`specs/004-agent-switchboard.md`](specs/004-agent-switchboard.md).
-Status against its "Done looks like":
+Status against its "Done looks like" plus additions shipped during the sprint:
 
 | Deliverable | Status | Where |
 |---|---|---|
-| One command sets up my agent in any new harness | Done: Hermes + Claude Code installed on the Air (Nov 16) and on a fresh Mac mini install (Nov 19), with backups, manifest `pin` and `doctor` | [`switchboard`](https://github.com/tyleramberry/switchboard) |
-| Handoff works across agents; memory and skills shared live | Done Nov 16: a real model turn ran Hermes → Claude Code → Hermes; the handoff notes sit in shared memory | Home memory notes, tagged `sprint-5` |
-| Secrets are used but never seen; survives 10 red-team attempts | Done: 10/10 pass; all three findings (rot13 leak, Keychain ACL, manifest tamper) fixed and re-proven | `redteam/RESULTS.md` in the switchboard repo |
-| An MCP server running the core tools | Done: 7 tools; 50/50 tests pass on both Macs | switchboard repo |
-| Evidence and write-up | Done: problem, design, cost, failures, Sprint 6 backlog | `WRITEUP.md` in the switchboard repo |
-| Sprint review and retro | Not started | — |
+| One command sets up my agent in any new harness | Done: Hermes + Claude Code installed on the Air (Nov 16) and on a fresh Mac mini install (Nov 19), with backups, manifest `pin`, and `doctor` (Codex/Grokbot unit-tested only; Buzz manual) | [`switchboard`](https://github.com/tyleramberry/switchboard) |
+| Handoff works across agents; memory and skills shared live | Done Nov 16: a real model turn ran Hermes -> Claude Code -> Hermes; handoff notes sit in shared memory | Home memory notes, tagged `sprint-5` |
+| Secrets are used but never seen; survives 10 red-team attempts | Done: 10/10 pass; all three findings (F1 rot13, F2 Keychain ACL helper, F3 manifest pin) fixed and re-proven | `redteam/RESULTS.md` in the switchboard repo |
+| An MCP server running the core tools | Done: 7 tools; 92/92 tests pass | switchboard repo |
+| Evidence and write-up | Done: problem, design, cost, failures, honest gaps, Sprint 6 backlog | `WRITEUP.md` in the switchboard repo |
+| Added: Local Web UI (`switchboard ui`) | Shipped Nov 19 to 20: localhost-only control panel with token/Host/Origin/CSP guards, dark mode, Cmd+K palette, write-only secrets, memory/skills/harnesses views | `ui/public/` in the switchboard repo |
+| Added: Decision Inbox + nightly distillation | Shipped Nov 21: SQLite `InboxStore`, zero-MCP `switchboard inbox` CLI, single-card focus Inbox UI (shortcuts, dictation, embed mode), `switchboard-inbox` skill, `npm run distill` | `src/inbox/` and `scripts/distill-inbox.ts` in the switchboard repo |
+| Sprint review and retro | Not started | Pending |
 
 ## Sprint 4: Herd for the Nous Research Hermes Agent hackathon (reviewed)
 

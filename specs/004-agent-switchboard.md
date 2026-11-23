@@ -1,6 +1,6 @@
 # Spec 004: Switchboard, one agent setup for every harness
 
-**Status:** In progress
+**Status:** Shipped (Sprint 5)
 **Date:** 2026-11-13
 **Sprint:** 5 (`sprints/sprint-5-plan.md`)
 
@@ -81,19 +81,19 @@ and is never public.
 - Vector or semantic memory.
 - Auto-migrating every old note. I'll move over a useful starter set.
 - Windows or Linux.
-- A UI.
+- ~~A UI.~~ Moved in-scope mid-sprint: shipped localhost Web UI (`switchboard ui`, Nov 19 to 20) plus Decision Inbox and nightly memory distillation (Nov 21).
 
 ## Definition of done
 
-- [ ] `switchboard setup <harness>` takes a fresh Hermes and Claude Code install to
+- [x] `switchboard setup <harness>` takes a fresh Hermes and Claude Code install to
       working with one command each. Demo it on a clean profile.
-- [ ] A memory written in Hermes is found from Claude Code, and the reverse, shown live.
-- [ ] A skill added to Home appears in both.
-- [ ] A secret is stored and used via `secret_run`, and the agent never sees the value.
-- [ ] 10 red-team attacks run with results logged. The goal is to survive all 10. A failed one
-      is a finding for the write-up and gets a fix or an honest note.
-- [ ] Write-up committed, including cost and what failed.
-- [ ] Shipped: it runs on both of my Macs (Air and mini).
+- [x] A memory written in Hermes is found from Claude Code, and the reverse, shown live.
+- [x] A skill added to Home appears in both.
+- [x] A secret is stored and used via `secret_run`, and the agent never sees the value.
+- [x] 10 red-team attacks run with results logged. The goal is to survive all 10. A failed one
+      is a finding for the write-up and gets a fix or an honest note. (10/10 pass after F1, F2, F3 fixes.)
+- [x] Write-up committed, including cost and what failed.
+- [x] Shipped: it runs on both of my Macs (Air and mini).
 
 ## Risks
 

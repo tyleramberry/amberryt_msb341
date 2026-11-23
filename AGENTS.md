@@ -31,10 +31,12 @@ and why.
 
 ## Current state
 
-- **This sprint's goal (Sprint 5):** the five "Done looks like" items in `sprints/sprint-5-plan.md`.
-  Status Nov 19: built and verified on both Macs (Air Nov 16, fresh Mac mini install Nov 19),
-  red team 10/10 with all findings fixed, 50/50 tests. The sprint review and retro are not
-  written yet.
+- **This sprint's goal (Sprint 5):** the five "Done looks like" items in `sprints/sprint-5-plan.md`,
+  plus the mid-sprint additions documented there. Status Nov 23: built and verified on both Macs
+  (Air Nov 16, fresh Mac mini install Nov 19), red team 10/10 with all findings fixed, 92/92
+  tests, plus localhost Web UI (`switchboard ui`), SQLite Decision Inbox (`switchboard inbox`),
+  and nightly memory distillation (`npm run distill`). `WRITEUP.md` is finalized; the sprint
+  review and retro are next.
 - **Where Switchboard lives:** code, red-team results (`redteam/RESULTS.md`) and `WRITEUP.md` in
   the switchboard repo (public). Real data stays out of that repo: Home is `~/agent-home`, a
   local git repo on each Mac. Spec: `specs/004-agent-switchboard.md`.
